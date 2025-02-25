@@ -1,0 +1,103 @@
+﻿:root {
+  /* Variables communes aux deux thèmes */
+  --border-radius: 8px;
+  --transition-speed: 0.3s;
+  
+  /* Couleurs de base */
+  --color-primary: #3b82f6;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #0ea5e9;
+}
+
+/* Thème clair (par défaut) */
+.light-theme, :root {
+  /* Couleurs de fond */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --bg-tertiary: #f1f5f9;
+  
+  /* Couleurs de texte */
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-tertiary: #6b7280;
+  --text-inverted: #ffffff;
+  
+  /* Couleurs de bordure */
+  --border-color: #e5e7eb;
+  --border-color-hover: #d1d5db;
+  
+  /* Couleurs d'ombres */
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --shadow-sm: 0 1px 2px 0 var(--shadow-color);
+  --shadow: 0 1px 3px 0 var(--shadow-color), 0 1px 2px -1px var(--shadow-color);
+  --shadow-lg: 0 10px 15px -3px var(--shadow-color), 0 4px 6px -4px var(--shadow-color);
+  
+  /* Couleurs de composants */
+  --input-bg: #ffffff;
+  --input-border: #d1d5db;
+  --input-focus-border: var(--color-primary);
+  
+  /* Palette pour le PixelBoard */
+  --grid-bg: #ffffff;
+  --grid-lines: #e5e7eb;
+  --pixel-border: #d1d5db;
+}
+
+/* Thème sombre */
+.dark-theme {
+  /* Couleurs de fond */
+  --bg-primary: #1f2937;
+  --bg-secondary: #111827;
+  --bg-tertiary: #374151;
+  
+  /* Couleurs de texte */
+  --text-primary: #f9fafb;
+  --text-secondary: #e5e7eb;
+  --text-tertiary: #d1d5db;
+  --text-inverted: #111827;
+  
+  /* Couleurs de bordure */
+  --border-color: #374151;
+  --border-color-hover: #4b5563;
+  
+  /* Couleurs d'ombres */
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 2px 0 var(--shadow-color);
+  --shadow: 0 1px 3px 0 var(--shadow-color), 0 1px 2px -1px var(--shadow-color);
+  --shadow-lg: 0 10px 15px -3px var(--shadow-color), 0 4px 6px -4px var(--shadow-color);
+  
+  /* Couleurs de composants */
+  --input-bg: #374151;
+  --input-border: #4b5563;
+  --input-focus-border: var(--color-primary);
+  
+  /* Palette pour le PixelBoard */
+  --grid-bg: #1f2937;
+  --grid-lines: #374151;
+  --pixel-border: #4b5563;
+}
+
+/* Classe d'application pour garantir que tout le contenu utilise les variables CSS */
+.app {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Styles de base pour faciliter l'utilisation des variables */
+.bg-primary { background-color: var(--bg-primary); }
+.bg-secondary { background-color: var(--bg-secondary); }
+.bg-tertiary { background-color: var(--bg-tertiary); }
+
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-tertiary { color: var(--text-tertiary); }
+
+/* Transition pour les changements de thème */
+* {
+  transition: background-color var(--transition-speed) ease,
+              color var(--transition-speed) ease,
+              border-color var(--transition-speed) ease,
+              box-shadow var(--transition-speed) ease;
+}
