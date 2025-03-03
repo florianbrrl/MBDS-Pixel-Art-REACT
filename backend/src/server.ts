@@ -1,4 +1,5 @@
 import app from './app';
+import config from './config';
 
 // Gestion des erreurs non capturées
 process.on('uncaughtException', (err) => {
@@ -7,12 +8,13 @@ process.on('uncaughtException', (err) => {
 	process.exit(1);
 });
 
-// Port du serveur (sera configuré via les variables d'environnement dans l'issue 3)
-const port = process.env.PORT || 3000;
+// Port du serveur (depuis la configuration)
+const port = config.server.port;
 
 // Démarrage du serveur
 const server = app.listen(port, () => {
-	console.log(`Server running on port ${port}`);
+	console.log(`Server running in ${config.server.env} mode on port ${port}`);
+	console.log(`API available at ${config.server.apiPrefix}`);
 });
 
 // Gestion des rejets de promesses non gérées
