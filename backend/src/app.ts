@@ -2,42 +2,43 @@ import express, { Application, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
-import { config } from './config';
+import morgan from 'morgan';
+import routes from './routes';
+import { AppError, globalErrorHandler } from './middleware/errorHandler.middleware';
 
-// Import des routes
-import apiRoutes from './routes';
-
+// Création de l'application Express
 const app: Application = express();
 
-// Trucs qui sont recommandés par Express
-app.use(cors());
-app.use(helmet());
-app.use(compression());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Middleware de base
+app.use(helmet()); // Sécurité: définit divers en-têtes HTTP
+app.use(cors()); // Autorise les requêtes cross-origin
+app.use(compression()); // Compresse les réponses
+app.use(morgan('dev')); // Journalisation des requêtes
+app.use(express.json({ limit: '10kb' })); // Parse le corps JSON avec limite
+app.use(express.urlencoded({ extended: true, limit: '10kb' })); // Parse les données URL-encoded
 
 // Routes
-app.use('/api', apiRoutes);
+app.use('/api', routes);
 
-// Status de l'API
-app.get('/health', (_req: Request, res: Response) => {
-  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+// Route de contrôle de santé
+app.get('/health', (req: Request, res: Response) => {
+	res.status(200).json({
+		status: 'success',
+		message: 'Server is running',
+		timestamp: new Date().toISOString(),
+		uptime: process.uptime()
+	});
 });
 
-// 404
-app.use((_req: Request, res: Response) => {
-  res.status(404).json({
-    message: 'Not Found - The requested resource does not exist',
-  });
+// Gestion des routes non trouvées
+app.all('*', (req: Request, res: Response, next: NextFunction) => {
+	const err: AppError = new Error(`Route ${req.originalUrl} not found`);
+	err.statusCode = 404;
+	err.status = 'fail';
+	next(err);
 });
 
-// Gestionnaire d'erreur
-app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({
-    message: 'Internal Server Error',
-    ...(config.env !== 'production' && { error: err.message }),
-  });
-});
+// Middleware de gestion globale des erreurs
+app.use(globalErrorHandler);
 
 export default app;
