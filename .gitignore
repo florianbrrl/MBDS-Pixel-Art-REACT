@@ -155,7 +155,7 @@ coverage/
 
 # IDE specific files
 .idea/
-.vscode/
+# .vscode/
 *.swp
 *.swo
 
