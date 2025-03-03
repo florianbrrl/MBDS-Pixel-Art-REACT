@@ -1,21 +1,18 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 
 const router = Router();
 
-// Les routes pour après
-// import authRoutes from './auth.routes';
-// import userRoutes from './user.routes';
-// import pixelboardRoutes from './pixelboard.routes';
-
-// Define routes
-router.get('/', (_req, res) => {
-  res.json({
+// Route racine de l'API
+router.get('/', (req: Request, res: Response) => {
+  res.status(200).json({
+    status: 'success',
     message: 'PixelBoard API',
     version: '1.0.0',
+    apiDocs: '/api/docs'
   });
 });
 
-// Application des routes
+// Importer les autres routeurs ici quand ils seront créés
 // router.use('/auth', authRoutes);
 // router.use('/users', userRoutes);
 // router.use('/pixelboards', pixelboardRoutes);
