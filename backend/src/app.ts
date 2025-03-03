@@ -5,20 +5,24 @@ import compression from 'compression';
 import morgan from 'morgan';
 import routes from './routes';
 import { AppError, globalErrorHandler } from './middleware/errorHandler.middleware';
+import config from './config';
 
 // Création de l'application Express
 const app: Application = express();
 
 // Middleware de base
 app.use(helmet()); // Sécurité: définit divers en-têtes HTTP
-app.use(cors()); // Autorise les requêtes cross-origin
+app.use(cors({
+	origin: config.cors.origin,
+	credentials: true
+})); // Autorise les requêtes cross-origin
 app.use(compression()); // Compresse les réponses
-app.use(morgan('dev')); // Journalisation des requêtes
+app.use(morgan(config.logging.format)); // Journalisation des requêtes
 app.use(express.json({ limit: '10kb' })); // Parse le corps JSON avec limite
 app.use(express.urlencoded({ extended: true, limit: '10kb' })); // Parse les données URL-encoded
 
 // Routes
-app.use('/api', routes);
+app.use(config.server.apiPrefix, routes);
 
 // Route de contrôle de santé
 app.get('/health', (req: Request, res: Response) => {
@@ -39,6 +43,18 @@ app.all('*', (req: Request, res: Response, next: NextFunction) => {
 });
 
 // Middleware de gestion globale des erreurs
-app.use(globalErrorHandler);
+app.use((err: AppError, req: Request, res: Response, next: NextFunction) => {
+	err.statusCode = err.statusCode || 500;
+	err.status = err.status || 'error';
+
+	// En développement, envoyer l'erreur complète, en production, envoyer une réponse simplifiée
+	const isDevelopment = config.server.env === 'development';
+
+	res.status(err.statusCode).json({
+		status: err.status,
+		message: err.message,
+		...(isDevelopment && { stack: err.stack })
+	});
+});
 
 export default app;
