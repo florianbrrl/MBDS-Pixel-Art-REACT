@@ -12,10 +12,12 @@ const app: Application = express();
 
 // Middleware de base
 app.use(helmet()); // Sécurité: définit divers en-têtes HTTP
-app.use(cors({
-	origin: config.cors.origin,
-	credentials: true
-})); // Autorise les requêtes cross-origin
+app.use(
+	cors({
+		origin: config.cors.origin,
+		credentials: true,
+	})
+); // Autorise les requêtes cross-origin
 app.use(compression()); // Compresse les réponses
 app.use(morgan(config.logging.format)); // Journalisation des requêtes
 app.use(express.json({ limit: '10kb' })); // Parse le corps JSON avec limite
@@ -30,7 +32,7 @@ app.get('/health', (req: Request, res: Response) => {
 		status: 'success',
 		message: 'Server is running',
 		timestamp: new Date().toISOString(),
-		uptime: process.uptime()
+		uptime: process.uptime(),
 	});
 });
 
@@ -53,7 +55,7 @@ app.use((err: AppError, req: Request, res: Response, next: NextFunction) => {
 	res.status(err.statusCode).json({
 		status: err.status,
 		message: err.message,
-		...(isDevelopment && { stack: err.stack })
+		...(isDevelopment && { stack: err.stack }),
 	});
 });
 
