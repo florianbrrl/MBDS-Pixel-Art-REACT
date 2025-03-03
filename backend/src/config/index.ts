@@ -1,30 +1,39 @@
 import dotenv from 'dotenv';
 import path from 'path';
 
+// Charger les variables d'environnement du fichier .env
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
-interface Config {
-  env: string;
-  port: number;
-  apiPrefix: string;
-  log: {
-    level: string;
-    filename: string;
-  };
-  cors: {
-    origin: string;
-  };
+// Interface pour la configuration typée
+export interface Config {
+	server: {
+		env: string;
+		port: number;
+		apiPrefix: string;
+	};
+	logging: {
+		level: string;
+		format: string;
+	};
+	cors: {
+		origin: string;
+	};
 }
 
-export const config: Config = {
-  env: process.env.NODE_ENV || 'development',
-  port: parseInt(process.env.PORT || '3000', 10),
-  apiPrefix: process.env.API_PREFIX || '/api',
-  log: {
-    level: process.env.LOG_LEVEL || 'info',
-    filename: process.env.LOG_FILENAME || 'app.log',
-  },
-  cors: {
-    origin: process.env.CORS_ORIGIN || '*',
-  },
+// Configuration de base, à compléter avec la validation plus tard
+const config: Config = {
+	server: {
+		env: process.env.NODE_ENV || 'development',
+		port: parseInt(process.env.PORT || '3000', 10),
+		apiPrefix: process.env.API_PREFIX || '/api',
+	},
+	logging: {
+		level: process.env.LOG_LEVEL || 'info',
+		format: process.env.LOG_FORMAT || 'dev',
+	},
+	cors: {
+		origin: process.env.CORS_ORIGIN || '*',
+	},
 };
+
+export default config;
