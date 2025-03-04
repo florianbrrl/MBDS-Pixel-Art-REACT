@@ -1,24 +1,79 @@
 {
-    "parser": "@typescript-eslint/parser",
-    "parserOptions": {
-      "ecmaVersion": 2020,
-      "sourceType": "module",
-      "project": "./tsconfig.json"
-    },
-    "plugins": ["@typescript-eslint"],
-    "extends": [
-      "eslint:recommended",
-      "plugin:@typescript-eslint/recommended",
-      "prettier"
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 2020,
+    "sourceType": "module",
+    "project": "./tsconfig.json"
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:import/errors",
+    "plugin:import/warnings",
+    "plugin:import/typescript",
+    "plugin:security/recommended",
+    "prettier"
+  ],
+  "plugins": [
+    "@typescript-eslint",
+    "prettier",
+    "import",
+    "security"
+  ],
+  "rules": {
+    "prettier/prettier": "error",
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_"
+      }
     ],
-    "rules": {
-      "@typescript-eslint/explicit-function-return-type": "off",
-      "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
-      "no-console": "warn"
-    },
-    "env": {
-      "node": true,
-      "es6": true
-    }
+    "no-console": [
+      "warn",
+      {
+        "allow": [
+          "warn",
+          "error"
+        ]
+      }
+    ],
+    "no-return-await": "error",
+    "curly": [
+      "error",
+      "all"
+    ],
+    "eqeqeq": [
+      "error",
+      "always",
+      {
+        "null": "ignore"
+      }
+    ],
+    "no-magic-numbers": [
+      "warn",
+      {
+        "ignore": [
+          0,
+          1,
+          -1
+        ],
+        "ignoreArrayIndexes": true
+      }
+    ],
+    "spaced-comment": [
+      "error",
+      "always",
+      {
+        "markers": [
+          "/"
+        ]
+      }
+    ]
+  },
+  "env": {
+    "node": true,
+    "es6": true
   }
+}
