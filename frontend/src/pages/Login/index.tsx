@@ -44,62 +44,60 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="login-page max-w-md mx-auto">
+    <div className="auth-page">
       <h1 className="text-3xl font-bold mb-6">Connexion</h1>
 
       {error && (
-        <div className="bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 px-4 py-3 rounded relative mb-4">
-          {error}
+        <div className="error-message">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            style={{ width: '20px', height: '20px', flexShrink: 0 }}
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+          </svg>
+          <span>{error}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-        <div className="mb-4">
-          <label htmlFor="email" className="block mb-2 font-medium">
-            Email
-          </label>
+      <form onSubmit={handleSubmit} className="auth-form">
+        <div className="form-group">
+          <label htmlFor="email">Email</label>
           <input
             type="email"
             id="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           />
         </div>
 
-        <div className="mb-6">
-          <label htmlFor="password" className="block mb-2 font-medium">
-            Mot de passe
-          </label>
+        <div className="form-group">
+          <label htmlFor="password">Mot de passe</label>
           <input
             type="password"
             id="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           />
         </div>
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition duration-200 disabled:bg-blue-400"
-        >
+        <button type="submit" disabled={isSubmitting} className="btn-primary">
           {isSubmitting ? (
-            <LoadingSpinner size="small" message="Connexion en cours..." />
+            <span className="loading-button">
+              <span className="loading-spinner"></span>
+              Connexion en cours...
+            </span>
           ) : (
             'Se connecter'
           )}
         </button>
       </form>
 
-      <p className="mt-4 text-center">
-        Pas encore de compte ?{' '}
-        <Link to="/register" className="text-blue-600 dark:text-blue-400 hover:underline">
-          S'inscrire
-        </Link>
+      <p className="auth-link">
+        Pas encore de compte ? <Link to="/register">S'inscrire</Link>
       </p>
     </div>
   );
