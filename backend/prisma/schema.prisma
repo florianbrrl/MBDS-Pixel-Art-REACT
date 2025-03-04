@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String        @id @default(uuid()) @db.Uuid
+  email            String        @unique
+  password_hash    String
+  created_at       DateTime      @default(now()) @db.Timestamptz()
+  updated_at       DateTime?     @db.Timestamptz()
+  theme_preference String        @default("system") @db.VarChar(5)
+
+  // Relations
+  owned_boards     PixelBoard[]  @relation("BoardAdmin")
+  pixel_history    PixelHistory[]
+
+  @@map("users")
+}
+
+model PixelBoard {
+  id              String        @id @default(uuid()) @db.Uuid
+  title           String        @db.VarChar(255)
+  width           Int
+  height          Int
+  grid            Json          @db.JsonB
+  cooldown        Int           @default(60)
+  allow_overwrite Boolean       @default(false)
+  start_time      DateTime      @db.Timestamptz()
+  end_time        DateTime      @db.Timestamptz()
+  is_active       Boolean       @default(true)
+  admin_id        String?       @db.Uuid
+  created_at      DateTime      @default(now()) @db.Timestamptz()
+
+  // Relations
+  admin           User?         @relation("BoardAdmin", fields: [admin_id], references: [id])
+  pixel_history   PixelHistory[]
+
+  @@map("pixel_boards")
+}
+
+model PixelHistory {
+  board_id   String      @db.Uuid
+  x          Int
+  y          Int
+  color      String      @db.Char(7)
+  user_id    String?     @db.Uuid
+  timestamp  DateTime    @default(now()) @db.Timestamptz()
+
+  // Relations
+  board      PixelBoard  @relation(fields: [board_id], references: [id])
+  user       User?       @relation(fields: [user_id], references: [id])
+
+  @@id([board_id, x, y, timestamp])
+  @@map("pixel_history")
+}
