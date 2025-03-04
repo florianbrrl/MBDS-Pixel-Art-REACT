@@ -2,55 +2,53 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 
-// Layouts
+// Layout
 import MainLayout from './layouts/MainLayout';
-import AuthLayout from './layouts/AuthLayout';
 
 // Route Protection Components
 import PrivateRoute from './components/routing/PrivateRoute';
 import PublicRoute from './components/routing/PublicRoute';
 
 // Pages
-import Home from './pages/Home/index';
-import Login from './pages/Login/index';
-import Register from './pages/Register/index';
-import PixelBoards from './pages/PixelBoards/index';
-import PixelBoardDetail from './pages/PixelBoardDetail/index';
-import Profile from './pages/Profile/index';
-import Admin from './pages/Admin/index';
-import NotFound from './pages/NotFound/index';
+import Home from './pages/Home';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import PixelBoards from './pages/PixelBoards';
+import PixelBoardDetail from './pages/PixelBoardDetail';
+import Profile from './pages/Profile';
+import Admin from './pages/Admin';
+import NotFound from './pages/NotFound';
 
 const Router: React.FC = () => {
   return (
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          {/* Routes publiques avec MainLayout */}
+          {/* Toutes les routes utilisent MainLayout */}
           <Route element={<MainLayout />}>
+            {/* Routes publiques */}
             <Route element={<PublicRoute />}>
               <Route path="/" element={<Home />} />
               <Route path="/pixel-boards" element={<PixelBoards />} />
               <Route path="/pixel-boards/:id" element={<PixelBoardDetail />} />
             </Route>
 
-            {/* Routes protégées avec MainLayout */}
-            <Route element={<PrivateRoute />}>
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/admin" element={<Admin />} />
-            </Route>
-          </Route>
-
-          {/* Routes d'authentification avec AuthLayout */}
-          <Route element={<AuthLayout />}>
+            {/* Routes d'authentification */}
             <Route element={<PublicRoute restricted />}>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
             </Route>
-          </Route>
 
-          {/* Routes de fallback */}
-          <Route path="/404" element={<NotFound />} />
-          <Route path="*" element={<Navigate to="/404" replace />} />
+            {/* Routes protégées */}
+            <Route element={<PrivateRoute />}>
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/admin" element={<Admin />} />
+            </Route>
+
+            {/* Routes de fallback */}
+            <Route path="/404" element={<NotFound />} />
+            <Route path="*" element={<Navigate to="/404" replace />} />
+          </Route>
         </Routes>
       </AuthProvider>
     </BrowserRouter>
