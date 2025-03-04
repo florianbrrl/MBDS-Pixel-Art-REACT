@@ -1,6 +1,10 @@
-﻿body {
+﻿@import './styles/navigation.css';
+
+body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans',
+    'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -10,6 +14,8 @@
   min-height: 100vh;
   background-color: var(--bg-primary);
   color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
 }
 
 .app-header {
@@ -19,7 +25,6 @@
   background-color: var(--bg-secondary);
   color: var(--text-primary);
   padding: 1rem 2rem;
-  margin-bottom: 2rem;
   box-shadow: var(--shadow);
 }
 
@@ -29,9 +34,11 @@
 }
 
 .app-main {
+  flex: 1;
   max-width: 1200px;
+  width: 100%;
   margin: 0 auto;
-  padding: 0 2rem 2rem;
+  padding: 2rem;
 }
 
 /* Ajustements responsive */
@@ -39,9 +46,9 @@
   .app-header {
     padding: 1rem;
   }
-  
+
   .app-main {
-    padding: 0 1rem 1rem;
+    padding: 1rem;
   }
 }
 
