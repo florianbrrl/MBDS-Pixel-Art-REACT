@@ -2,7 +2,7 @@ import app from './app';
 import config from './config';
 
 // Gestion des erreurs non capturées
-process.on('uncaughtException', (err) => {
+process.on('uncaughtException', err => {
 	console.error('UNCAUGHT EXCEPTION! 💥 Shutting down...');
 	console.error(err.name, err.message, err.stack);
 	process.exit(1);

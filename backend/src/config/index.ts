@@ -8,14 +8,17 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 // Définir les validateurs et les valeurs par défaut
 const env = envalid.cleanEnv(process.env, {
 	// Serveur
-	NODE_ENV: envalid.str({ choices: ['development', 'test', 'production'], default: 'development' }),
+	NODE_ENV: envalid.str({
+		choices: ['development', 'test', 'production'],
+		default: 'development',
+	}),
 	PORT: envalid.port({ default: 3000 }),
 	API_PREFIX: envalid.str({ default: '/api' }),
 
 	// Logging
 	LOG_LEVEL: envalid.str({
 		choices: ['error', 'warn', 'info', 'http', 'verbose', 'debug', 'silly'],
-		default: 'info'
+		default: 'info',
 	}),
 	LOG_FORMAT: envalid.str({ default: 'dev' }),
 
