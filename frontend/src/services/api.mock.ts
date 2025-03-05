@@ -286,6 +286,27 @@ const MockApiService = {
     return simulateResponse(mockStats);
   },
 
+  updateProfile: async (data: Partial<User>): Promise<ApiResponse<User>> => {
+    await simulateNetworkDelay();
+
+    if (simulateRandomError()) {
+      return { error: 'Échec de la mise à jour du profil. Veuillez réessayer.' };
+    }
+
+    const storedUser = localStorage.getItem('user');
+    if (!storedUser) {
+      return { error: 'Utilisateur non connecté.' };
+    }
+
+    const currentUser = JSON.parse(storedUser);
+    const updatedUser = { ...currentUser, ...data };
+
+    // Mettre à jour le stockage local
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+
+    return { data: updatedUser };
+  },
+
   // Contributions utilisateur
   getUserContributions: async (
     userId: string,
