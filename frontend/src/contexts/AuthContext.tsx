@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '@/types';
+import ApiService from '@/services/api.service';
 
 interface AuthContextType {
   currentUser: User | null;
@@ -8,6 +9,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  updateProfile: (data: Partial<User>) => Promise<void>;
 }
 
 // Valeur par défaut du contexte
@@ -96,6 +98,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Fonction de mise à jour du profil
+  const updateProfile = async (data: Partial<User>) => {
+    try {
+      setIsLoading(true);
+      // Appel à l'API pour mettre à jour le profil
+      const response = await ApiService.updateProfile(data);
+
+      if (response.error) {
+        throw new Error(response.error);
+      }
+
+      // Mettre à jour l'utilisateur courant avec les nouvelles données
+      if (currentUser) {
+        const updatedUser = { ...currentUser, ...data };
+        setCurrentUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+      }
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du profil:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Fonction de déconnexion
   const logout = () => {
     localStorage.removeItem('user');
@@ -110,6 +137,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     register,
     logout,
+    updateProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
