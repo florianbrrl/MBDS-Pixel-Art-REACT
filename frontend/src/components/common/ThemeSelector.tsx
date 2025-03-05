@@ -9,7 +9,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ className = '' }) => {
   const { theme, setTheme } = useTheme();
 
   return (
-    <div className={	heme-selector }>
+    <div className={`theme-selector ${className}`}>
       <select
         value={theme}
         onChange={(e) => setTheme(e.target.value as 'light' | 'dark' | 'system')}
