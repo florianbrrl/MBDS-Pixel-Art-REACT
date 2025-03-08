@@ -71,3 +71,48 @@ button:focus {
   outline: none;
   box-shadow: 0 0 0 2px var(--color-primary);
 }
+
+/* Désactiver la sélection de texte et le curseur de texte sur les éléments non éditables */
+body,
+div,
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+span,
+a,
+li,
+ul,
+section,
+article,
+header,
+footer,
+main {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  cursor: default;
+}
+
+/* Réactiver la sélection et le curseur de texte uniquement sur les éléments éditables */
+input,
+textarea,
+select,
+[contenteditable='true'] {
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  cursor: text;
+}
+
+/* S'assurer que les liens ont le bon curseur */
+a,
+button,
+[role='button'] {
+  cursor: pointer;
+}
