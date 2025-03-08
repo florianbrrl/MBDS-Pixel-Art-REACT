@@ -72,6 +72,16 @@ const RealApiService = {
     }
   },
 
+  // Mise à jour du profil
+  updateProfile: async (data: Partial<User>): Promise<ApiResponse<User>> => {
+    try {
+      const response = await axiosInstance.put('/users/profile', data);
+      return { data: response.data.data };
+    } catch (error: any) {
+      return { error: error.error || 'Échec de la mise à jour du profil' };
+    }
+  },
+
   // PixelBoards
   getActivePixelBoards: async (): Promise<ApiResponse<PixelBoard[]>> => {
     try {
