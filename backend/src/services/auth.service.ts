@@ -18,7 +18,7 @@ export const registerUser = async (email: string, password: string): Promise<str
 		data: {
 			email,
 			password_hash: passwordHash,
-			theme_preference: 'system', // Default theme preference
+			theme_preference: 'sys', // Default theme preference shortened to fit VARCHAR(5) column
 		},
 	});
 
