@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import authRoutes from './auth.routes';
 
 const router = Router();
 
@@ -12,8 +13,10 @@ router.get('/', (req: Request, res: Response) => {
 	});
 });
 
+// Routes d'authentification
+router.use('/auth', authRoutes);
+
 // Importer les autres routeurs ici quand ils seront créés
-// router.use('/auth', authRoutes);
 // router.use('/users', userRoutes);
 // router.use('/pixelboards', pixelboardRoutes);
 
