@@ -13,7 +13,7 @@ model User {
   password_hash    String
   created_at       DateTime      @default(now()) @db.Timestamptz()
   updated_at       DateTime?     @db.Timestamptz()
-  theme_preference String        @default("system") @db.VarChar(5)
+  theme_preference String        @default("sys") @db.VarChar(5)
 
   // Relations
   owned_boards     PixelBoard[]  @relation("BoardAdmin")
