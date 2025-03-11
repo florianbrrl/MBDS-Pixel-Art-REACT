@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import ApiService from '@/services/api.service';
 
 const Register: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -16,7 +15,20 @@ const Register: React.FC = () => {
     e.preventDefault();
     setError('');
 
-    // Validation du formulaire
+    // Validation des données
+    if (!email.trim() || !password.trim() || !confirmPassword.trim()) {
+      setError('Tous les champs sont requis');
+      return;
+    }
+
+    // Vérification du format email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Veuillez entrer une adresse email valide');
+      return;
+    }
+
+    // Vérification des mots de passe
     if (password !== confirmPassword) {
       setError('Les mots de passe ne correspondent pas');
       return;
@@ -29,22 +41,12 @@ const Register: React.FC = () => {
 
     try {
       setIsSubmitting(true);
-
-      // Appel API (mock) pour enregistrer l'utilisateur
-      const response = await ApiService.register(email, password);
-
-      if (response.error) {
-        setError(response.error);
-        return;
-      }
-
-      // Utiliser notre hook d'authentification pour se connecter
       await register(email, password);
 
-      // Rediriger vers la page d'accueil
+      // Rediriger vers la page d'accueil après l'inscription réussie
       navigate('/');
-    } catch (err) {
-      setError("Échec de l'inscription. Veuillez réessayer.");
+    } catch (err: any) {
+      setError(err.error || "Échec de l'inscription. Veuillez réessayer.");
     } finally {
       setIsSubmitting(false);
     }
@@ -77,6 +79,8 @@ const Register: React.FC = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            disabled={isSubmitting}
+            autoComplete="email"
           />
         </div>
 
@@ -88,6 +92,8 @@ const Register: React.FC = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            disabled={isSubmitting}
+            autoComplete="new-password"
             minLength={6}
           />
         </div>
@@ -100,6 +106,9 @@ const Register: React.FC = () => {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
+            disabled={isSubmitting}
+            autoComplete="new-password"
+            minLength={6}
           />
         </div>
 

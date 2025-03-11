@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import ApiService from '@/services/api.service';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 const Login: React.FC = () => {
@@ -20,24 +19,20 @@ const Login: React.FC = () => {
     e.preventDefault();
     setError('');
 
+    // Validation simple
+    if (!email.trim() || !password.trim()) {
+      setError('Email et mot de passe sont requis');
+      return;
+    }
+
     try {
       setIsSubmitting(true);
-
-      // Appel API (mock) pour se connecter
-      const response = await ApiService.login(email, password);
-
-      if (response.error) {
-        setError(response.error);
-        return;
-      }
-
-      // Utiliser notre hook d'authentification
       await login(email, password);
 
       // Rediriger vers la page précédente ou la page d'accueil
       navigate(from, { replace: true });
-    } catch (err) {
-      setError('Échec de la connexion. Veuillez vérifier vos identifiants.');
+    } catch (err: any) {
+      setError(err.error || 'Échec de la connexion. Veuillez vérifier vos identifiants.');
     } finally {
       setIsSubmitting(false);
     }
@@ -70,6 +65,8 @@ const Login: React.FC = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            disabled={isSubmitting}
+            autoComplete="email"
           />
         </div>
 
@@ -81,6 +78,8 @@ const Login: React.FC = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            disabled={isSubmitting}
+            autoComplete="current-password"
           />
         </div>
 

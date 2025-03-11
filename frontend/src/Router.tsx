@@ -18,6 +18,7 @@ import PixelBoardDetail from './pages/PixelBoardDetail';
 import Profile from './pages/Profile';
 import Admin from './pages/Admin';
 import NotFound from './pages/NotFound';
+import AccessDenied from './pages/AccessDenied';
 
 const Router: React.FC = () => {
   return (
@@ -31,6 +32,7 @@ const Router: React.FC = () => {
               <Route path="/" element={<Home />} />
               <Route path="/pixel-boards" element={<PixelBoards />} />
               <Route path="/pixel-boards/:id" element={<PixelBoardDetail />} />
+              <Route path="/access-denied" element={<AccessDenied />} />
             </Route>
 
             {/* Routes d'authentification */}
@@ -39,9 +41,13 @@ const Router: React.FC = () => {
               <Route path="/register" element={<Register />} />
             </Route>
 
-            {/* Routes protégées */}
+            {/* Routes protégées par l'authentification */}
             <Route element={<PrivateRoute />}>
               <Route path="/profile" element={<Profile />} />
+            </Route>
+
+            {/* Routes protégées pour les administrateurs */}
+            <Route element={<PrivateRoute requiredRoles={['admin']} />}>
               <Route path="/admin" element={<Admin />} />
             </Route>
 

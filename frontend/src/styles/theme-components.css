@@ -24,13 +24,13 @@
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
 }
 
-/* Styles pour le toggler de thème - avec couleurs inversées */
+/* Styles pour le toggler de thème */
 .theme-toggle {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 55px;
-  height: 55px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background-color: var(--text-primary); /* Utilise la couleur du texte pour le fond */
   color: var(--bg-primary); /* Utilise la couleur du fond pour le texte */
@@ -40,7 +40,7 @@
 }
 
 .theme-toggle:hover {
-  background-color: var(--text-secondary); /* Version légèrement plus claire/foncée */
+  background-color: var(--text-secondary);
 }
 
 .theme-toggle:focus {
@@ -51,13 +51,99 @@
 .theme-toggle svg {
   width: 20px;
   height: 20px;
-}
-
-/* Animation lors du changement de thème */
-.theme-toggle svg {
   transition: transform 0.3s ease;
 }
 
 .theme-toggle:active svg {
   transform: rotate(30deg);
+}
+
+/* Loader spinner */
+.loading-spinner {
+  display: inline-block;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 0.25rem solid rgba(0, 0, 0, 0.1);
+  border-top-color: var(--color-primary);
+  animation: spin 1s linear infinite;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+}
+
+.loading-message {
+  margin-top: 1rem;
+  color: var(--text-secondary);
+}
+
+/* Animation de rotation */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Composant de message d'erreur */
+.error-container {
+  background-color: #fee2e2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  border-radius: var(--border-radius);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.error-container .icon {
+  margin-right: 0.75rem;
+  flex-shrink: 0;
+}
+
+.error-message {
+  flex-grow: 1;
+}
+
+.retry-button {
+  background-color: #fecaca;
+  color: #b91c1c;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  margin-left: 0.5rem;
+}
+
+.retry-button:hover {
+  background-color: #fca5a5;
+}
+
+/* Thème sombre pour les composants */
+@media (prefers-color-scheme: dark) {
+  .error-container {
+    background-color: #7f1d1d;
+    border-color: #b91c1c;
+    color: #fecaca;
+  }
+
+  .retry-button {
+    background-color: #b91c1c;
+    color: #fecaca;
+  }
+
+  .retry-button:hover {
+    background-color: #ef4444;
+  }
+
+  .loading-spinner {
+    border-color: rgba(255, 255, 255, 0.1);
+    border-top-color: var(--color-primary);
+  }
 }
