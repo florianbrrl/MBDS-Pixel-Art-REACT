@@ -1,56 +1,136 @@
-import React from 'react';
-import { Outlet } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Outlet, Link } from 'react-router-dom';
 import ThemeToggle from '@/components/common/ThemeToggle';
-import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import MobileNavigation from '@/components/navigation/MobileNavigation';
 
 const MainLayout: React.FC = () => {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, currentUser } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen((prev) => !prev);
+  };
+
+  const handleLogout = () => {
+    logout();
+    setMobileMenuOpen(false);
+  };
+
+  const isAdmin = currentUser?.id === 'user-1'; // Simplifié, à adapter selon votre logique
 
   return (
     <div className="app">
       <header className="app-header">
-        <h1>
-          <Link to="/" className="header-link">
-            PixelArt App
-          </Link>
-        </h1>
-        <nav className="main-nav">
-          <ul className="nav-list">
-            <li className="nav-item">
-              <Link to="/" className="nav-link">Accueil</Link>
-            </li>
-            <li className="nav-item">
-              <Link to="/pixel-boards" className="nav-link">Pixel Boards</Link>
-            </li>
-            {isAuthenticated ? (
-              <>
-                <li className="nav-item">
-                  <Link to="/profile" className="nav-link">Profil</Link>
-                </li>
-                <li className="nav-item">
-                  <button onClick={logout} className="nav-button">Déconnexion</button>
-                </li>
-              </>
-            ) : (
-              <>
-                <li className="nav-item">
-                  <Link to="/login" className="nav-link">Connexion</Link>
-                </li>
-                <li className="nav-item">
-                  <Link to="/register" className="nav-link">Inscription</Link>
-                </li>
-              </>
-            )}
-          </ul>
-        </nav>
-        <ThemeToggle className="theme-toggle-button" />
+        <div className="header-content">
+          <h1>
+            <Link to="/" className="header-link" onClick={() => setMobileMenuOpen(false)}>
+              PixelArt App
+            </Link>
+          </h1>
+
+          {/* Bouton du menu mobile */}
+          <button
+            className="mobile-menu-button"
+            onClick={toggleMobileMenu}
+            aria-label={mobileMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+            aria-expanded={mobileMenuOpen}
+          >
+            <span className={`hamburger ${mobileMenuOpen ? 'open' : ''}`}>
+              <span className="hamburger-line"></span>
+              <span className="hamburger-line"></span>
+              <span className="hamburger-line"></span>
+            </span>
+          </button>
+
+          {/* Navigation desktop */}
+          <nav className="main-nav desktop-nav">
+            <ul className="nav-list">
+              <li className="nav-item">
+                <Link to="/" className="nav-link">
+                  Accueil
+                </Link>
+              </li>
+              <li className="nav-item">
+                <Link to="/pixel-boards" className="nav-link">
+                  Pixel Boards
+                </Link>
+              </li>
+              {isAuthenticated ? (
+                <>
+                  <li className="nav-item">
+                    <Link to="/profile" className="nav-link">
+                      Profil
+                    </Link>
+                  </li>
+                  {isAdmin && (
+                    <li className="nav-item">
+                      <Link to="/admin" className="nav-link">
+                        Administration
+                      </Link>
+                    </li>
+                  )}
+                  <li className="nav-item">
+                    <button onClick={logout} className="nav-button">
+                      Déconnexion
+                    </button>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li className="nav-item">
+                    <Link to="/login" className="nav-link">
+                      Connexion
+                    </Link>
+                  </li>
+                  <li className="nav-item">
+                    <Link to="/register" className="nav-link">
+                      Inscription
+                    </Link>
+                  </li>
+                </>
+              )}
+            </ul>
+          </nav>
+
+          <ThemeToggle className="theme-toggle-button" />
+        </div>
+
+        {/* Menu mobile */}
+        <MobileNavigation
+          isOpen={mobileMenuOpen}
+          onClose={() => setMobileMenuOpen(false)}
+          isAuthenticated={isAuthenticated}
+          onLogout={handleLogout}
+          isAdmin={isAdmin}
+        />
       </header>
+
       <main className="app-main">
         <Outlet />
       </main>
+
       <footer className="app-footer">
-        <p>© 2025 PixelArt App</p>
+        <div className="footer-content">
+          <p>&copy; {new Date().getFullYear()} PixelArt App</p>
+          <div className="footer-links">
+            <Link to="/" className="footer-link">
+              Accueil
+            </Link>
+            <Link to="/pixel-boards" className="footer-link">
+              Pixel Boards
+            </Link>
+            {isAuthenticated ? (
+              <Link to="/profile" className="footer-link">
+                Mon profil
+              </Link>
+            ) : (
+              <Link to="/login" className="footer-link">
+                Connexion
+              </Link>
+            )}
+          </div>
+        </div>
       </footer>
     </div>
   );
