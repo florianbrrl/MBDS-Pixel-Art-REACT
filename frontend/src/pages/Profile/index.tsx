@@ -3,12 +3,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import ThemeSelector from '@/components/common/ThemeSelector';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ErrorMessage from '@/components/common/ErrorMessage';
-import { User } from '@/types';
-import { UserRole, ThemePreference } from '@/types/auth.types';
+import { UserRole, ThemePreference, UserContributions } from '@/types/auth.types';
 import '../../styles/profile-page.css';
 
 const Profile: React.FC = () => {
-  const { currentUser, updateProfile, changePassword, isLoading: authLoading } = useAuth();
+  const { currentUser, updateProfile, changePassword, getUserContributions, isLoading: authLoading } = useAuth();
 
   // États pour le formulaire de modification du profil
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -25,13 +24,45 @@ const Profile: React.FC = () => {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
 
+  // État pour les contributions
+  const [contributions, setContributions] = useState<UserContributions | null>(null);
+  const [contributionsLoading, setContributionsLoading] = useState(false);
+  const [contributionsError, setContributionsError] = useState<string | null>(null);
+
   // Initialiser les champs du formulaire avec les valeurs actuelles
   useEffect(() => {
     if (currentUser) {
       setEmail(currentUser.email);
-      setThemePreference(currentUser.theme_preference as ThemePreference || 'system');
+      // 'sys' est le format stocké dans la BD, 'system' est le format utilisé côté client
+      const themeValue = currentUser.theme_preference === 'sys' ? 'system' : (currentUser.theme_preference as ThemePreference || 'system');
+      setThemePreference(themeValue);
     }
   }, [currentUser]);
+
+  // Charger les contributions utilisateur
+  useEffect(() => {
+    const loadContributions = async () => {
+      if (!currentUser) return;
+
+      setContributionsLoading(true);
+      setContributionsError(null);
+
+      try {
+        const response = await getUserContributions();
+        if (response.data) {
+          setContributions(response.data);
+        } else if (response.error) {
+          setContributionsError(response.error);
+        }
+      } catch (error: any) {
+        setContributionsError(error.message || "Erreur lors du chargement des contributions");
+      } finally {
+        setContributionsLoading(false);
+      }
+    };
+
+    loadContributions();
+  }, [currentUser, getUserContributions]);
 
   // Formater le rôle utilisateur pour l'affichage
   const formatRole = (role?: UserRole): string => {
@@ -60,11 +91,14 @@ const Profile: React.FC = () => {
     if (!currentUser) return;
 
     try {
-      await updateProfile({ email, theme_preference: themePreference });
+      // Convertir 'system' en 'sys' pour le backend
+      const theme_preference = themePreference === 'system' ? 'sys' : themePreference;
+
+      await updateProfile({ email, theme_preference });
       setProfileSuccess('Profil mis à jour avec succès');
       setIsEditingProfile(false);
     } catch (error: any) {
-      setProfileError(error.error || 'Erreur lors de la mise à jour du profil');
+      setProfileError(error.message || 'Erreur lors de la mise à jour du profil');
     }
   };
 
@@ -93,7 +127,7 @@ const Profile: React.FC = () => {
       setNewPassword('');
       setConfirmNewPassword('');
     } catch (error: any) {
-      setPasswordError(error.error || 'Erreur lors du changement de mot de passe');
+      setPasswordError(error.message || 'Erreur lors du changement de mot de passe');
     }
   };
 
@@ -190,7 +224,9 @@ const Profile: React.FC = () => {
                   onClick={() => {
                     setIsEditingProfile(false);
                     setEmail(currentUser.email);
-                    setThemePreference(currentUser.theme_preference as ThemePreference || 'system');
+                    // 'sys' est le format stocké dans la BD, 'system' est le format utilisé côté client
+                    const themeValue = currentUser.theme_preference === 'sys' ? 'system' : (currentUser.theme_preference as ThemePreference || 'system');
+                    setThemePreference(themeValue);
                     setProfileError(null);
                   }}
                   className="secondary-button"
@@ -325,6 +361,51 @@ const Profile: React.FC = () => {
             <label>Thème de l'application:</label>
             <ThemeSelector />
           </div>
+        </div>
+
+        {/* Section des contributions */}
+        <div className="profile-section">
+          <h2>Mes Contributions</h2>
+
+          {contributionsLoading ? (
+            <div className="contributions-loading">
+              <LoadingSpinner size="small" message="Chargement des contributions..." />
+            </div>
+          ) : contributionsError ? (
+            <div className="error-message">
+              <span>{contributionsError}</span>
+            </div>
+          ) : contributions ? (
+            <div className="contributions">
+              <div className="stats">
+                <div className="stat-item">
+                  <span className="stat-label">Total de pixels placés</span>
+                  <span className="stat-value">{contributions.totalPixels}</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-label">PixelBoards contribués</span>
+                  <span className="stat-value">{contributions.contributedBoards.length}</span>
+                </div>
+              </div>
+
+              {contributions.contributedBoards.length > 0 && (
+                <div className="boards-list">
+                  <h3>Tableaux avec contributions:</h3>
+                  <ul>
+                    {contributions.contributedBoards.map(board => (
+                      <li key={board.boardId}>
+                        <a href={`/pixel-boards/${board.boardId}`}>
+                          {board.boardId.substring(0, 8)}... - {board.pixelCount} pixels
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          ) : (
+            <p>Aucune contribution trouvée.</p>
+          )}
         </div>
       </div>
     </div>

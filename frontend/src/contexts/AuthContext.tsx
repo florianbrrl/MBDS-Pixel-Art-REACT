@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '@/types';
 import AuthService from '@/services/auth.service';
-import { LoginCredentials, RegisterCredentials } from '@/types/auth.types';
+import { ThemePreference } from '@/types/auth.types';
 
 // Interface pour les données utilisateur stockées dans le contexte
 interface AuthContextType {
@@ -12,8 +12,10 @@ interface AuthContextType {
   register: (email: string, password: string) => Promise<void>;
   logout: () => void;
   updateProfile: (data: Partial<User>) => Promise<void>;
+  updateTheme: (theme: ThemePreference) => Promise<void>;
   hasRole: (roles: string[]) => boolean;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  getUserContributions: (userId?: string) => Promise<any>;
 }
 
 // Valeur par défaut du contexte
@@ -99,9 +101,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const register = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const response = await AuthService.register({ email, password });
+      const response = await AuthService.register(email, password);
 
-      if (!response.data || !response.data.userId) {
+      if (!response.data) {
         throw new Error(response.error || 'Échec de l\'inscription');
       }
 
@@ -134,6 +136,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Fonction pour mettre à jour uniquement le thème
+  const updateTheme = async (theme: ThemePreference) => {
+    setIsLoading(true);
+    try {
+      const response = await AuthService.updateTheme(theme);
+
+      if (response.error) {
+        throw new Error(response.error);
+      }
+
+      // Mettre à jour l'utilisateur local avec le nouveau thème
+      if (currentUser) {
+        setCurrentUser({
+          ...currentUser,
+          theme_preference: theme
+        });
+      }
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du thème:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Fonction pour changer le mot de passe
   const changePassword = async (currentPassword: string, newPassword: string) => {
     setIsLoading(true);
@@ -148,6 +175,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       throw error;
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Fonction pour récupérer les contributions utilisateur
+  const getUserContributions = async (userId?: string) => {
+    try {
+      return await AuthService.getUserContributions(userId);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des contributions:', error);
+      throw error;
     }
   };
 
@@ -172,8 +209,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     register,
     logout,
     updateProfile,
+    updateTheme,
     hasRole,
-    changePassword
+    changePassword,
+    getUserContributions
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

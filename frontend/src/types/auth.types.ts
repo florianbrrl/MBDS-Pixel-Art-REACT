@@ -4,10 +4,10 @@
 export type UserRole = 'guest' | 'user' | 'premium' | 'admin';
 
 // Type pour les préférences de thème
-export type ThemePreference = 'light' | 'dark' | 'system';
+export type ThemePreference = 'light' | 'dark' | 'system' | 'sys';
 
-// Interface pour l'utilisateur
-export interface User {
+// Interface pour le profil utilisateur
+export interface UserProfile {
   id: string;
   email: string;
   role?: UserRole;
@@ -33,4 +33,19 @@ export interface RegisterCredentials {
 export interface AuthToken {
   token: string;
   expires_in?: number;
+}
+
+// Interface pour les contributions utilisateur
+export interface UserContributions {
+  totalPixels: number;
+  contributedBoards: {
+    boardId: string;
+    pixelCount: number;
+  }[];
+}
+
+// Interface pour les données de changement de mot de passe
+export interface PasswordChangeData {
+  currentPassword: string;
+  newPassword: string;
 }

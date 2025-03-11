@@ -1,74 +1,96 @@
 import apiClient from './api.client';
 import { User, ApiResponse } from '@/types';
-import { AuthToken, LoginCredentials, RegisterCredentials } from '@/types/auth.types';
+import { AuthToken } from '@/types/auth.types';
 
-// Interface pour les réponses d'authentification
-interface AuthResponse {
-  token: string;
-  userId: string;
-}
-
-// Interface pour les données de profil
-interface ProfileResponse {
-  id: string;
-  email: string;
-  role: string;
-  theme_preference: string;
-  created_at: string;
-  updated_at?: string;
-}
-
-// Service d'authentification
+/**
+ * Service d'authentification pour les interactions avec l'API
+ */
 const AuthService = {
-  // Fonction de connexion
-  login: async (email: string, password: string): Promise<ApiResponse<AuthResponse>> => {
-    return apiClient.post<AuthResponse>('/auth/login', { email, password });
+  /**
+   * Connecte un utilisateur avec son email et mot de passe
+   * @param email - Email de l'utilisateur
+   * @param password - Mot de passe de l'utilisateur
+   */
+  login: async (email: string, password: string): Promise<ApiResponse<{ token: string }>> => {
+    return apiClient.post<{ token: string }>('/auth/login', { email, password });
   },
 
-  // Fonction d'inscription
-  register: async (credentials: RegisterCredentials): Promise<ApiResponse<{ userId: string }>> => {
-    return apiClient.post<{ userId: string }>('/auth/register', credentials);
+  /**
+   * Inscrit un nouvel utilisateur
+   * @param email - Email du nouvel utilisateur
+   * @param password - Mot de passe du nouvel utilisateur
+   */
+  register: async (email: string, password: string): Promise<ApiResponse<{ userId: string }>> => {
+    return apiClient.post<{ userId: string }>('/auth/register', { email, password });
   },
 
-  // Fonction pour récupérer le profil utilisateur
-  getProfile: async (): Promise<ApiResponse<ProfileResponse>> => {
-    try {
-      const response = await apiClient.get<ProfileResponse>('/auth/profile');
-      console.log("Profile response:", response); // Ajouter ce log
-      return { data: response.data };
-    } catch (error: any) {
-      console.error("Profile error:", error); // Ajouter ce log
-      return { error: error.error || 'Échec de la récupération du profil' };
-    }
+  /**
+   * Récupère le profil de l'utilisateur connecté
+   */
+  getProfile: async (): Promise<ApiResponse<User>> => {
+    return apiClient.get<User>('/users/profile');
   },
 
-  // Fonction pour mettre à jour le profil utilisateur
+  /**
+   * Met à jour le profil utilisateur
+   * @param data - Données à mettre à jour (email, theme_preference)
+   */
   updateProfile: async (data: Partial<User>): Promise<ApiResponse<User>> => {
-    return apiClient.put<User>('/auth/profile', data);
+    return apiClient.put<User>('/users/profile', data);
   },
 
-  // Fonction pour changer le mot de passe
+  /**
+   * Met à jour uniquement la préférence de thème
+   * @param theme - Nouveau thème ('light', 'dark', 'sys')
+   */
+  updateTheme: async (theme: string): Promise<ApiResponse<{ theme: string }>> => {
+    return apiClient.put<{ theme: string }>('/users/theme', { theme });
+  },
+
+  /**
+   * Change le mot de passe de l'utilisateur
+   * @param currentPassword - Mot de passe actuel
+   * @param newPassword - Nouveau mot de passe
+   */
   changePassword: async (currentPassword: string, newPassword: string): Promise<ApiResponse<void>> => {
     return apiClient.put<void>('/auth/change-password', {
-      current_password: currentPassword,
-      new_password: newPassword,
+      currentPassword,
+      newPassword
     });
   },
 
-  // Fonction utilitaire pour vérifier si l'utilisateur est authentifié
+  /**
+   * Récupère les contributions d'un utilisateur
+   * @param userId - ID de l'utilisateur (optionnel, utilise l'utilisateur connecté par défaut)
+   */
+  getUserContributions: async (userId?: string): Promise<ApiResponse<{
+    totalPixels: number;
+    contributedBoards: { boardId: string; pixelCount: number }[];
+  }>> => {
+    const endpoint = userId ? `/users/${userId}/contributions` : '/users/contributions';
+    return apiClient.get(endpoint);
+  },
+
+  /**
+   * Vérifie si l'utilisateur est authentifié
+   */
   isAuthenticated: (): boolean => {
     return !!localStorage.getItem('token');
   },
 
-  // Fonction utilitaire pour obtenir le token
+  /**
+   * Récupère le token d'authentification
+   */
   getToken: (): string | null => {
     return localStorage.getItem('token');
   },
 
-  // Fonction de déconnexion
+  /**
+   * Déconnecte l'utilisateur
+   */
   logout: (): void => {
     localStorage.removeItem('token');
-  },
+  }
 };
 
 export default AuthService;
