@@ -106,6 +106,51 @@ router.put('/profile', UserController.updateProfile);
 
 /**
  * @swagger
+ * /users/password:
+ *   post:
+ *     summary: Change user's password
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - currentPassword
+ *               - newPassword
+ *             properties:
+ *               currentPassword:
+ *                 type: string
+ *                 description: User's current password
+ *               newPassword:
+ *                 type: string
+ *                 description: New password (minimum 8 characters)
+ *     responses:
+ *       200:
+ *         description: Password changed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: Password changed successfully
+ *       400:
+ *         description: Invalid data provided or current password incorrect
+ *       401:
+ *         description: Not authenticated
+ */
+router.post('/password', UserController.changePassword);
+
+/**
+ * @swagger
  * /users/theme:
  *   put:
  *     summary: Update user's theme preference
