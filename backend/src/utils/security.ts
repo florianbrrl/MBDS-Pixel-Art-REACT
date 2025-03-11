@@ -1,6 +1,7 @@
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 import config from '../config';
+import { User } from '@prisma/client';
 
 const SALT_ROUNDS = 10;
 
@@ -12,8 +13,8 @@ export const comparePassword = async (password: string, hash: string): Promise<b
 	return bcrypt.compare(password, hash);
 };
 
-export const generateToken = (userId: string): string => {
-	return jwt.sign({ id: userId }, config.jwt.secret, {
+export const generateToken = (user: User): string => {
+	return jwt.sign({ id: user.id, role: user.role }, config.jwt.secret, {
 		expiresIn: config.jwt.expiresIn,
 	});
 };

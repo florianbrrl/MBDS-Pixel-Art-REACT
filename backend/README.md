@@ -57,6 +57,19 @@ Ce document contient toutes les instructions nécessaires pour configurer, exéc
    npm run prisma:studio
    ```
 
+5. Pour initialiser des utilisateurs de test avec différents rôles :
+   ```bash
+   npx ts-node src/scripts/seed.ts
+   ```
+   
+   Cela créera les utilisateurs suivants :
+   - guest@example.com (rôle: guest)
+   - user@example.com (rôle: user)
+   - premium@example.com (rôle: premium)
+   - admin@example.com (rôle: admin)
+   
+   Le mot de passe pour tous les utilisateurs de test est : `password123`
+
 ## Lancement de l'application
 
 ### En mode développement

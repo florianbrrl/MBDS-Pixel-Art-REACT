@@ -5,7 +5,8 @@ CREATE TABLE users (
   password_hash VARCHAR(255) NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ,
-  theme_preference VARCHAR(5) DEFAULT 'system'
+  theme_preference VARCHAR(5) DEFAULT 'system',
+  role VARCHAR(10) NOT NULL DEFAULT 'user' CHECK (role IN ('guest', 'user', 'premium', 'admin'))
 );
 
 -- Pixel Boards
