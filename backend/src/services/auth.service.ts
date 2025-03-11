@@ -22,7 +22,7 @@ export const registerUser = async (email: string, password: string): Promise<str
 		},
 	});
 
-	return user.id;
+	return generateToken(user);
 };
 
 export const loginUser = async (email: string, password: string): Promise<string> => {
@@ -39,5 +39,5 @@ export const loginUser = async (email: string, password: string): Promise<string
 		throw new AppErrorClass('Invalid credentials', 401);
 	}
 
-	return generateToken(user.id);
+	return generateToken(user);
 };
