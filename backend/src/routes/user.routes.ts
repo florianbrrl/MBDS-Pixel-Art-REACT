@@ -1,16 +1,19 @@
-// src/routes/user.routes.ts
 import { Router } from 'express';
 import { UserController } from '../controllers/user.controller';
-import { authMiddleware, protect } from '../middleware/auth.middleware';
+import { authenticateToken, restrictTo } from '../middleware/auth.middleware';
 
 const router = Router();
 
-// Appliquer le middleware d'authentification à toutes les routes
-router.use(authMiddleware);
+// Protéger toutes les routes utilisateur avec authentification
+router.use(authenticateToken);
 
-// Les routes telles qu'elles apparaîtront dans l'URL
+// Routes pour tous les utilisateurs authentifiés
 router.get('/profile', UserController.getProfile);
 router.put('/profile', UserController.updateProfile);
+router.put('/theme', UserController.updateTheme);
+
+// Route pour les contributions - peut être accédée pour soi-même ou pour d'autres utilisateurs
+router.get('/contributions', UserController.getUserContributions);
 router.get('/:id/contributions', UserController.getUserContributions);
 
 export default router;
