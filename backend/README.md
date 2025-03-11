@@ -84,6 +84,16 @@ npm run build
 npm run start
 ```
 
+## Documentation API
+
+La documentation de l'API est disponible via Swagger UI à l'adresse http://localhost:3000/api-docs lorsque le serveur est en cours d'exécution.
+
+Cette documentation interactive vous permet de :
+- Explorer tous les endpoints disponibles
+- Tester les requêtes directement depuis l'interface
+- Voir les schémas de données et les exemples de réponses
+- Comprendre les exigences d'authentification pour chaque endpoint
+
 ## Commandes utiles
 
 - **Build** : `npm run build` - Compile le code TypeScript
@@ -136,6 +146,7 @@ backend/
 ├── prisma/                  # Schéma et migrations Prisma
 ├── src/
 │   ├── config/              # Configuration de l'application
+│   │   └── swagger/         # Configuration Swagger pour la documentation API
 │   ├── controllers/         # Contrôleurs Express
 │   ├── db/                  # Clients et utilitaires de base de données
 │   ├── middleware/          # Middleware Express
@@ -159,3 +170,5 @@ backend/
 3. **Sécurité** : Ne stockez jamais de secrets dans le code. Utilisez les variables d'environnement.
 
 4. **API** : Respectez la structure de réponse API cohérente (status, data, message).
+
+5. **Documentation** : Ajoutez des annotations Swagger pour tous les nouveaux endpoints en suivant le format existant.
