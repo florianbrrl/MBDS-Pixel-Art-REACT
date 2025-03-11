@@ -1,34 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import ApiService from '@/services/api.service';
-import { PixelBoard } from '@/types';
+import ThemeSelector from '@/components/common/ThemeSelector';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ErrorMessage from '@/components/common/ErrorMessage';
-import ThemeSelector from '@/components/common/ThemeSelector';
+import { User } from '@/types';
+import { UserRole, ThemePreference } from '@/types/auth.types';
+import '../../styles/profile-page.css';
 
 const Profile: React.FC = () => {
-  const { currentUser, updateProfile, isLoading: authLoading } = useAuth();
-
-  // États pour les contributions utilisateur
-  const [contributions, setContributions] = useState<{
-    totalPixels: number;
-    boardsContributed: string[];
-  } | null>(null);
-
-  // États pour les PixelBoards contribués
-  const [contributedBoards, setContributedBoards] = useState<PixelBoard[]>([]);
-
-  // États de chargement
-  const [contributionsLoading, setContributionsLoading] = useState(true);
-  const [boardsLoading, setBoardsLoading] = useState(true);
-
-  // États d'erreur
-  const [contributionsError, setContributionsError] = useState<string | null>(null);
-  const [boardsError, setBoardsError] = useState<string | null>(null);
+  const { currentUser, updateProfile, changePassword, isLoading: authLoading } = useAuth();
 
   // États pour le formulaire de modification du profil
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [email, setEmail] = useState('');
+  const [themePreference, setThemePreference] = useState<ThemePreference>('system');
   const [profileError, setProfileError] = useState<string | null>(null);
   const [profileSuccess, setProfileSuccess] = useState<string | null>(null);
 
@@ -44,63 +29,27 @@ const Profile: React.FC = () => {
   useEffect(() => {
     if (currentUser) {
       setEmail(currentUser.email);
+      setThemePreference(currentUser.theme_preference as ThemePreference || 'system');
     }
   }, [currentUser]);
 
-  // Charger les contributions de l'utilisateur
-  useEffect(() => {
-    const loadContributions = async () => {
-      if (!currentUser) return;
+  // Formater le rôle utilisateur pour l'affichage
+  const formatRole = (role?: UserRole): string => {
+    if (!role) return 'Utilisateur';
 
-      setContributionsLoading(true);
-      setContributionsError(null);
-
-      const response = await ApiService.getUserContributions(currentUser.id);
-
-      if (response.error) {
-        setContributionsError(response.error);
-      } else {
-        setContributions(response.data || { totalPixels: 0, boardsContributed: [] });
-      }
-
-      setContributionsLoading(false);
-    };
-
-    loadContributions();
-  }, [currentUser]);
-
-  // Charger les détails des PixelBoards contribués
-  useEffect(() => {
-    const loadContributedBoards = async () => {
-      if (!contributions || !contributions.boardsContributed.length) {
-        setBoardsLoading(false);
-        return;
-      }
-
-      setBoardsLoading(true);
-      setBoardsError(null);
-
-      const boardDetails: PixelBoard[] = [];
-
-      try {
-        // Pour chaque PixelBoard contribué, récupérer ses détails
-        for (const boardId of contributions.boardsContributed) {
-          const response = await ApiService.getPixelBoardById(boardId);
-          if (response.data) {
-            boardDetails.push(response.data);
-          }
-        }
-
-        setContributedBoards(boardDetails);
-      } catch (error) {
-        setBoardsError('Impossible de récupérer les détails des PixelBoards contribués');
-      }
-
-      setBoardsLoading(false);
-    };
-
-    loadContributedBoards();
-  }, [contributions]);
+    switch (role) {
+      case 'admin':
+        return 'Administrateur';
+      case 'premium':
+        return 'Utilisateur premium';
+      case 'user':
+        return 'Utilisateur';
+      case 'guest':
+        return 'Invité';
+      default:
+        return role;
+    }
+  };
 
   // Gérer la soumission du formulaire de modification du profil
   const handleProfileSubmit = async (e: React.FormEvent) => {
@@ -111,11 +60,11 @@ const Profile: React.FC = () => {
     if (!currentUser) return;
 
     try {
-      await updateProfile({ email });
+      await updateProfile({ email, theme_preference: themePreference });
       setProfileSuccess('Profil mis à jour avec succès');
       setIsEditingProfile(false);
-    } catch (error) {
-      setProfileError('Erreur lors de la mise à jour du profil');
+    } catch (error: any) {
+      setProfileError(error.error || 'Erreur lors de la mise à jour du profil');
     }
   };
 
@@ -125,6 +74,7 @@ const Profile: React.FC = () => {
     setPasswordError(null);
     setPasswordSuccess(null);
 
+    // Validation des mots de passe
     if (newPassword !== confirmNewPassword) {
       setPasswordError('Les mots de passe ne correspondent pas');
       return;
@@ -136,15 +86,14 @@ const Profile: React.FC = () => {
     }
 
     try {
-      // Dans un scénario réel, nous appellerions l'API pour changer le mot de passe
-      // Pour l'instant, nous simulons juste le succès
+      await changePassword(currentPassword, newPassword);
       setPasswordSuccess('Mot de passe changé avec succès');
       setIsChangingPassword(false);
       setCurrentPassword('');
       setNewPassword('');
       setConfirmNewPassword('');
-    } catch (error) {
-      setPasswordError('Erreur lors du changement de mot de passe');
+    } catch (error: any) {
+      setPasswordError(error.error || 'Erreur lors du changement de mot de passe');
     }
   };
 
@@ -156,18 +105,26 @@ const Profile: React.FC = () => {
     );
   }
 
+  if (authLoading) {
+    return (
+      <div className="profile-page profile-loading">
+        <LoadingSpinner message="Chargement de votre profil..." />
+      </div>
+    );
+  }
+
   return (
     <div className="profile-page">
-      <h1 className="text-3xl font-bold mb-6">Mon Profil</h1>
+      <h1>Mon Profil</h1>
 
-      <div className="profile-info mb-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-        <div className="mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Informations Personnelles</h2>
+      <div className="profile-card">
+        <div className="profile-section">
+          <div className="section-header">
+            <h2>Informations Personnelles</h2>
             {!isEditingProfile && (
               <button
                 onClick={() => setIsEditingProfile(true)}
-                className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                className="edit-button"
               >
                 Modifier
               </button>
@@ -175,33 +132,55 @@ const Profile: React.FC = () => {
           </div>
 
           {profileSuccess && (
-            <div className="success-message bg-green-100 text-green-800 p-3 rounded mb-4">
+            <div className="success-message">
               {profileSuccess}
             </div>
           )}
 
-          {profileError && <div className="error-message mb-4">{profileError}</div>}
+          {profileError && (
+            <div className="error-message">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="error-icon"
+              >
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+              </svg>
+              <span>{profileError}</span>
+            </div>
+          )}
 
           {isEditingProfile ? (
-            <form onSubmit={handleProfileSubmit} className="space-y-4">
+            <form onSubmit={handleProfileSubmit} className="profile-form">
               <div className="form-group">
-                <label htmlFor="email" className="block mb-1">
-                  Email:
-                </label>
+                <label htmlFor="email">Email:</label>
                 <input
                   type="email"
                   id="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded"
                   required
                 />
               </div>
 
-              <div className="flex space-x-3">
+              <div className="form-group">
+                <label htmlFor="themePreference">Préférence de thème:</label>
+                <select
+                  id="themePreference"
+                  value={themePreference}
+                  onChange={(e) => setThemePreference(e.target.value as ThemePreference)}
+                >
+                  <option value="light">Clair</option>
+                  <option value="dark">Sombre</option>
+                  <option value="system">Système</option>
+                </select>
+              </div>
+
+              <div className="form-actions">
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-blue-400"
+                  className="primary-button"
                   disabled={authLoading}
                 >
                   {authLoading ? 'Enregistrement...' : 'Enregistrer'}
@@ -211,9 +190,10 @@ const Profile: React.FC = () => {
                   onClick={() => {
                     setIsEditingProfile(false);
                     setEmail(currentUser.email);
+                    setThemePreference(currentUser.theme_preference as ThemePreference || 'system');
                     setProfileError(null);
                   }}
-                  className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-600"
+                  className="secondary-button"
                   disabled={authLoading}
                 >
                   Annuler
@@ -221,25 +201,34 @@ const Profile: React.FC = () => {
               </div>
             </form>
           ) : (
-            <>
-              <p className="mb-2">
+            <div className="profile-details">
+              <p>
                 <strong>Email:</strong> {currentUser.email}
               </p>
-              <p className="mb-2">
+              <p>
+                <strong>Rôle:</strong> {formatRole(currentUser.role as UserRole)}
+              </p>
+              <p>
                 <strong>Compte créé le:</strong>{' '}
                 {new Date(currentUser.created_at).toLocaleDateString()}
               </p>
-            </>
+              {currentUser.updated_at && (
+                <p>
+                  <strong>Dernière mise à jour:</strong>{' '}
+                  {new Date(currentUser.updated_at).toLocaleDateString()}
+                </p>
+              )}
+            </div>
           )}
         </div>
 
-        <div className="mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Modifier le mot de passe</h2>
+        <div className="profile-section">
+          <div className="section-header">
+            <h2>Modifier le mot de passe</h2>
             {!isChangingPassword && (
               <button
                 onClick={() => setIsChangingPassword(true)}
-                className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                className="edit-button"
               >
                 Changer
               </button>
@@ -247,63 +236,66 @@ const Profile: React.FC = () => {
           </div>
 
           {passwordSuccess && (
-            <div className="success-message bg-green-100 text-green-800 p-3 rounded mb-4">
+            <div className="success-message">
               {passwordSuccess}
             </div>
           )}
 
-          {passwordError && <div className="error-message mb-4">{passwordError}</div>}
+          {passwordError && (
+            <div className="error-message">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="error-icon"
+              >
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+              </svg>
+              <span>{passwordError}</span>
+            </div>
+          )}
 
           {isChangingPassword && (
-            <form onSubmit={handlePasswordSubmit} className="space-y-4">
+            <form onSubmit={handlePasswordSubmit} className="profile-form">
               <div className="form-group">
-                <label htmlFor="currentPassword" className="block mb-1">
-                  Mot de passe actuel:
-                </label>
+                <label htmlFor="currentPassword">Mot de passe actuel:</label>
                 <input
                   type="password"
                   id="currentPassword"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded"
                   required
                 />
               </div>
 
               <div className="form-group">
-                <label htmlFor="newPassword" className="block mb-1">
-                  Nouveau mot de passe:
-                </label>
+                <label htmlFor="newPassword">Nouveau mot de passe:</label>
                 <input
                   type="password"
                   id="newPassword"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded"
                   required
                   minLength={6}
                 />
               </div>
 
               <div className="form-group">
-                <label htmlFor="confirmNewPassword" className="block mb-1">
-                  Confirmer le nouveau mot de passe:
-                </label>
+                <label htmlFor="confirmNewPassword">Confirmer le nouveau mot de passe:</label>
                 <input
                   type="password"
                   id="confirmNewPassword"
                   value={confirmNewPassword}
                   onChange={(e) => setConfirmNewPassword(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded"
                   required
                   minLength={6}
                 />
               </div>
 
-              <div className="flex space-x-3">
+              <div className="form-actions">
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-blue-400"
+                  className="primary-button"
                   disabled={authLoading}
                 >
                   {authLoading ? 'Enregistrement...' : 'Changer le mot de passe'}
@@ -317,7 +309,7 @@ const Profile: React.FC = () => {
                     setConfirmNewPassword('');
                     setPasswordError(null);
                   }}
-                  className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-600"
+                  className="secondary-button"
                   disabled={authLoading}
                 >
                   Annuler
@@ -327,86 +319,14 @@ const Profile: React.FC = () => {
           )}
         </div>
 
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Préférences</h2>
-          <div className="mb-4">
-            <label className="block mb-2">Thème de l'application:</label>
-            <ThemeSelector className="w-full md:w-auto" />
+        <div className="profile-section">
+          <h2>Préférences</h2>
+          <div className="theme-selector-container">
+            <label>Thème de l'application:</label>
+            <ThemeSelector />
           </div>
         </div>
       </div>
-
-      <div className="user-contributions mb-8">
-        <h2 className="text-2xl font-semibold mb-4">Mes Contributions</h2>
-
-        {contributionsLoading ? (
-          <LoadingSpinner message="Chargement de vos contributions..." />
-        ) : contributionsError ? (
-          <ErrorMessage message={contributionsError} />
-        ) : contributions ? (
-          <div className="stats-container grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="stat-item bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-              <h3 className="text-xl mb-2">Pixels Placés</h3>
-              <p className="stat-number text-4xl font-bold text-blue-600 dark:text-blue-400">
-                {contributions.totalPixels}
-              </p>
-            </div>
-            <div className="stat-item bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-              <h3 className="text-xl mb-2">PixelBoards</h3>
-              <p className="stat-number text-4xl font-bold text-blue-600 dark:text-blue-400">
-                {contributions.boardsContributed.length}
-              </p>
-            </div>
-          </div>
-        ) : (
-          <p className="text-gray-600 dark:text-gray-400">Aucune contribution trouvée.</p>
-        )}
-      </div>
-
-      {contributions && contributions.boardsContributed.length > 0 && (
-        <div className="contributed-boards">
-          <h2 className="text-2xl font-semibold mb-4">PixelBoards auxquels j'ai contribué</h2>
-
-          {boardsLoading ? (
-            <LoadingSpinner message="Chargement des PixelBoards..." />
-          ) : boardsError ? (
-            <ErrorMessage message={boardsError} />
-          ) : contributedBoards.length === 0 ? (
-            <p className="text-gray-600 dark:text-gray-400">Aucun PixelBoard trouvé.</p>
-          ) : (
-            <div className="boards-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-              {contributedBoards.map((board) => (
-                <div
-                  key={board.id}
-                  className="board-card bg-white dark:bg-gray-800 p-4 rounded-lg shadow hover:shadow-md transition-shadow"
-                >
-                  <h3 className="text-lg font-semibold mb-2">{board.title}</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                    {board.width}x{board.height} pixels
-                  </p>
-                  <div className="flex justify-between items-center">
-                    <span
-                      className={`px-2 py-1 text-xs rounded ${
-                        board.is_active
-                          ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
-                          : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200'
-                      }`}
-                    >
-                      {board.is_active ? 'Actif' : 'Terminé'}
-                    </span>
-                    <a
-                      href={`/pixel-boards/${board.id}`}
-                      className="text-blue-600 dark:text-blue-400 hover:underline"
-                    >
-                      Voir
-                    </a>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 };

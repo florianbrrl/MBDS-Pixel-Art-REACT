@@ -19,8 +19,11 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="mobile-nav-overlay">
-      <nav className={`mobile-nav ${isOpen ? 'open' : ''}`}>
+    <>
+      {/* Overlay pour fermer le menu en cliquant à l'extérieur */}
+      <div className="mobile-nav-overlay" onClick={onClose} aria-hidden="true"></div>
+
+      <nav className="mobile-nav">
         <ul className="mobile-nav-list">
           <li className="mobile-nav-item">
             <Link to="/" className="mobile-nav-link" onClick={onClose}>
@@ -68,7 +71,7 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
           )}
         </ul>
       </nav>
-    </div>
+    </>
   );
 };
 

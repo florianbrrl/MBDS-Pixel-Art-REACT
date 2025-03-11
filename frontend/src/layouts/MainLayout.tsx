@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import MobileNavigation from '@/components/navigation/MobileNavigation';
 
 const MainLayout: React.FC = () => {
-  const { isAuthenticated, logout, currentUser } = useAuth();
+  const { isAuthenticated, logout, currentUser, hasRole } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const toggleMobileMenu = () => {
@@ -17,7 +17,8 @@ const MainLayout: React.FC = () => {
     setMobileMenuOpen(false);
   };
 
-  const isAdmin = currentUser?.id === 'user-1'; // Simplifié, à adapter selon votre logique
+  // Vérifier si l'utilisateur a le rôle d'administrateur
+  const isAdmin = hasRole(['admin']);
 
   return (
     <div className="app">
@@ -71,7 +72,7 @@ const MainLayout: React.FC = () => {
                     </li>
                   )}
                   <li className="nav-item">
-                    <button onClick={logout} className="nav-button">
+                    <button onClick={handleLogout} className="nav-button">
                       Déconnexion
                     </button>
                   </li>
