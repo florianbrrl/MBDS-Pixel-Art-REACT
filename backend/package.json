@@ -9,7 +9,9 @@
 		"express": "^4.21.2",
 		"helmet": "^8.0.0",
 		"jsonwebtoken": "^9.0.2",
-		"morgan": "^1.10.0"
+		"morgan": "^1.10.0",
+		"swagger-jsdoc": "^6.2.8",
+		"swagger-ui-express": "^5.0.1"
 	},
 	"devDependencies": {
 		"@types/bcrypt": "^5.0.2",

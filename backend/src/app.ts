@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import routes from './routes';
 import { AppError, globalErrorHandler } from './middleware/errorHandler.middleware';
 import config from './config';
+import setupSwagger from './config/swagger/swagger.middleware';
 
 // Création de l'application Express
 const app: Application = express();
@@ -22,6 +23,9 @@ app.use(compression()); // Compresse les réponses
 app.use(morgan(config.logging.format)); // Journalisation des requêtes
 app.use(express.json({ limit: '10kb' })); // Parse le corps JSON avec limite
 app.use(express.urlencoded({ extended: true, limit: '10kb' })); // Parse les données URL-encoded
+
+// Configure Swagger documentation
+setupSwagger(app);
 
 // Routes
 app.use(config.server.apiPrefix, routes);
