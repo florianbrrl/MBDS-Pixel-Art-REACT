@@ -2,6 +2,7 @@ import { User } from '@prisma/client';
 import { UserModel } from '../models/user.model';
 import { PixelHistoryModel } from '../models/pixel-history.model';
 import { AppErrorClass } from '../middleware/errorHandler.middleware';
+import { hashPassword, comparePassword } from '../utils/security';
 
 /**
  * Service pour la gestion des utilisateurs
@@ -37,6 +38,37 @@ export class UserService {
 
 		return UserModel.update(userId, {
 			...updateData,
+			updated_at: new Date(),
+		});
+	}
+
+	/**
+	 * Change le mot de passe d'un utilisateur
+	 * @param userId - ID de l'utilisateur
+	 * @param currentPassword - Mot de passe actuel
+	 * @param newPassword - Nouveau mot de passe
+	 * @returns L'utilisateur mis à jour
+	 */
+	static async changePassword(
+		userId: string,
+		currentPassword: string,
+		newPassword: string
+	): Promise<User> {
+		// Récupérer l'utilisateur avec son mot de passe actuel
+		const user = await this.getUserById(userId);
+
+		// Vérifier que le mot de passe actuel est correct
+		const isPasswordValid = await comparePassword(currentPassword, user.password_hash);
+		if (!isPasswordValid) {
+			throw new AppErrorClass('Mot de passe actuel incorrect', 400);
+		}
+
+		// Hacher le nouveau mot de passe
+		const newPasswordHash = await hashPassword(newPassword);
+
+		// Mettre à jour le mot de passe
+		return UserModel.update(userId, {
+			password_hash: newPasswordHash,
 			updated_at: new Date(),
 		});
 	}

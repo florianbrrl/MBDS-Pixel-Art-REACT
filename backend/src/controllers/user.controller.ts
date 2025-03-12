@@ -61,6 +61,35 @@ export class UserController {
 	});
 
 	/**
+	 * Change le mot de passe d'un utilisateur
+	 */
+	static changePassword = catchAsync(async (req: Request, res: Response) => {
+		if (!req.user || !req.user.id) {
+			throw new AppErrorClass('Not authenticated', 401);
+		}
+
+		const userId = req.user.id;
+		const { currentPassword, newPassword } = req.body;
+
+		// Valider les données de la requête
+		if (!currentPassword || !newPassword) {
+			throw new AppErrorClass('Current password and new password are required', 400);
+		}
+
+		// Vérifier que le nouveau mot de passe a une longueur minimum
+		if (newPassword.length < 8) {
+			throw new AppErrorClass('New password must be at least 8 characters long', 400);
+		}
+
+		await UserService.changePassword(userId, currentPassword, newPassword);
+
+		res.status(200).json({
+			status: 'success',
+			message: 'Password changed successfully',
+		});
+	});
+
+	/**
 	 * Récupère les contributions d'un utilisateur
 	 */
 	static getUserContributions = catchAsync(async (req: Request, res: Response) => {
