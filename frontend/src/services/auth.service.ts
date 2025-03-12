@@ -53,7 +53,7 @@ const AuthService = {
    * @param newPassword - Nouveau mot de passe
    */
   changePassword: async (currentPassword: string, newPassword: string): Promise<ApiResponse<void>> => {
-    return apiClient.put<void>('/auth/change-password', {
+    return apiClient.post<void>('/users/password', {
       currentPassword,
       newPassword
     });

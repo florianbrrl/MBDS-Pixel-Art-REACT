@@ -23,6 +23,7 @@ const Profile: React.FC = () => {
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // État pour les contributions
   const [contributions, setContributions] = useState<UserContributions | null>(null);
@@ -107,15 +108,18 @@ const Profile: React.FC = () => {
     e.preventDefault();
     setPasswordError(null);
     setPasswordSuccess(null);
+    setIsSubmitting(true);
 
     // Validation des mots de passe
     if (newPassword !== confirmNewPassword) {
       setPasswordError('Les mots de passe ne correspondent pas');
+      setIsSubmitting(false);
       return;
     }
 
     if (newPassword.length < 6) {
       setPasswordError('Le nouveau mot de passe doit contenir au moins 6 caractères');
+      setIsSubmitting(false);
       return;
     }
 
@@ -128,6 +132,8 @@ const Profile: React.FC = () => {
       setConfirmNewPassword('');
     } catch (error: any) {
       setPasswordError(error.message || 'Erreur lors du changement de mot de passe');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -332,9 +338,9 @@ const Profile: React.FC = () => {
                 <button
                   type="submit"
                   className="primary-button"
-                  disabled={authLoading}
+                  disabled={isSubmitting}
                 >
-                  {authLoading ? 'Enregistrement...' : 'Changer le mot de passe'}
+                  {isSubmitting ? 'Modification en cours...' : 'Changer le mot de passe'}
                 </button>
                 <button
                   type="button"
@@ -346,7 +352,7 @@ const Profile: React.FC = () => {
                     setPasswordError(null);
                   }}
                   className="secondary-button"
-                  disabled={authLoading}
+                  disabled={isSubmitting}
                 >
                   Annuler
                 </button>
