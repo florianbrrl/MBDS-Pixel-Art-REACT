@@ -25,11 +25,11 @@ Ce document contient toutes les instructions nécessaires pour configurer, exéc
    ```
    # Base de données
    DATABASE_URL="postgresql://username:password@localhost:5432/pixelboard?schema=public"
-   
+
    # JWT
    JWT_SECRET="votre_secret_jwt_complexe"
    JWT_EXPIRES_IN="90d"
-   
+
    # Server
    PORT=3000
    NODE_ENV=development
@@ -61,14 +61,24 @@ Ce document contient toutes les instructions nécessaires pour configurer, exéc
    ```bash
    npx ts-node src/scripts/seed.ts
    ```
-   
-   Cela créera les utilisateurs suivants :
-   - guest@example.com (rôle: guest)
-   - user@example.com (rôle: user)
-   - premium@example.com (rôle: premium)
-   - admin@example.com (rôle: admin)
-   
-   Le mot de passe pour tous les utilisateurs de test est : `password123`
+
+   Ce script créera:
+
+   - Utilisateurs:
+
+      - guest@example.com (rôle: guest)
+      - user@example.com (rôle: user)
+      - premium@example.com (rôle: premium)
+      - admin@example.com (rôle: admin)
+
+      Le mot de passe pour tous les utilisateurs est password123
+
+   - PixelBoards:
+
+      - Plusieurs PixelBoards actifs de différentes tailles
+      - Des PixelBoards terminés avec quelques pixels
+      - Un PixelBoard à venir (qui commencera dans le futur)
+
 
 ## Lancement de l'application
 
@@ -123,7 +133,7 @@ Solution : Exécutez `npm run prisma:generate`
 
 ### Erreur de longueur pour theme_preference
 Si vous rencontrez une erreur concernant la longueur de la colonne `theme_preference` :
-- Vérifiez que les migrations ont bien été appliquées  
+- Vérifiez que les migrations ont bien été appliquées
 - Utilisez uniquement des valeurs de 5 caractères maximum (ex: "sys", "dark", "light")
 
 ### Port déjà utilisé (EADDRINUSE)
