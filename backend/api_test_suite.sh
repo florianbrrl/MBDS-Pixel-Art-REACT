@@ -56,6 +56,10 @@ TESTS_TOTAL=0
 TESTS_PASSED=0
 TESTS_FAILED=0
 
+# Arrays to store test results
+declare -A PASSED_TESTS
+declare -A FAILED_TESTS
+
 # Create results directory if it doesn't exist
 mkdir -p "$RESULTS_DIR"
 
@@ -135,9 +139,13 @@ run_test() {
     if [ "$http_status" = "$expected_status" ]; then
         echo -e "  ${GREEN}✓ Status: $http_status (Expected: $expected_status)${NC}"
         TESTS_PASSED=$((TESTS_PASSED + 1))
+        # Add to passed tests list
+        PASSED_TESTS["$TESTS_TOTAL"]="$description"
     else
         echo -e "  ${RED}✗ Status: $http_status (Expected: $expected_status)${NC}"
         TESTS_FAILED=$((TESTS_FAILED + 1))
+        # Add to failed tests list with details
+        FAILED_TESTS["$TESTS_TOTAL"]="$description (Got: $http_status, Expected: $expected_status)"
     fi
     
     # In verbose mode, show response preview
@@ -323,10 +331,44 @@ echo -e "${YELLOW}Total Tests: ${TESTS_TOTAL}${NC}"
 echo -e "${GREEN}Tests Passed: ${TESTS_PASSED}${NC}"
 echo -e "${RED}Tests Failed: ${TESTS_FAILED}${NC}"
 
+# Write summary to file
+SUMMARY_FILE="${RESULTS_DIR}/test_summary.txt"
+{
+    echo "=== API Test Suite Summary ==="
+    echo "Date: $(date)"
+    echo "Total Tests: ${TESTS_TOTAL}"
+    echo "Tests Passed: ${TESTS_PASSED}"
+    echo "Tests Failed: ${TESTS_FAILED}"
+    echo ""
+    if [ "$TESTS_TOTAL" -gt 0 ]; then
+        echo "Passing percentage: $((TESTS_PASSED * 100 / TESTS_TOTAL))%"
+    else
+        echo "Passing percentage: 0%"
+    fi
+    
+    # List failed tests if any
+    if [ "$TESTS_FAILED" -gt 0 ]; then
+        echo ""
+        echo "Failed tests:"
+        for i in "${!FAILED_TESTS[@]}"; do
+            echo "  #$i: ${FAILED_TESTS[$i]}"
+        done
+    fi
+} > "$SUMMARY_FILE"
+
 if [ "$TESTS_FAILED" -eq 0 ]; then
     echo -e "\n${GREEN}All tests passed successfully!${NC}"
+    echo "All tests passed successfully!" >> "$SUMMARY_FILE"
+    
+    # Display the summary file
+    echo -e "\n${YELLOW}Test summary saved to: ${SUMMARY_FILE}${NC}"
     exit 0
 else
-    echo -e "\n${RED}Some tests failed. Check the logs above for details.${NC}"
+    echo -e "\n${RED}Failed tests (${TESTS_FAILED}):${NC}"
+    for i in "${!FAILED_TESTS[@]}"; do
+        echo -e "  ${RED}#$i: ${FAILED_TESTS[$i]}${NC}"
+    done
+    echo -e "\n${YELLOW}Test summary saved to: ${SUMMARY_FILE}${NC}"
+    echo "Some tests failed. Check the logs and results directory for details." >> "$SUMMARY_FILE"
     exit 1
 fi
