@@ -1,11 +1,7 @@
 import axios from 'axios';
 import { User, PixelBoard, PixelHistory, ApiResponse } from '@/types';
-import MockApiService from './api.mock';
 
-// Décider si on utilise l'API mock ou l'API réelle
-const USE_MOCK_API = true; // Mettre à jour cette valeur pour basculer entre mock et réel
-
-// Configuration de l'API réelle
+// Configuration de l'API
 const API_URL = '/api';
 const axiosInstance = axios.create({
   baseURL: API_URL,
@@ -51,8 +47,8 @@ axiosInstance.interceptors.response.use(
   },
 );
 
-// API Service réel
-const RealApiService = {
+// API Service
+const ApiService = {
   // Authentification
   login: async (email: string, password: string): Promise<ApiResponse<User>> => {
     try {
@@ -149,8 +145,5 @@ const RealApiService = {
     }
   },
 };
-
-// Exporter le service approprié selon la configuration
-const ApiService = USE_MOCK_API ? MockApiService : RealApiService;
 
 export default ApiService;
