@@ -1,7 +1,8 @@
 import { Router, Request, Response } from 'express';
 import authRoutes from './auth.routes';
 import userRoutes from './user.routes';
-import pixelBoardRoutes from './pixelboard.routes'; // Importer les nouvelles routes
+import pixelBoardRoutes from './pixelboard.routes';
+import pixelRoutes from './pixel.routes';
 import { authenticateToken, restrictTo } from '../middleware/auth.middleware';
 
 /**
@@ -62,6 +63,8 @@ import { authenticateToken, restrictTo } from '../middleware/auth.middleware';
  *     description: Administrative operations
  *   - name: PixelBoards
  *     description: Operations related to pixel art boards
+ *   - name: Pixels
+ *     description: Operations related to pixel placement and history
  */
 
 const router = Router();
@@ -111,6 +114,9 @@ router.use('/users', userRoutes);
 
 // Routes PixelBoard
 router.use('/pixelboards', pixelBoardRoutes);
+
+// Routes Pixel
+router.use('/pixels', pixelRoutes);
 
 /**
  * @swagger
