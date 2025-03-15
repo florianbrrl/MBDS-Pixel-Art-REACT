@@ -2,11 +2,43 @@
 
 # API Test Suite for Pixel Art Backend API
 # This script tests all API endpoints and verifies expected responses
+#
+# Usage: ./api_test_suite.sh [options]
+#
+# Options:
+#   -v, --verbose     Show detailed output for each test
+#
+# The script will test all API endpoints and verify expected responses.
+# Results are stored in the test_results directory.
 
 # -e: Exit immediately if a command exits with a non-zero status
 # -u: Treat unset variables as an error when substituting
 set -e
 set -u
+
+# Show help if requested
+if [[ "$*" == *"--help"* || "$*" == *"-h"* ]]; then
+    echo "Usage: ./api_test_suite.sh [options]"
+    echo ""
+    echo "Options:"
+    echo "  -v, --verbose     Show detailed output for each test"
+    echo "  -h, --help        Show this help message"
+    echo ""
+    echo "The script will test all API endpoints and verify expected responses."
+    echo "Results are stored in the test_results directory."
+    exit 0
+fi
+
+# Parse command line arguments
+VERBOSE=false
+for arg in "$@"; do
+    case $arg in
+        -v|--verbose)
+            VERBOSE=true
+            shift
+            ;;
+    esac
+done
 
 # Colors for output formatting
 RED='\033[0;31m'
@@ -72,8 +104,16 @@ run_test() {
     local http_status
     local response
     
+    # Print the test number and description
     echo -e "${BLUE}TEST ${TESTS_TOTAL}${NC}: $description"
-    echo "  Endpoint: $method $endpoint${params}"
+    
+    # In verbose mode, print more details
+    if [ "$VERBOSE" = true ]; then
+        echo "  Endpoint: $method $endpoint${params}"
+        if [ -n "$data" ] && [ "$data" != "null" ]; then
+            echo "  Data: $data"
+        fi
+    fi
     
     # Execute command and capture response body and status code
     response=$(eval "$cmd" 2>/dev/null || echo '{"error":"Connection failed"}')
@@ -100,13 +140,15 @@ run_test() {
         TESTS_FAILED=$((TESTS_FAILED + 1))
     fi
     
-    # Print a preview of the response
-    echo -e "  ${YELLOW}Response Preview:${NC}"
-    echo "$response" | head -n 5 | sed 's/^/    /'
-    if [ "$(echo "$response" | wc -l)" -gt 5 ]; then
-        echo "    ..."
+    # In verbose mode, show response preview
+    if [ "$VERBOSE" = true ]; then
+        echo -e "  ${YELLOW}Response Preview:${NC}"
+        echo "$response" | head -n 3 | sed 's/^/    /'
+        if [ "$(echo "$response" | wc -l)" -gt 3 ]; then
+            echo "    ..."
+        fi
+        echo ""
     fi
-    echo ""
 }
 
 echo -e "${BLUE}=== Running Pixel Art API Test Suite ===${NC}"
