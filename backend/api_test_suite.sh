@@ -72,45 +72,45 @@ run_test() {
     local data="$5"
     local token="$6"
     local params="${7:-}"
-    
+
     TESTS_TOTAL=$((TESTS_TOTAL + 1))
-    
+
     # Replace potential spaces in endpoint for filename
     local safe_endpoint="${endpoint//\//_}"
     safe_endpoint="${safe_endpoint// /_}"
     safe_endpoint="${safe_endpoint//\?/\?}"
-    
+
     # Create command with appropriate method and data
     local cmd="curl -s -X $method"
-    
+
     # Add headers
     cmd="$cmd -H 'Content-Type: application/json'"
     if [ -n "$token" ]; then
         cmd="$cmd -H 'Authorization: Bearer $token'"
     fi
-    
+
     # Add data if present
     if [ -n "$data" ] && [ "$data" != "null" ]; then
         cmd="$cmd -d '$data'"
     fi
-    
+
     # Add parameters if present
     local full_endpoint="$API_BASE_URL$endpoint"
     if [ -n "$params" ]; then
         full_endpoint="${full_endpoint}${params}"
     fi
-    
+
     # Finalize command
     cmd="$cmd $full_endpoint"
-    
+
     # Execute the command and capture response and status
     local response_file="${RESULTS_DIR}/${safe_endpoint}_${method}.json"
     local http_status
     local response
-    
+
     # Print the test number and description
     echo -e "${BLUE}TEST ${TESTS_TOTAL}${NC}: $description"
-    
+
     # In verbose mode, print more details
     if [ "$VERBOSE" = true ]; then
         echo "  Endpoint: $method $endpoint${params}"
@@ -118,14 +118,14 @@ run_test() {
             echo "  Data: $data"
         fi
     fi
-    
+
     # Execute command and capture response body and status code
     response=$(eval "$cmd" 2>/dev/null || echo '{"error":"Connection failed"}')
     echo "$response" > "$response_file"
-    
+
     # Get HTTP status from response (assuming API returns status in JSON)
     http_status=$(echo "$response" | grep -o '"status":[0-9]*' | grep -o '[0-9]*')
-    
+
     # If http_status is empty (possibly because API doesn't return status in JSON), default to check for error keywords
     if [ -z "$http_status" ]; then
         if echo "$response" | grep -q "error"; then
@@ -134,7 +134,7 @@ run_test() {
             http_status="200" # Assume success if no error found
         fi
     fi
-    
+
     # Verify status code against expected
     if [ "$http_status" = "$expected_status" ]; then
         echo -e "  ${GREEN}✓ Status: $http_status (Expected: $expected_status)${NC}"
@@ -147,7 +147,7 @@ run_test() {
         # Add to failed tests list with details
         FAILED_TESTS["$TESTS_TOTAL"]="$description (Got: $http_status, Expected: $expected_status)"
     fi
-    
+
     # In verbose mode, show response preview
     if [ "$VERBOSE" = true ]; then
         echo -e "  ${YELLOW}Response Preview:${NC}"
@@ -301,14 +301,14 @@ if [ -n "$pixelboard_id" ]; then
       "title": "Updated Test Board",
       "allow_overwrite": false
     }'
-    
+
     # Update PixelBoard (admin only)
     run_test "/pixelboards/$pixelboard_id" "PUT" "200" "Update pixelboard as admin" "$PIXELBOARD_UPDATE_DATA" "$ADMIN_TOKEN" ""
     run_test "/pixelboards/$pixelboard_id" "PUT" "403" "Update pixelboard as premium" "$PIXELBOARD_UPDATE_DATA" "$PREMIUM_TOKEN" ""
     run_test "/pixelboards/$pixelboard_id" "PUT" "403" "Update pixelboard as user" "$PIXELBOARD_UPDATE_DATA" "$USER_TOKEN" ""
     run_test "/pixelboards/$pixelboard_id" "PUT" "403" "Update pixelboard as guest" "$PIXELBOARD_UPDATE_DATA" "$GUEST_TOKEN" ""
     run_test "/pixelboards/$pixelboard_id" "PUT" "401" "Update pixelboard without auth" "$PIXELBOARD_UPDATE_DATA" "" ""
-    
+
     # Delete PixelBoard (admin only)
     run_test "/pixelboards/$pixelboard_id" "DELETE" "200" "Delete pixelboard as admin" "" "$ADMIN_TOKEN" ""
     run_test "/pixelboards/$pixelboard_id" "DELETE" "404" "Delete already deleted pixelboard" "" "$ADMIN_TOKEN" ""
@@ -333,33 +333,32 @@ echo -e "${RED}Tests Failed: ${TESTS_FAILED}${NC}"
 
 # Write summary to file
 SUMMARY_FILE="${RESULTS_DIR}/test_summary.txt"
-{
-    echo "=== API Test Suite Summary ==="
-    echo "Date: $(date)"
-    echo "Total Tests: ${TESTS_TOTAL}"
-    echo "Tests Passed: ${TESTS_PASSED}"
-    echo "Tests Failed: ${TESTS_FAILED}"
-    echo ""
-    if [ "$TESTS_TOTAL" -gt 0 ]; then
-        echo "Passing percentage: $((TESTS_PASSED * 100 / TESTS_TOTAL))%"
-    else
-        echo "Passing percentage: 0%"
-    fi
-    
-    # List failed tests if any
-    if [ "$TESTS_FAILED" -gt 0 ]; then
-        echo ""
-        echo "Failed tests:"
-        for i in "${!FAILED_TESTS[@]}"; do
-            echo "  #$i: ${FAILED_TESTS[$i]}"
-        done
-    fi
-} > "$SUMMARY_FILE"
+echo "Creating summary file at ${SUMMARY_FILE}"
+echo "=== API Test Suite Summary ===" > "$SUMMARY_FILE"
+echo "Date: $(date)" >> "$SUMMARY_FILE"
+echo "Total Tests: ${TESTS_TOTAL}" >> "$SUMMARY_FILE"
+echo "Tests Passed: ${TESTS_PASSED}" >> "$SUMMARY_FILE"
+echo "Tests Failed: ${TESTS_FAILED}" >> "$SUMMARY_FILE"
+echo "" >> "$SUMMARY_FILE"
+if [ "$TESTS_TOTAL" -gt 0 ]; then
+    echo "Passing percentage: $((TESTS_PASSED * 100 / TESTS_TOTAL))%" >> "$SUMMARY_FILE"
+else
+    echo "Passing percentage: 0%" >> "$SUMMARY_FILE"
+fi
+
+# List failed tests if any
+if [ "$TESTS_FAILED" -gt 0 ]; then
+    echo "" >> "$SUMMARY_FILE"
+    echo "Failed tests:" >> "$SUMMARY_FILE"
+    for i in "${!FAILED_TESTS[@]}"; do
+        echo "  #$i: ${FAILED_TESTS[$i]}" >> "$SUMMARY_FILE"
+    done
+fi
 
 if [ "$TESTS_FAILED" -eq 0 ]; then
     echo -e "\n${GREEN}All tests passed successfully!${NC}"
     echo "All tests passed successfully!" >> "$SUMMARY_FILE"
-    
+
     # Display the summary file
     echo -e "\n${YELLOW}Test summary saved to: ${SUMMARY_FILE}${NC}"
     exit 0
