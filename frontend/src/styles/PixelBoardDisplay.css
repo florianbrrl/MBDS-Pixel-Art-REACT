@@ -1,0 +1,88 @@
+.pixel-board-display {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 500px;
+}
+
+.display-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.display-header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.display-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.toggle-info-button {
+  padding: 6px 12px;
+  background-color: var(--bg-secondary, #f3f4f6);
+  border: 1px solid var(--border-color, #d1d5db);
+  border-radius: var(--border-radius, 4px);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.toggle-info-button:hover {
+  background-color: var(--bg-tertiary, #e5e7eb);
+}
+
+.display-container {
+  display: flex;
+  flex: 1;
+  gap: 16px;
+}
+
+.display-container.with-info {
+  flex-direction: row;
+}
+
+.display-container.without-info {
+  flex-direction: column;
+}
+
+.info-panel {
+  flex: 0 0 300px;
+  overflow-y: auto;
+}
+
+.canvas-panel {
+  flex: 1;
+  min-height: 400px;
+  position: relative;
+}
+
+@media (max-width: 768px) {
+  .display-container.with-info {
+    flex-direction: column;
+  }
+
+  .info-panel {
+    flex: none;
+    width: 100%;
+  }
+}
+
+/* Styles pour le mode sombre */
+@media (prefers-color-scheme: dark) {
+  .toggle-info-button {
+    background-color: #2a2a2a;
+    border-color: #444;
+    color: #e0e0e0;
+  }
+
+  .toggle-info-button:hover {
+    background-color: #3a3a3a;
+  }
+}
