@@ -1,208 +1,367 @@
 import { Request, Response, NextFunction } from 'express';
 import { catchAsync, AppErrorClass } from '../middleware/errorHandler.middleware';
-import { PixelBoardModel, IPixelBoardCreate } from '../models/pixelboard.model';
+import {
+	PixelBoardModel,
+	IPixelBoardCreate,
+	IPixelBoardFilters,
+	IPixelBoardSortOptions,
+} from '../models/pixelboard.model';
 import { randomUUID } from 'crypto';
 
 /**
  * Fonction de validation pour les données PixelBoard
  */
 const validatePixelBoardData = (data: any) => {
-  // Vérifier les limites de taille
-  if (data.width && (data.width < 10 || data.width > 1000)) {
-    throw new AppErrorClass('La largeur doit être entre 10 et 1000', 400);
-  }
+	// Vérifier les limites de taille
+	if (data.width && (data.width < 10 || data.width > 1000)) {
+		throw new AppErrorClass('La largeur doit être entre 10 et 1000', 400);
+	}
 
-  if (data.height && (data.height < 10 || data.height > 1000)) {
-    throw new AppErrorClass('La hauteur doit être entre 10 et 1000', 400);
-  }
+	if (data.height && (data.height < 10 || data.height > 1000)) {
+		throw new AppErrorClass('La hauteur doit être entre 10 et 1000', 400);
+	}
 
-  // Vérifier les dates
-  if (data.start_time && data.end_time) {
-    const start = new Date(data.start_time);
-    const end = new Date(data.end_time);
+	// Vérifier les dates
+	if (data.start_time && data.end_time) {
+		const start = new Date(data.start_time);
+		const end = new Date(data.end_time);
 
-    if (start >= end) {
-      throw new AppErrorClass('La date de fin doit être postérieure à la date de début', 400);
-    }
-  }
+		if (start >= end) {
+			throw new AppErrorClass('La date de fin doit être postérieure à la date de début', 400);
+		}
+	}
 
-  return true;
+	return true;
+};
+
+/**
+ * Parse les paramètres de filtrage depuis la requête
+ */
+const parseFilterParams = (req: Request): IPixelBoardFilters => {
+	const filters: IPixelBoardFilters = {};
+
+	// Parse les filtres booléens
+	if (req.query.isActive !== undefined) {
+		filters.isActive = req.query.isActive === 'true';
+	}
+
+	if (req.query.allowOverwrite !== undefined) {
+		filters.allowOverwrite = req.query.allowOverwrite === 'true';
+	}
+
+	// Parse les filtres numériques
+	if (req.query.minWidth) {
+		filters.minWidth = parseInt(req.query.minWidth as string, 10);
+	}
+
+	if (req.query.maxWidth) {
+		filters.maxWidth = parseInt(req.query.maxWidth as string, 10);
+	}
+
+	if (req.query.minHeight) {
+		filters.minHeight = parseInt(req.query.minHeight as string, 10);
+	}
+
+	if (req.query.maxHeight) {
+		filters.maxHeight = parseInt(req.query.maxHeight as string, 10);
+	}
+
+	// Parse les filtres de texte
+	if (req.query.title) {
+		filters.title = req.query.title as string;
+	}
+
+	if (req.query.adminId) {
+		filters.adminId = req.query.adminId as string;
+	}
+
+	// Parse les filtres de date
+	if (req.query.startDateBefore) {
+		filters.startDateBefore = new Date(req.query.startDateBefore as string);
+	}
+
+	if (req.query.startDateAfter) {
+		filters.startDateAfter = new Date(req.query.startDateAfter as string);
+	}
+
+	if (req.query.endDateBefore) {
+		filters.endDateBefore = new Date(req.query.endDateBefore as string);
+	}
+
+	if (req.query.endDateAfter) {
+		filters.endDateAfter = new Date(req.query.endDateAfter as string);
+	}
+
+	return filters;
+};
+
+/**
+ * Parse les paramètres de tri depuis la requête
+ */
+const parseSortParams = (req: Request): IPixelBoardSortOptions => {
+	const defaultSort: IPixelBoardSortOptions = { field: 'created_at', direction: 'desc' };
+
+	const field = req.query.sortBy as string;
+	const direction = req.query.sortDirection as string;
+
+	// Valider le champ de tri
+	if (
+		field &&
+		['created_at', 'title', 'width', 'height', 'start_time', 'end_time'].includes(field)
+	) {
+		defaultSort.field = field as any;
+	}
+
+	// Valider la direction de tri
+	if (direction && ['asc', 'desc'].includes(direction)) {
+		defaultSort.direction = direction as 'asc' | 'desc';
+	}
+
+	return defaultSort;
+};
+
+/**
+ * Parse les paramètres de pagination depuis la requête
+ */
+const parsePaginationParams = (req: Request): { page: number; limit: number } => {
+	let page = 1;
+	let limit = 10;
+
+	if (req.query.page) {
+		const parsedPage = parseInt(req.query.page as string, 10);
+		if (!isNaN(parsedPage) && parsedPage > 0) {
+			page = parsedPage;
+		}
+	}
+
+	if (req.query.limit) {
+		const parsedLimit = parseInt(req.query.limit as string, 10);
+		if (!isNaN(parsedLimit) && parsedLimit > 0 && parsedLimit <= 100) {
+			limit = parsedLimit;
+		}
+	}
+
+	return { page, limit };
 };
 
 export class PixelBoardController {
-  /**
-   * Récupérer tous les PixelBoards
-   */
-  static getAllPixelBoards = catchAsync(async (req: Request, res: Response) => {
-    const pixelBoards = await PixelBoardModel.findAll();
+	/**
+	 * Récupérer tous les PixelBoards avec filtrage, tri et pagination
+	 */
+	static getAllPixelBoards = catchAsync(async (req: Request, res: Response) => {
+		// Parser les paramètres de filtrage, tri et pagination
+		const filters = parseFilterParams(req);
+		const sortOptions = parseSortParams(req);
+		const { page, limit } = parsePaginationParams(req);
 
-    res.status(200).json({
-      status: 'success',
-      data: pixelBoards,
-    });
-  });
+		// Récupérer les données avec les filtres appliqués
+		const result = await PixelBoardModel.findWithFilters(filters, sortOptions, page, limit);
 
-  /**
-   * Récupérer les PixelBoards actifs uniquement
-   */
-  static getActivePixelBoards = catchAsync(async (req: Request, res: Response) => {
-    const activePixelBoards = await PixelBoardModel.findActive();
+		res.status(200).json({
+			status: 'success',
+			data: result.data,
+			meta: {
+				total: result.total,
+				page: result.page,
+				limit: result.limit,
+				pages: Math.ceil(result.total / result.limit),
+			},
+		});
+	});
 
-    res.status(200).json({
-      status: 'success',
-      data: activePixelBoards,
-    });
-  });
+	/**
+	 * Récupérer les PixelBoards actifs uniquement
+	 */
+	static getActivePixelBoards = catchAsync(async (req: Request, res: Response) => {
+		// Forcer le filtre is_active à true et utiliser les autres filtres de la requête
+		const filters = { ...parseFilterParams(req), isActive: true };
+		const sortOptions = parseSortParams(req);
+		const { page, limit } = parsePaginationParams(req);
 
-  /**
-   * Récupérer les PixelBoards terminés (non actifs)
-   */
-  static getCompletedPixelBoards = catchAsync(async (req: Request, res: Response) => {
-    // Récupérer tous les PixelBoards
-    const allPixelBoards = await PixelBoardModel.findAll();
+		const result = await PixelBoardModel.findWithFilters(filters, sortOptions, page, limit);
 
-    // Filtrer pour ne garder que les terminés
-    const completedPixelBoards = allPixelBoards.filter(board => !board.is_active);
+		res.status(200).json({
+			status: 'success',
+			data: result.data,
+			meta: {
+				total: result.total,
+				page: result.page,
+				limit: result.limit,
+				pages: Math.ceil(result.total / result.limit),
+			},
+		});
+	});
 
-    res.status(200).json({
-      status: 'success',
-      data: completedPixelBoards,
-    });
-  });
+	/**
+	 * Récupérer les PixelBoards terminés (non actifs)
+	 */
+	static getCompletedPixelBoards = catchAsync(async (req: Request, res: Response) => {
+		// Forcer le filtre is_active à false et utiliser les autres filtres de la requête
+		const filters = { ...parseFilterParams(req), isActive: false };
+		const sortOptions = parseSortParams(req);
+		const { page, limit } = parsePaginationParams(req);
 
-  /**
-   * Récupérer un PixelBoard par son ID
-   */
-  static getPixelBoardById = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
+		const result = await PixelBoardModel.findWithFilters(filters, sortOptions, page, limit);
 
-    if (!id) {
-      return next(new AppErrorClass('ID du PixelBoard requis', 400));
-    }
+		res.status(200).json({
+			status: 'success',
+			data: result.data,
+			meta: {
+				total: result.total,
+				page: result.page,
+				limit: result.limit,
+				pages: Math.ceil(result.total / result.limit),
+			},
+		});
+	});
 
-    const pixelBoard = await PixelBoardModel.findById(id);
+	/**
+	 * Récupérer un PixelBoard par son ID
+	 */
+	static getPixelBoardById = catchAsync(
+		async (req: Request, res: Response, next: NextFunction) => {
+			const { id } = req.params;
 
-    if (!pixelBoard) {
-      return next(new AppErrorClass('PixelBoard non trouvé', 404));
-    }
+			if (!id) {
+				return next(new AppErrorClass('ID du PixelBoard requis', 400));
+			}
 
-    res.status(200).json({
-      status: 'success',
-      data: pixelBoard,
-    });
-  });
+			const pixelBoard = await PixelBoardModel.findById(id);
 
-  /**
-   * Créer un nouveau PixelBoard
-   */
-  static createPixelBoard = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const { title, width, height, cooldown, allow_overwrite, start_time, end_time } = req.body;
+			if (!pixelBoard) {
+				return next(new AppErrorClass('PixelBoard non trouvé', 404));
+			}
 
-    // Validation de base
-    if (!title || !width || !height || !start_time || !end_time) {
-      return next(new AppErrorClass('Champs obligatoires manquants', 400));
-    }
+			res.status(200).json({
+				status: 'success',
+				data: pixelBoard,
+			});
+		}
+	);
 
-    // Validation approfondie
-    validatePixelBoardData(req.body);
+	/**
+	 * Créer un nouveau PixelBoard
+	 */
+	static createPixelBoard = catchAsync(
+		async (req: Request, res: Response, next: NextFunction) => {
+			const { title, width, height, cooldown, allow_overwrite, start_time, end_time } =
+				req.body;
 
-    // Création des données pour le PixelBoard
-    const pixelBoardData: IPixelBoardCreate = {
-      title,
-      width: Number(width),
-      height: Number(height),
-      grid: {}, // Grille vide initialement
-      cooldown: cooldown ? Number(cooldown) : 60, // Valeur par défaut: 60 secondes
-      allow_overwrite: allow_overwrite || false, // Valeur par défaut: false
-      start_time: new Date(start_time),
-      end_time: new Date(end_time),
-      admin_id: req.user?.id, // ID de l'administrateur qui crée le PixelBoard
-    };
+			// Validation de base
+			if (!title || !width || !height || !start_time || !end_time) {
+				return next(new AppErrorClass('Champs obligatoires manquants', 400));
+			}
 
-    // Création du PixelBoard
-    const pixelBoard = await PixelBoardModel.create(pixelBoardData);
+			// Validation approfondie
+			validatePixelBoardData(req.body);
 
-    res.status(201).json({
-      status: 'success',
-      data: pixelBoard,
-    });
-  });
+			// Création des données pour le PixelBoard
+			const pixelBoardData: IPixelBoardCreate = {
+				title,
+				width: Number(width),
+				height: Number(height),
+				grid: {}, // Grille vide initialement
+				cooldown: cooldown ? Number(cooldown) : 60, // Valeur par défaut: 60 secondes
+				allow_overwrite: allow_overwrite || false, // Valeur par défaut: false
+				start_time: new Date(start_time),
+				end_time: new Date(end_time),
+				admin_id: req.user?.id, // ID de l'administrateur qui crée le PixelBoard
+			};
 
-  /**
-   * Mettre à jour un PixelBoard
-   */
-  static updatePixelBoard = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
-    const { title, width, height, cooldown, allow_overwrite, start_time, end_time } = req.body;
+			// Création du PixelBoard
+			const pixelBoard = await PixelBoardModel.create(pixelBoardData);
 
-    if (!id) {
-      return next(new AppErrorClass('ID du PixelBoard requis', 400));
-    }
+			res.status(201).json({
+				status: 'success',
+				data: pixelBoard,
+			});
+		}
+	);
 
-    // Vérifier si le PixelBoard existe
-    const existingPixelBoard = await PixelBoardModel.findById(id);
+	/**
+	 * Mettre à jour un PixelBoard
+	 */
+	static updatePixelBoard = catchAsync(
+		async (req: Request, res: Response, next: NextFunction) => {
+			const { id } = req.params;
+			const { title, width, height, cooldown, allow_overwrite, start_time, end_time } =
+				req.body;
 
-    if (!existingPixelBoard) {
-      return next(new AppErrorClass('PixelBoard non trouvé', 404));
-    }
+			if (!id) {
+				return next(new AppErrorClass('ID du PixelBoard requis', 400));
+			}
 
-    // Vérifier que l'utilisateur est l'administrateur du PixelBoard
-    if (existingPixelBoard.admin_id && existingPixelBoard.admin_id !== req.user?.id) {
-      return next(new AppErrorClass('Vous n\'êtes pas autorisé à modifier ce PixelBoard', 403));
-    }
+			// Vérifier si le PixelBoard existe
+			const existingPixelBoard = await PixelBoardModel.findById(id);
 
-    // Validation des données
-    if (width || height || start_time || end_time) {
-      validatePixelBoardData({
-        width: width || existingPixelBoard.width,
-        height: height || existingPixelBoard.height,
-        start_time: start_time || existingPixelBoard.start_time,
-        end_time: end_time || existingPixelBoard.end_time,
-      });
-    }
+			if (!existingPixelBoard) {
+				return next(new AppErrorClass('PixelBoard non trouvé', 404));
+			}
 
-    // Mettre à jour les champs
-    const updatedPixelBoard = await PixelBoardModel.update(id, {
-      ...(title && { title }),
-      ...(width && { width: Number(width) }),
-      ...(height && { height: Number(height) }),
-      ...(cooldown !== undefined && { cooldown: Number(cooldown) }),
-      ...(allow_overwrite !== undefined && { allow_overwrite }),
-      ...(start_time && { start_time: new Date(start_time) }),
-      ...(end_time && { end_time: new Date(end_time) }),
-    });
+			// Vérifier que l'utilisateur est l'administrateur du PixelBoard
+			if (existingPixelBoard.admin_id && existingPixelBoard.admin_id !== req.user?.id) {
+				return next(
+					new AppErrorClass("Vous n'êtes pas autorisé à modifier ce PixelBoard", 403)
+				);
+			}
 
-    res.status(200).json({
-      status: 'success',
-      data: updatedPixelBoard,
-    });
-  });
+			// Validation des données
+			if (width || height || start_time || end_time) {
+				validatePixelBoardData({
+					width: width || existingPixelBoard.width,
+					height: height || existingPixelBoard.height,
+					start_time: start_time || existingPixelBoard.start_time,
+					end_time: end_time || existingPixelBoard.end_time,
+				});
+			}
 
-  /**
-   * Supprimer un PixelBoard
-   */
-  static deletePixelBoard = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
+			// Mettre à jour les champs
+			const updatedPixelBoard = await PixelBoardModel.update(id, {
+				...(title && { title }),
+				...(width && { width: Number(width) }),
+				...(height && { height: Number(height) }),
+				...(cooldown !== undefined && { cooldown: Number(cooldown) }),
+				...(allow_overwrite !== undefined && { allow_overwrite }),
+				...(start_time && { start_time: new Date(start_time) }),
+				...(end_time && { end_time: new Date(end_time) }),
+			});
 
-    if (!id) {
-      return next(new AppErrorClass('ID du PixelBoard requis', 400));
-    }
+			res.status(200).json({
+				status: 'success',
+				data: updatedPixelBoard,
+			});
+		}
+	);
 
-    // Vérifier si le PixelBoard existe
-    const existingPixelBoard = await PixelBoardModel.findById(id);
+	/**
+	 * Supprimer un PixelBoard
+	 */
+	static deletePixelBoard = catchAsync(
+		async (req: Request, res: Response, next: NextFunction) => {
+			const { id } = req.params;
 
-    if (!existingPixelBoard) {
-      return next(new AppErrorClass('PixelBoard non trouvé', 404));
-    }
+			if (!id) {
+				return next(new AppErrorClass('ID du PixelBoard requis', 400));
+			}
 
-    // Vérifier que l'utilisateur est l'administrateur du PixelBoard
-    if (existingPixelBoard.admin_id && existingPixelBoard.admin_id !== req.user?.id) {
-      return next(new AppErrorClass('Vous n\'êtes pas autorisé à supprimer ce PixelBoard', 403));
-    }
+			// Vérifier si le PixelBoard existe
+			const existingPixelBoard = await PixelBoardModel.findById(id);
 
-    // Supprimer le PixelBoard
-    await PixelBoardModel.delete(id);
+			if (!existingPixelBoard) {
+				return next(new AppErrorClass('PixelBoard non trouvé', 404));
+			}
 
-    res.status(204).send();
-  });
+			// Vérifier que l'utilisateur est l'administrateur du PixelBoard
+			if (existingPixelBoard.admin_id && existingPixelBoard.admin_id !== req.user?.id) {
+				return next(
+					new AppErrorClass("Vous n'êtes pas autorisé à supprimer ce PixelBoard", 403)
+				);
+			}
+
+			// Supprimer le PixelBoard
+			await PixelBoardModel.delete(id);
+
+			res.status(204).send();
+		}
+	);
 }
