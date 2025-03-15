@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PixelBoard } from '@/types';
-import '@/styles/PixelBoard.css';
+import '@/styles/pixelboard.css';
 
 interface PixelBoardFormProps {
   board: PixelBoard | null;
@@ -42,7 +42,7 @@ const PixelBoardForm: React.FC<PixelBoardFormProps> = ({ board, onSubmit, onCanc
     cooldown: 60,
     allow_overwrite: false,
     start_time: getCurrentDate(),
-    end_time: getNextWeekDate()
+    end_time: getNextWeekDate(),
   });
 
   // Initialiser le formulaire avec les données du board si en mode édition
@@ -55,7 +55,7 @@ const PixelBoardForm: React.FC<PixelBoardFormProps> = ({ board, onSubmit, onCanc
         cooldown: board.cooldown,
         allow_overwrite: board.allow_overwrite,
         start_time: formatDateForInput(board.start_time),
-        end_time: formatDateForInput(board.end_time)
+        end_time: formatDateForInput(board.end_time),
       });
     }
   }, [board]);
@@ -66,7 +66,7 @@ const PixelBoardForm: React.FC<PixelBoardFormProps> = ({ board, onSubmit, onCanc
 
     setFormData({
       ...formData,
-      [name]: type === 'checkbox' ? checked : type === 'number' ? Number(value) : value
+      [name]: type === 'checkbox' ? checked : type === 'number' ? Number(value) : value,
     });
   };
 

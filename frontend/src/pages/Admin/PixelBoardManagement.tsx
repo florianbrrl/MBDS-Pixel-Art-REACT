@@ -5,7 +5,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ErrorMessage from '@/components/common/ErrorMessage';
 import PixelBoardForm from './PixelBoardForm';
 import PixelBoardPreview from './PixelBoardPreview';
-import '@/styles/PixelBoard.css';
+import '@/styles/pixelboard.css';
 
 const PixelBoardManagement: React.FC = () => {
   // États pour les données et l'UI
@@ -53,7 +53,7 @@ const PixelBoardManagement: React.FC = () => {
         alert(`Erreur: ${response.error}`);
       } else {
         // Mettre à jour la liste après suppression
-        setBoards(boards.filter(board => board.id !== id));
+        setBoards(boards.filter((board) => board.id !== id));
         alert('PixelBoard supprimé avec succès');
       }
     } catch (err: any) {
@@ -139,7 +139,7 @@ const PixelBoardManagement: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {boards.map(board => (
+                {boards.map((board) => (
                   <tr key={board.id}>
                     <td className="px-4 py-2 border-b">
                       <div className="flex items-center">
@@ -149,13 +149,19 @@ const PixelBoardManagement: React.FC = () => {
                         <span>{board.title}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-2 border-b">{board.width}x{board.height}</td>
                     <td className="px-4 py-2 border-b">
-                      <span className={`px-2 py-1 rounded text-xs ${board.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                      {board.width}x{board.height}
+                    </td>
+                    <td className="px-4 py-2 border-b">
+                      <span
+                        className={`px-2 py-1 rounded text-xs ${board.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+                      >
                         {board.is_active ? 'Actif' : 'Terminé'}
                       </span>
                     </td>
-                    <td className="px-4 py-2 border-b">{new Date(board.end_time).toLocaleDateString()}</td>
+                    <td className="px-4 py-2 border-b">
+                      {new Date(board.end_time).toLocaleDateString()}
+                    </td>
                     <td className="px-4 py-2 border-b">
                       <button
                         onClick={() => handleEdit(board)}

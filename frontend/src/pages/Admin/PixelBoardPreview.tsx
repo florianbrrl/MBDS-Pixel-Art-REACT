@@ -1,6 +1,6 @@
 import React from 'react';
 import { PixelBoard } from '@/types';
-import '@/styles/PixelBoard.css';
+import '@/styles/pixelboard.css';
 
 interface PixelBoardPreviewProps {
   board: PixelBoard;
@@ -9,10 +9,7 @@ interface PixelBoardPreviewProps {
 
 const PixelBoardPreview: React.FC<PixelBoardPreviewProps> = ({ board, size = 100 }) => {
   // Calculer la taille d'une cellule en fonction des dimensions du board
-  const cellSize = Math.min(
-    Math.floor(size / board.width),
-    Math.floor(size / board.height)
-  );
+  const cellSize = Math.min(Math.floor(size / board.width), Math.floor(size / board.height));
 
   // Créer un tableau 2D pour représenter la grille
   const grid = [];
@@ -31,13 +28,13 @@ const PixelBoardPreview: React.FC<PixelBoardPreviewProps> = ({ board, size = 100
             height: `${cellSize}px`,
             backgroundColor: color,
           }}
-        />
+        />,
       );
     }
     grid.push(
       <div key={`row-${y}`} style={{ display: 'flex' }}>
         {row}
-      </div>
+      </div>,
     );
   }
 
@@ -50,7 +47,7 @@ const PixelBoardPreview: React.FC<PixelBoardPreviewProps> = ({ board, size = 100
         border: '1px solid #ccc',
         overflow: 'hidden',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
       }}
     >
       {grid}
