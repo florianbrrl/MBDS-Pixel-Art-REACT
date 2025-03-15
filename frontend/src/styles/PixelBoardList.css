@@ -1,0 +1,170 @@
+.pixelboard-list-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .pixelboard-list-controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: var(--bg-secondary, #f9fafb);
+    border-radius: var(--border-radius, 8px);
+    box-shadow: var(--shadow, 0 1px 3px rgba(0, 0, 0, 0.1));
+  }
+
+  .search-container {
+    flex: 1 1 300px;
+    max-width: 500px;
+    margin-right: 20px;
+    margin-bottom: 10px;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: var(--border-radius, 8px);
+    background-color: var(--input-bg, white);
+    color: var(--text-primary, #111827);
+    font-size: 1rem;
+  }
+
+  .search-input:focus {
+    outline: none;
+    border-color: var(--color-primary, #3b82f6);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+  }
+
+  .filter-sort-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+
+  .filter-dropdown,
+  .sort-dropdown {
+    display: flex;
+    align-items: center;
+  }
+
+  .filter-dropdown label,
+  .sort-dropdown label {
+    margin-right: 8px;
+    color: var(--text-secondary, #4b5563);
+    font-size: 0.9rem;
+  }
+
+  .filter-dropdown select,
+  .sort-dropdown select {
+    padding: 8px 30px 8px 12px;
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: var(--border-radius, 8px);
+    background-color: var(--input-bg, white);
+    color: var(--text-primary, #111827);
+    font-size: 0.9rem;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='%23374151' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    cursor: pointer;
+  }
+
+  .filter-dropdown select:focus,
+  .sort-dropdown select:focus {
+    outline: none;
+    border-color: var(--color-primary, #3b82f6);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+  }
+
+  .boards-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    color: var(--text-secondary, #6b7280);
+    font-size: 0.95rem;
+  }
+
+  .boards-count {
+    font-weight: 500;
+  }
+
+  .pixelboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+
+  .no-boards-message {
+    padding: 30px;
+    text-align: center;
+    background-color: var(--bg-secondary, #f9fafb);
+    border-radius: var(--border-radius, 8px);
+    color: var(--text-secondary, #6b7280);
+    border: 1px dashed var(--border-color, #e5e7eb);
+  }
+
+  /* Responsive design */
+  @media (max-width: 768px) {
+    .pixelboard-list-controls {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .search-container {
+      margin-right: 0;
+      margin-bottom: 15px;
+      max-width: none;
+    }
+
+    .filter-sort-container {
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .filter-dropdown,
+    .sort-dropdown {
+      width: 100%;
+    }
+
+    .filter-dropdown select,
+    .sort-dropdown select {
+      flex: 1;
+    }
+
+    .pixelboard-grid {
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+  }
+
+  /* Styles pour le mode sombre */
+  @media (prefers-color-scheme: dark) {
+    .search-input {
+      background-color: #374151;
+      border-color: #4b5563;
+      color: #f9fafb;
+    }
+
+    .filter-dropdown select,
+    .sort-dropdown select {
+      background-color: #374151;
+      border-color: #4b5563;
+      color: #f9fafb;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='%23f9fafb' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    }
+
+    .pixelboard-list-controls {
+      background-color: #1f2937;
+    }
+
+    .no-boards-message {
+      background-color: #1f2937;
+      border-color: #374151;
+      color: #9ca3af;
+    }
+  }
