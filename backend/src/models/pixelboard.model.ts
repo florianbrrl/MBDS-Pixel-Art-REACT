@@ -17,6 +17,32 @@ export interface IPixelBoardCreate {
 }
 
 /**
+ * Interface pour les options de filtrage des PixelBoards
+ */
+export interface IPixelBoardFilters {
+	isActive?: boolean;
+	minWidth?: number;
+	maxWidth?: number;
+	minHeight?: number;
+	maxHeight?: number;
+	allowOverwrite?: boolean;
+	title?: string;
+	adminId?: string;
+	startDateBefore?: Date;
+	startDateAfter?: Date;
+	endDateBefore?: Date;
+	endDateAfter?: Date;
+}
+
+/**
+ * Interface pour les options de tri des PixelBoards
+ */
+export interface IPixelBoardSortOptions {
+	field: 'created_at' | 'title' | 'width' | 'height' | 'start_time' | 'end_time';
+	direction: 'asc' | 'desc';
+}
+
+/**
  * Classe modèle PixelBoard pour les opérations de base de données
  */
 export class PixelBoardModel {
@@ -49,6 +75,104 @@ export class PixelBoardModel {
 				is_active: true,
 			},
 		});
+	}
+
+	/**
+	 * Obtenir les tableaux de pixels terminés
+	 * @returns Tableau des tableaux de pixels terminés
+	 */
+	static async findCompleted(): Promise<PixelBoard[]> {
+		return prisma.pixelBoard.findMany({
+			where: {
+				is_active: false,
+			},
+		});
+	}
+
+	/**
+	 * Rechercher les tableaux de pixels avec filtres et tri
+	 * @param filters - Critères de filtrage
+	 * @param sortOptions - Options de tri
+	 * @param page - Numéro de page pour la pagination
+	 * @param limit - Nombre d'éléments par page
+	 * @returns Tableau des tableaux de pixels filtrés et triés
+	 */
+	static async findWithFilters(
+		filters: IPixelBoardFilters = {},
+		sortOptions: IPixelBoardSortOptions = { field: 'created_at', direction: 'desc' },
+		page = 1,
+		limit = 10
+	): Promise<{ data: PixelBoard[]; total: number; page: number; limit: number }> {
+		// Construire les conditions de filtrage
+		const where: any = {};
+
+		if (filters.isActive !== undefined) {
+			where.is_active = filters.isActive;
+		}
+
+		if (filters.minWidth !== undefined) {
+			where.width = { ...(where.width || {}), gte: filters.minWidth };
+		}
+
+		if (filters.maxWidth !== undefined) {
+			where.width = { ...(where.width || {}), lte: filters.maxWidth };
+		}
+
+		if (filters.minHeight !== undefined) {
+			where.height = { ...(where.height || {}), gte: filters.minHeight };
+		}
+
+		if (filters.maxHeight !== undefined) {
+			where.height = { ...(where.height || {}), lte: filters.maxHeight };
+		}
+
+		if (filters.allowOverwrite !== undefined) {
+			where.allow_overwrite = filters.allowOverwrite;
+		}
+
+		if (filters.title) {
+			where.title = { contains: filters.title, mode: 'insensitive' };
+		}
+
+		if (filters.adminId) {
+			where.admin_id = filters.adminId;
+		}
+
+		if (filters.startDateBefore) {
+			where.start_time = { ...(where.start_time || {}), lte: filters.startDateBefore };
+		}
+
+		if (filters.startDateAfter) {
+			where.start_time = { ...(where.start_time || {}), gte: filters.startDateAfter };
+		}
+
+		if (filters.endDateBefore) {
+			where.end_time = { ...(where.end_time || {}), lte: filters.endDateBefore };
+		}
+
+		if (filters.endDateAfter) {
+			where.end_time = { ...(where.end_time || {}), gte: filters.endDateAfter };
+		}
+
+		// Calculer le nombre total d'éléments correspondant aux filtres
+		const total = await prisma.pixelBoard.count({ where });
+
+		// Récupérer les données avec pagination et tri
+		const data = await prisma.pixelBoard.findMany({
+			where,
+			orderBy: {
+				[sortOptions.field]: sortOptions.direction,
+			},
+			skip: (page - 1) * limit,
+			take: limit,
+		});
+
+		return {
+			data,
+			total,
+			page,
+			limit,
+		};
 	}
 
 	/**
