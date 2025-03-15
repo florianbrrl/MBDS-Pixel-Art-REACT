@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { PixelController } from '../controllers/pixel.controller';
-import { authenticate } from '../middleware/auth.middleware';
+import { authenticateToken as authenticate } from '../middleware/auth.middleware';
 
 const router = Router();
 
