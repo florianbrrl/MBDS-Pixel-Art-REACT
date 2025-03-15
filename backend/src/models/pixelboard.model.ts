@@ -52,9 +52,15 @@ export class PixelBoardModel {
 	 * @returns Le tableau de pixels ou null si non trouvé
 	 */
 	static async findById(id: string): Promise<PixelBoard | null> {
-		return prisma.pixelBoard.findUnique({
-			where: { id },
-		});
+		try {
+			return await prisma.pixelBoard.findUnique({
+				where: { id },
+			});
+		} catch (error) {
+			// If an invalid UUID format is provided, return null instead of throwing an error
+			console.error('Error finding PixelBoard by ID:', error);
+			return null;
+		}
 	}
 
 	/**

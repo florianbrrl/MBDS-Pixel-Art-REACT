@@ -47,8 +47,12 @@ router.use(authenticateToken);
  *                       format: date-time
  *       401:
  *         description: Not authenticated
+ *       403:
+ *         description: Insufficient permissions
  */
-router.get('/profile', UserController.getProfile);
+// Restrict these endpoints to non-guest users
+router.get('/profile', restrictTo('user', 'premium', 'admin'), UserController.getProfile);
+router.get('/me', restrictTo('user', 'premium', 'admin'), UserController.getProfile); // Add /me endpoint as alias for /profile
 
 /**
  * @swagger
@@ -101,8 +105,13 @@ router.get('/profile', UserController.getProfile);
  *         description: Invalid data provided
  *       401:
  *         description: Not authenticated
+ *       403:
+ *         description: Insufficient permissions
  */
-router.put('/profile', UserController.updateProfile);
+// Restrict these endpoints to non-guest users 
+router.put('/profile', restrictTo('user', 'premium', 'admin'), UserController.updateProfile);
+router.put('/me', restrictTo('user', 'premium', 'admin'), UserController.updateProfile); // Add /me endpoint as alias for updating profile
+router.patch('/me', restrictTo('user', 'premium', 'admin'), UserController.updateProfile); // Add PATCH method for updating profile
 
 /**
  * @swagger

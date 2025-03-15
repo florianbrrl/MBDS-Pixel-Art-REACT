@@ -23,7 +23,7 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
 
 	jwt.verify(token, config.jwt.secret, (err, decoded) => {
 		if (err) {
-			return next(new AppErrorClass('Invalid or expired token', 403));
+			return next(new AppErrorClass('Invalid or expired token', 401));
 		}
 		req.user = decoded as JwtPayload; // Attach decoded payload to request
 		next();
