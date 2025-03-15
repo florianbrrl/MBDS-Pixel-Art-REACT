@@ -49,18 +49,6 @@ app.all('*', (req: Request, res: Response, next: NextFunction) => {
 });
 
 // Middleware de gestion globale des erreurs
-app.use((err: AppError, req: Request, res: Response, next: NextFunction) => {
-	err.statusCode = err.statusCode || 500;
-	err.status = err.status || 'error';
-
-	// En développement, envoyer l'erreur complète, en production, envoyer une réponse simplifiée
-	const isDevelopment = config.server.env === 'development';
-
-	res.status(err.statusCode).json({
-		status: err.status,
-		message: err.message,
-		...(isDevelopment && { stack: err.stack }),
-	});
-});
+app.use(globalErrorHandler);
 
 export default app;
