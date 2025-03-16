@@ -1,0 +1,50 @@
+.pixelboard-preview-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .pixelboard-preview {
+    border: 1px solid var(--border-color, #e5e7eb);
+    background-color: var(--bg-secondary, #f3f4f6);
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+  }
+
+  /* Style pour adapter les grilles de grande taille */
+  .pixelboard-preview.large-grid {
+    transform: scale(0.9);
+  }
+
+  /* Style pour les lignes de la grille */
+  .preview-row {
+    display: flex;
+    flex-direction: row;
+  }
+
+  /* Style pour les pixels individuels */
+  .preview-pixel {
+    display: inline-block;
+    box-sizing: border-box;
+  }
+
+  /* Facultatif: effet de hover sur les pixels */
+  .preview-pixel:hover {
+    outline: 1px solid rgba(0, 0, 0, 0.2);
+    z-index: 1;
+  }
+
+  /* Styles pour le mode sombre */
+  @media (prefers-color-scheme: dark) {
+    .pixelboard-preview {
+      border-color: #374151;
+      background-color: #111827;
+    }
+
+    .preview-pixel:hover {
+      outline-color: rgba(255, 255, 255, 0.3);
+    }
+  }
