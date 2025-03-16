@@ -346,6 +346,39 @@ run_test "/admin" "GET" "403" "Access admin route as user" "" "$USER_TOKEN" ""
 run_test "/admin" "GET" "403" "Access admin route as guest" "" "$GUEST_TOKEN" ""
 run_test "/admin" "GET" "401" "Access admin route without token" "" "" ""
 
+# Create a test PixelBoard for pixel placement
+echo "Creating test PixelBoard for pixel placement tests..."
+PIXELBOARD_CREATE_DATA='{
+  "title": "Test Board for Pixel Placement",
+  "width": 20,
+  "height": 20,
+  "cooldown": 0,
+  "allow_overwrite": true,
+  "start_time": "2023-01-01T00:00:00Z",
+  "end_time": "2030-12-31T23:59:59Z"
+}'
+
+# Create a test board as admin
+test_board_response=$(curl -s -X POST "$API_BASE_URL/pixelboards" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -d "$PIXELBOARD_CREATE_DATA")
+
+# Extract the ID of the newly created board
+active_pixelboard_id=$(echo "$test_board_response" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+echo "Using pixelboard ID: $active_pixelboard_id"
+
+# Test pixel placement
+run_test "/pixelboards/$active_pixelboard_id/pixel" "POST" "200" "Place a pixel as a user" '{"x": 5, "y": 5, "color": "#FF0000"}' "$USER_TOKEN" ""
+run_test "/pixelboards/$active_pixelboard_id/pixel" "POST" "200" "Place a pixel as a premium user" '{"x": 6, "y": 6, "color": "#00FF00"}' "$PREMIUM_TOKEN" ""
+run_test "/pixelboards/$active_pixelboard_id/pixel" "POST" "200" "Place a pixel as an admin" '{"x": 7, "y": 7, "color": "#0000FF"}' "$ADMIN_TOKEN" ""
+run_test "/pixelboards/$active_pixelboard_id/pixel" "POST" "403" "Place a pixel as a guest" '{"x": 8, "y": 8, "color": "#FF00FF"}' "$GUEST_TOKEN" ""
+run_test "/pixelboards/$active_pixelboard_id/pixel" "POST" "401" "Place a pixel without authentication" '{"x": 9, "y": 9, "color": "#00FFFF"}' "" ""
+run_test "/pixelboards/invalid-id/pixel" "POST" "404" "Place a pixel with invalid ID" '{"x": 5, "y": 5, "color": "#FF0000"}' "$USER_TOKEN" ""
+run_test "/pixelboards/$active_pixelboard_id/pixel" "POST" "400" "Place a pixel with invalid coordinates" '{"x": -1, "y": 5, "color": "#FF0000"}' "$USER_TOKEN" ""
+run_test "/pixelboards/$active_pixelboard_id/pixel" "POST" "400" "Place a pixel with invalid color format" '{"x": 5, "y": 5, "color": "invalid-color"}' "$USER_TOKEN" ""
+run_test "/pixelboards/invalid-id/pixel" "POST" "404" "Place a pixel on a non-existent board" '{"x": 5, "y": 5, "color": "#FF0000"}' "$USER_TOKEN" ""
+
 # ==========================================
 # Summary and Results
 # ==========================================

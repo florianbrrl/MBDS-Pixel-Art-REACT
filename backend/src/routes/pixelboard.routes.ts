@@ -426,6 +426,73 @@ router.get('/:id', PixelBoardController.getPixelBoardById);
 // Les routes protégées restent inchangées...
 router.use(authenticateToken);
 
+/**
+ * @swagger
+ * /pixelboards/{id}/pixel:
+ *   post:
+ *     summary: Placer un pixel sur un PixelBoard
+ *     tags: [PixelBoards]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID du PixelBoard
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - x
+ *               - y
+ *               - color
+ *             properties:
+ *               x:
+ *                 type: integer
+ *                 description: Coordonnée X du pixel
+ *               y:
+ *                 type: integer
+ *                 description: Coordonnée Y du pixel
+ *               color:
+ *                 type: string
+ *                 description: Couleur au format hexadécimal (#RRGGBB)
+ *     responses:
+ *       200:
+ *         description: Pixel placé avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     pixelboard_id:
+ *                       type: string
+ *                     x:
+ *                       type: integer
+ *                     y:
+ *                       type: integer
+ *                     color:
+ *                       type: string
+ *                     timestamp:
+ *                       type: string
+ *                       format: date-time
+ *       400:
+ *         description: Erreur de validation ou contrainte de cooldown non respectée
+ *       404:
+ *         description: PixelBoard non trouvé
+ */
+router.post('/:id/pixel', PixelBoardController.placePixel);
+
 router.post('/', restrictTo('admin'), PixelBoardController.createPixelBoard);
 router.put('/:id', restrictTo('admin'), PixelBoardController.updatePixelBoard);
 router.delete('/:id', restrictTo('admin'), PixelBoardController.deletePixelBoard);

@@ -17,6 +17,16 @@ export interface IPixelBoardCreate {
 }
 
 /**
+ * Interface pour les données de placement d'un pixel
+ */
+export interface IPlacePixelData {
+	x: number;
+	y: number;
+	color: string;
+	user_id?: string;
+}
+
+/**
  * Interface pour les options de filtrage des PixelBoards
  */
 export interface IPixelBoardFilters {
@@ -223,6 +233,110 @@ export class PixelBoardModel {
 	static async delete(id: string): Promise<PixelBoard> {
 		return prisma.pixelBoard.delete({
 			where: { id },
+		});
+	}
+
+	/**
+	 * Placer un pixel sur un tableau avec des transactions pour l'intégrité des données
+	 * @param boardId - L'UUID du tableau
+	 * @param pixelData - Les données du pixel à placer
+	 * @returns Le tableau de pixels mis à jour
+	 */
+	static async placePixel(boardId: string, pixelData: IPlacePixelData): Promise<PixelBoard> {
+		return prisma.$transaction(async (tx) => {
+			// 1. Récupérer le tableau actuel avec verrouillage pour éviter les conditions de concurrence
+			const pixelBoard = await tx.pixelBoard.findUnique({
+				where: { id: boardId },
+				select: {
+					id: true,
+					grid: true,
+					width: true,
+					height: true,
+					is_active: true,
+					allow_overwrite: true,
+					cooldown: true,
+				},
+			});
+
+			// Vérifier si le tableau existe
+			if (!pixelBoard) {
+				throw new Error('PixelBoard not found');
+			}
+
+			// Vérifier si le tableau est actif
+			if (!pixelBoard.is_active) {
+				throw new Error('PixelBoard is not active');
+			}
+
+			// Vérifier si les coordonnées sont valides
+			if (
+				pixelData.x < 0 ||
+				pixelData.x >= pixelBoard.width ||
+				pixelData.y < 0 ||
+				pixelData.y >= pixelBoard.height
+			) {
+				throw new Error('Invalid pixel coordinates');
+			}
+
+			// Vérifier si l'utilisateur peut placer un pixel (cooldown)
+			if (pixelData.user_id) {
+				const lastPixel = await tx.pixelHistory.findFirst({
+					where: {
+						board_id: boardId,
+						user_id: pixelData.user_id,
+					},
+					orderBy: {
+						timestamp: 'desc',
+					},
+				});
+
+				if (lastPixel) {
+					const timeSinceLastPixel = Math.floor(
+						(Date.now() - lastPixel.timestamp.getTime()) / 1000
+					);
+					if (timeSinceLastPixel < pixelBoard.cooldown) {
+						throw new Error(
+							`You must wait ${
+								pixelBoard.cooldown - timeSinceLastPixel
+							} seconds before placing another pixel`
+						);
+					}
+				}
+			}
+
+			// Vérifier si le pixel peut être écrasé
+			const grid = pixelBoard.grid as any;
+			const pixelKey = `${pixelData.x},${pixelData.y}`;
+			
+			if (!pixelBoard.allow_overwrite && grid[pixelKey]) {
+				throw new Error('This pixel has already been placed and cannot be overwritten');
+			}
+
+			// 2. Mettre à jour la grille
+			const updatedGrid = { ...grid };
+			updatedGrid[pixelKey] = pixelData.color;
+
+			// 3. Mettre à jour le tableau
+			const updatedBoard = await tx.pixelBoard.update({
+				where: { id: boardId },
+				data: {
+					grid: updatedGrid,
+				},
+			});
+
+			// 4. Ajouter l'entrée dans l'historique
+			await tx.pixelHistory.create({
+				data: {
+					board_id: boardId,
+					x: pixelData.x,
+					y: pixelData.y,
+					color: pixelData.color,
+					user_id: pixelData.user_id,
+					timestamp: new Date(),
+				},
+			});
+
+			return updatedBoard;
 		});
 	}
 }

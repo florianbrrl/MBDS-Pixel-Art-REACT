@@ -146,6 +146,88 @@ const parsePaginationParams = (req: Request): { page: number; limit: number } =>
 
 export class PixelBoardController {
 	/**
+	 * Placer un pixel sur un PixelBoard
+	 */
+	static placePixel = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+		// Vérifier si l'utilisateur a les droits (restreint aux rôles premium, admin et user)
+		if (req.user?.role === 'guest') {
+			return next(new AppErrorClass('Les invités ne peuvent pas placer de pixels', 403));
+		}
+		
+		const { id } = req.params;
+		const { x, y, color } = req.body;
+
+		// Validation des champs requis
+		if (!id) {
+			return next(new AppErrorClass('ID du PixelBoard requis', 400));
+		}
+
+		if (x === undefined || y === undefined || !color) {
+			return next(new AppErrorClass('Coordonnées (x, y) et couleur requises', 400));
+		}
+
+		// Validation du format de la couleur (hex code sans # pour la compatibilité avec les tests)
+		const colorRegex = /^([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3}|#[A-Fa-f0-9]{6}|#[A-Fa-f0-9]{3})$/;
+		if (!colorRegex.test(color)) {
+			return next(new AppErrorClass('Format de couleur invalide (doit être au format hexadécimal RRGGBB ou #RRGGBB)', 400));
+		}
+		
+		// Normaliser le format avec # si nécessaire
+		const normalizedColor = color.startsWith('#') ? color : `#${color}`;
+
+		// Validation des coordonnées comme nombres
+		const parsedX = Number(x);
+		const parsedY = Number(y);
+
+		if (isNaN(parsedX) || isNaN(parsedY)) {
+			return next(new AppErrorClass('Les coordonnées doivent être des nombres', 400));
+		}
+
+		// Vérifier si les coordonnées sont négatives
+		if (parsedX < 0 || parsedY < 0) {
+			return next(new AppErrorClass('Les coordonnées ne peuvent pas être négatives', 400));
+		}
+
+		try {
+			// Vérifier si l'ID est un UUID valide
+			const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+			if (!uuidRegex.test(id)) {
+				return next(new AppErrorClass('PixelBoard non trouvé', 404));
+			}
+			
+			// Vérifier si le PixelBoard existe
+			const pixelBoard = await PixelBoardModel.findById(id);
+			if (!pixelBoard) {
+				return next(new AppErrorClass('PixelBoard non trouvé', 404));
+			}
+			
+			// Placer le pixel avec l'ID de l'utilisateur connecté si disponible
+			const pixelData = {
+				x: parsedX,
+				y: parsedY,
+				color: normalizedColor,
+				user_id: req.user?.id
+			};
+
+			const updatedPixelBoard = await PixelBoardModel.placePixel(id, pixelData);
+
+			res.status(200).json({
+				status: 'success',
+				data: {
+					pixelboard_id: updatedPixelBoard.id,
+					x: parsedX,
+					y: parsedY,
+					color: normalizedColor,
+					timestamp: new Date()
+				}
+			});
+		} catch (error: any) {
+			// Gérer les erreurs spécifiques au placement de pixels
+			return next(new AppErrorClass(error.message, 400));
+		}
+	});
+
+	/**
 	 * Récupérer tous les PixelBoards avec filtrage, tri et pagination
 	 */
 	static getAllPixelBoards = catchAsync(async (req: Request, res: Response) => {
