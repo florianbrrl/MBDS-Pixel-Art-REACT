@@ -423,6 +423,114 @@ router.get('/completed', PixelBoardController.getCompletedPixelBoards);
  */
 router.get('/:id', PixelBoardController.getPixelBoardById);
 
+/**
+ * @swagger
+ * /pixelboards/{id}/history:
+ *   get:
+ *     summary: Récupérer l'historique complet des pixels d'un PixelBoard
+ *     tags: [PixelBoards]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID du PixelBoard
+ *     responses:
+ *       200:
+ *         description: Historique des pixels du PixelBoard
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       board_id:
+ *                         type: string
+ *                       x:
+ *                         type: integer
+ *                       y:
+ *                         type: integer
+ *                       color:
+ *                         type: string
+ *                       user_id:
+ *                         type: string
+ *                       timestamp:
+ *                         type: string
+ *                         format: date-time
+ *       404:
+ *         description: PixelBoard non trouvé
+ */
+router.get('/:id/history', PixelBoardController.getBoardHistory);
+
+/**
+ * @swagger
+ * /pixelboards/{id}/position-history:
+ *   get:
+ *     summary: Récupérer l'historique des pixels pour une position spécifique
+ *     tags: [PixelBoards]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID du PixelBoard
+ *       - in: query
+ *         name: x
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Coordonnée X du pixel
+ *       - in: query
+ *         name: y
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Coordonnée Y du pixel
+ *     responses:
+ *       200:
+ *         description: Historique des pixels pour la position spécifiée
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       board_id:
+ *                         type: string
+ *                       x:
+ *                         type: integer
+ *                       y:
+ *                         type: integer
+ *                       color:
+ *                         type: string
+ *                       user_id:
+ *                         type: string
+ *                       timestamp:
+ *                         type: string
+ *                         format: date-time
+ *       400:
+ *         description: Coordonnées invalides ou manquantes
+ *       404:
+ *         description: PixelBoard non trouvé
+ */
+router.get('/:id/position-history', PixelBoardController.getPositionHistory);
+
 // Les routes protégées restent inchangées...
 router.use(authenticateToken);
 
