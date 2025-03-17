@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { PixelBoard } from '@/types';
 import PixelBoardCanvas from './PixelBoardCanvas';
 import PixelBoardInfo from './PixelBoardInfo';
+import ColorPicker from './ColorPicker';
 import './../../styles/PixelBoardDisplay.css';
 
 interface PixelBoardDisplayProps {
@@ -19,44 +20,51 @@ const PixelBoardDisplay: React.FC<PixelBoardDisplayProps> = ({
   selectedColor = '#000000',
   canEdit = false,
 }) => {
-  const [infoVisible, setInfoVisible] = useState(true);
+  const [currentColor, setCurrentColor] = useState(selectedColor);
+  const [notification, setNotification] = useState<string | null>(null);
+
+  const handleColorChange = (color: string) => {
+    setCurrentColor(color);
+  };
 
   const handlePixelClick = (x: number, y: number) => {
     if (readOnly || !onPixelPlaced) return;
-    onPixelPlaced(x, y, selectedColor);
-  };
 
-  const toggleInfo = () => {
-    setInfoVisible(!infoVisible);
+    // Vérifier si on peut écraser le pixel
+    const pixelKey = `${x},${y}`;
+    if (board.grid[pixelKey] && !board.allow_overwrite) {
+      setNotification('Ce pixel ne peut pas être modifié');
+      setTimeout(() => setNotification(null), 3000);
+      return;
+    }
+
+    // Appeler la fonction parente sans afficher directement une notification
+    // La notification de succès sera conditionnelle au niveau parent
+    onPixelPlaced(x, y, currentColor);
   };
 
   return (
     <div className="pixel-board-display">
       <div className="display-header">
         <h2>{board.title}</h2>
-        <div className="display-controls">
-          <button
-            className="toggle-info-button"
-            onClick={toggleInfo}
-            title={infoVisible ? 'Masquer les informations' : 'Afficher les informations'}
-          >
-            {infoVisible ? 'Masquer infos' : 'Afficher infos'}
-          </button>
-        </div>
       </div>
 
-      <div className={`display-container ${infoVisible ? 'with-info' : 'without-info'}`}>
-        {infoVisible && (
-          <div className="info-panel">
-            <PixelBoardInfo board={board} />
-          </div>
-        )}
+      {notification && <div className="pixel-notification">{notification}</div>}
+
+      <div className="display-container with-info">
+        <div className="info-panel">
+          <PixelBoardInfo board={board} />
+
+          {canEdit && !readOnly && (
+            <ColorPicker selectedColor={currentColor} onColorSelect={handleColorChange} />
+          )}
+        </div>
         <div className="canvas-panel">
           <PixelBoardCanvas
             board={board}
             readOnly={readOnly}
             onPixelClick={handlePixelClick}
-            selectedColor={selectedColor}
+            selectedColor={currentColor}
           />
         </div>
       </div>
