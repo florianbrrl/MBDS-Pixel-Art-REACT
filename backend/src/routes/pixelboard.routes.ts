@@ -531,6 +531,48 @@ router.get('/:id/history', PixelBoardController.getBoardHistory);
  */
 router.get('/:id/position-history', PixelBoardController.getPositionHistory);
 
+/**
+ * @swagger
+ * /pixelboards/{id}/cooldown:
+ *   get:
+ *     summary: Vérifier le statut du cooldown pour un utilisateur
+ *     tags: [PixelBoards]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID du PixelBoard
+ *     responses:
+ *       200:
+ *         description: Statut du cooldown
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     canPlace:
+ *                       type: boolean
+ *                     remainingSeconds:
+ *                       type: integer
+ *                     isPremium:
+ *                       type: boolean
+ *       401:
+ *         description: Non authentifié
+ *       404:
+ *         description: PixelBoard non trouvé
+ */
+router.get('/:id/cooldown', authenticateToken, PixelBoardController.checkCooldown);
+
 // Les routes protégées restent inchangées...
 router.use(authenticateToken);
 
@@ -539,6 +581,10 @@ router.use(authenticateToken);
  * /pixelboards/{id}/pixel:
  *   post:
  *     summary: Placer un pixel sur un PixelBoard
+ *     description: |
+ *       Permet de placer un pixel sur un PixelBoard spécifique.
+ *       Soumis à un cooldown entre les placements (sauf pour les utilisateurs premium).
+ *       Le cooldown est défini par tableau et varie généralement entre 5 et 300 secondes.
  *     tags: [PixelBoards]
  *     security:
  *       - bearerAuth: []
@@ -595,9 +641,15 @@ router.use(authenticateToken);
  *                       type: string
  *                       format: date-time
  *       400:
- *         description: Erreur de validation ou contrainte de cooldown non respectée
+ *         description: Erreur de validation ou contrainte de coordonnées
+ *       401:
+ *         description: Non authentifié
+ *       403:
+ *         description: Rôle insuffisant
  *       404:
  *         description: PixelBoard non trouvé
+ *       429:
+ *         description: Trop de requêtes - Cooldown actif
  */
 router.post('/:id/pixel', PixelBoardController.placePixel);
 

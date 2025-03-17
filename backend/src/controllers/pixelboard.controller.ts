@@ -7,6 +7,7 @@ import {
 	IPixelBoardSortOptions,
 } from '../models/pixelboard.model';
 import { PixelHistoryModel } from '../models/pixel-history.model';
+import { PixelCooldownModel } from '../models/pixel-cooldown.model';
 import { randomUUID } from 'crypto';
 
 /**
@@ -224,7 +225,7 @@ export class PixelBoardController {
 		if (req.user?.role === 'guest') {
 			return next(new AppErrorClass('Les invités ne peuvent pas placer de pixels', 403));
 		}
-		
+
 		const { id } = req.params;
 		const { x, y, color } = req.body;
 
@@ -242,7 +243,7 @@ export class PixelBoardController {
 		if (!colorRegex.test(color)) {
 			return next(new AppErrorClass('Format de couleur invalide (doit être au format hexadécimal RRGGBB ou #RRGGBB)', 400));
 		}
-		
+
 		// Normaliser le format avec # si nécessaire
 		const normalizedColor = color.startsWith('#') ? color : `#${color}`;
 
@@ -265,13 +266,66 @@ export class PixelBoardController {
 			if (!uuidRegex.test(id)) {
 				return next(new AppErrorClass('PixelBoard non trouvé', 404));
 			}
-			
+
 			// Vérifier si le PixelBoard existe
 			const pixelBoard = await PixelBoardModel.findById(id);
 			if (!pixelBoard) {
 				return next(new AppErrorClass('PixelBoard non trouvé', 404));
 			}
-			
+
+			// Vérifier si le tableau est actif
+			if (!pixelBoard.is_active) {
+				return next(new AppErrorClass('Ce PixelBoard n\'est plus actif', 400));
+			}
+
+			// Vérifier les coordonnées par rapport aux dimensions du tableau
+			if (
+				parsedX < 0 ||
+				parsedY < 0 ||
+				parsedX >= pixelBoard.width ||
+				parsedY >= pixelBoard.height
+			) {
+				return next(new AppErrorClass('Coordonnées en dehors des limites du tableau', 400));
+			}
+
+			// Vérifier le cooldown uniquement si l'utilisateur est authentifié
+			if (req.user?.id) {
+				// Vérifier si l'utilisateur est premium (pour contourner le cooldown)
+				const isPremium = req.user.role === 'premium' || req.user.role === 'admin';
+
+				// Vérifier si l'utilisateur peut placer un pixel
+				const canPlace = await PixelCooldownModel.canPlacePixel(
+					req.user.id,
+					id,
+					pixelBoard.cooldown,
+					isPremium
+				);
+
+				if (!canPlace) {
+					// Obtenir le temps restant
+					const remainingTime = await PixelCooldownModel.getRemainingCooldown(
+						req.user.id,
+						id,
+						pixelBoard.cooldown
+					);
+
+					return next(
+						new AppErrorClass(
+							`Vous devez attendre encore ${remainingTime} secondes avant de placer un nouveau pixel`,
+							429 // Too Many Requests est un code approprié ici
+						)
+					);
+				}
+			}
+
+			// Vérifier les permissions d'écrasement
+			const grid = pixelBoard.grid as any;
+			const pixelKey = `${parsedX},${parsedY}`;
+
+			if (!pixelBoard.allow_overwrite && grid[pixelKey]) {
+				return next(new AppErrorClass('Ce pixel a déjà été placé et ne peut pas être écrasé', 400));
+			}
+
 			// Placer le pixel avec l'ID de l'utilisateur connecté si disponible
 			const pixelData = {
 				x: parsedX,
@@ -296,6 +350,54 @@ export class PixelBoardController {
 			// Gérer les erreurs spécifiques au placement de pixels
 			return next(new AppErrorClass(error.message, 400));
 		}
+	});
+
+	/**
+	 * Vérifier le statut du cooldown pour un utilisateur
+	 */
+	static checkCooldown = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+		const { id } = req.params;
+
+		if (!id) {
+			return next(new AppErrorClass('ID du PixelBoard requis', 400));
+		}
+
+		if (!req.user?.id) {
+			return next(new AppErrorClass('Authentification requise', 401));
+		}
+
+		// Vérifier si le PixelBoard existe
+		const pixelBoard = await PixelBoardModel.findById(id);
+		if (!pixelBoard) {
+			return next(new AppErrorClass('PixelBoard non trouvé', 404));
+		}
+
+		// Vérifier si l'utilisateur est premium
+		const isPremium = req.user.role === 'premium' || req.user.role === 'admin';
+
+		// Obtenir le statut du cooldown
+		const canPlace = await PixelCooldownModel.canPlacePixel(
+			req.user.id,
+			id,
+			pixelBoard.cooldown,
+			isPremium
+		);
+
+		// Obtenir le temps restant (0 si l'utilisateur peut placer un pixel)
+		const remainingSeconds = await PixelCooldownModel.getRemainingCooldown(
+			req.user.id,
+			id,
+			pixelBoard.cooldown
+		);
+
+		res.status(200).json({
+			status: 'success',
+			data: {
+				canPlace,
+				remainingSeconds,
+				isPremium
+			}
+		});
 	});
 
 	/**

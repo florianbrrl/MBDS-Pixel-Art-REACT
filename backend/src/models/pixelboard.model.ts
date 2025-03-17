@@ -278,28 +278,35 @@ export class PixelBoardModel {
 				throw new Error('Invalid pixel coordinates');
 			}
 
-			// Vérifier si l'utilisateur peut placer un pixel (cooldown)
+			// Vérification du cooldown (uniquement si un utilisateur est identifié)
 			if (pixelData.user_id) {
-				const lastPixel = await tx.pixelHistory.findFirst({
-					where: {
-						board_id: boardId,
-						user_id: pixelData.user_id,
-					},
-					orderBy: {
-						timestamp: 'desc',
-					},
+				// Vérifier si l'utilisateur est premium
+				const user = await tx.user.findUnique({
+					where: { id: pixelData.user_id },
+					select: { role: true }
 				});
 
-				if (lastPixel) {
-					const timeSinceLastPixel = Math.floor(
-						(Date.now() - lastPixel.timestamp.getTime()) / 1000
-					);
-					if (timeSinceLastPixel < pixelBoard.cooldown) {
-						throw new Error(
-							`You must wait ${
-								pixelBoard.cooldown - timeSinceLastPixel
-							} seconds before placing another pixel`
+				const isPremium = user && (user.role === 'premium' || user.role === 'admin');
+
+				// Si l'utilisateur n'est pas premium, vérifier le cooldown
+				if (!isPremium) {
+					const lastPixel = await tx.pixelHistory.findFirst({
+						where: {
+							board_id: boardId,
+							user_id: pixelData.user_id,
+						},
+						orderBy: { timestamp: 'desc' },
+					});
+
+					if (lastPixel) {
+						const timeSinceLastPixel = Math.floor(
+							(Date.now() - lastPixel.timestamp.getTime()) / 1000
 						);
+						if (timeSinceLastPixel < pixelBoard.cooldown) {
+							throw new Error(
+								`You must wait ${pixelBoard.cooldown - timeSinceLastPixel} seconds before placing another pixel`
+							);
+						}
 					}
 				}
 			}
@@ -307,7 +314,7 @@ export class PixelBoardModel {
 			// Vérifier si le pixel peut être écrasé
 			const grid = pixelBoard.grid as any;
 			const pixelKey = `${pixelData.x},${pixelData.y}`;
-			
+
 			if (!pixelBoard.allow_overwrite && grid[pixelKey]) {
 				throw new Error('This pixel has already been placed and cannot be overwritten');
 			}
