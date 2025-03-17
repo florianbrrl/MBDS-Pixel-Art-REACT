@@ -5,12 +5,14 @@ interface CooldownIndicatorProps {
   remainingSeconds: number;
   isPremium: boolean;
   canPlace: boolean;
+  totalCooldown: number;
 }
 
 const CooldownIndicator: React.FC<CooldownIndicatorProps> = ({
   remainingSeconds,
   isPremium,
-  canPlace
+  canPlace,
+  totalCooldown
 }) => {
   // Formater le temps restant
   const formatTime = (seconds: number): string => {
@@ -49,11 +51,11 @@ const CooldownIndicator: React.FC<CooldownIndicatorProps> = ({
   return (
     <div className="cooldown-indicator waiting">
       <div className="cooldown-progress">
-        <div
-          className="cooldown-progress-bar"
-          style={{
-            width: `${Math.min(100, (remainingSeconds / 60) * 100)}%`
-          }}
+      <div
+        className="cooldown-progress-bar"
+        style={{
+            width: `${Math.min(100, (1 - remainingSeconds / totalCooldown) * 100)}%`
+        }}
         ></div>
       </div>
       <span className="cooldown-text">

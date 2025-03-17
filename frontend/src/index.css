@@ -41,6 +41,27 @@ body {
   padding: 2rem;
 }
 
+.app-header,
+.app-footer {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.app-header a,
+.app-footer a,
+.app-header button,
+.app-footer button {
+  color: var(--text-secondary);
+}
+
+.app-header a:hover,
+.app-footer a:hover,
+.app-header button:hover,
+.app-footer button:hover {
+  color: var(--color-primary);
+}
+
 /* Ajustements responsive */
 @media (max-width: 768px) {
   .app-header {

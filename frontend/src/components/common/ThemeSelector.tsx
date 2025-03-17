@@ -1,20 +1,18 @@
 ﻿import React from 'react';
 import { useTheme } from '@/contexts/ThemeContext';
+import './../../styles/theme-selector.css';
 
-interface ThemeSelectorProps {
-  className?: string;
-}
-
-const ThemeSelector: React.FC<ThemeSelectorProps> = ({ className = '' }) => {
+const ThemeSelector: React.FC = () => {
   const { theme, setTheme } = useTheme();
 
   return (
-    <div className={`theme-selector ${className}`}>
+    <div className="theme-selector">
+      <label htmlFor="theme-select">Thème:</label>
       <select
+        id="theme-select"
         value={theme}
         onChange={(e) => setTheme(e.target.value as 'light' | 'dark' | 'system')}
         className="theme-select"
-        aria-label="Sélectionner le thème"
       >
         <option value="light">Clair</option>
         <option value="dark">Sombre</option>

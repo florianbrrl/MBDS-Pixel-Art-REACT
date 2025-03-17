@@ -1,19 +1,16 @@
 ﻿import React, { createContext, useContext, useEffect, useState } from 'react';
-import useSystemTheme from '@/hooks/useSystemTheme';
 
-// Définir les types de thèmes possibles
+// Types de thèmes disponibles
 type ThemeType = 'light' | 'dark' | 'system';
-type ActualTheme = 'light' | 'dark';
 
-// Structure du contexte
 interface ThemeContextType {
   theme: ThemeType;
-  currentTheme: ActualTheme; // Thème réellement appliqué
+  actualTheme: 'light' | 'dark'; // Thème réellement appliqué
   setTheme: (theme: ThemeType) => void;
-  toggleTheme: () => void; // Fonction utilitaire pour basculer entre light et dark
+  toggleTheme: () => void;
 }
 
-// Créer le contexte avec une valeur par défaut
+// Créer le contexte avec une valeur par défaut undefined
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 // Hook personnalisé pour utiliser le contexte de thème
@@ -25,21 +22,20 @@ export const useTheme = () => {
   return context;
 };
 
-// Propriétés du provider
-interface ThemeProviderProps {
-  children: React.ReactNode;
-}
-
 // Clé pour stocker le thème dans le localStorage
-const THEME_STORAGE_KEY = 'pixelart-theme-preference';
+const THEME_STORAGE_KEY = 'pixelart-theme';
 
-export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  // Utiliser notre hook personnalisé pour détecter le thème du système
-  const systemPrefersDark = useSystemTheme();
-  
+export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Hook pour détecter la préférence du système
+  const [systemPrefersDark, setSystemPrefersDark] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    return false;
+  });
+
   // État pour le thème choisi par l'utilisateur
   const [theme, setTheme] = useState<ThemeType>(() => {
-    // Récupérer le thème du localStorage s'il existe
     if (typeof window !== 'undefined') {
       const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) as ThemeType | null;
       return savedTheme || 'system';
@@ -47,27 +43,53 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     return 'system';
   });
 
-  // État pour le thème réellement appliqué (light ou dark)
-  const [currentTheme, setCurrentTheme] = useState<ActualTheme>(
-    theme === 'system' ? (systemPrefersDark ? 'dark' : 'light') : (theme as ActualTheme)
+  // État pour le thème réellement appliqué
+  const [actualTheme, setActualTheme] = useState<'light' | 'dark'>(
+    theme === 'system' ? (systemPrefersDark ? 'dark' : 'light') : theme
   );
-  
-  // Mettre à jour le thème réel lorsque la préférence utilisateur ou système change
+
+  // Effet pour écouter les changements de préférence du système
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+    const handleChange = (e: MediaQueryListEvent) => {
+      setSystemPrefersDark(e.matches);
+
+      if (theme === 'system') {
+        setActualTheme(e.matches ? 'dark' : 'light');
+      }
+    };
+
+    // Ajouter l'écouteur d'événement
+    mediaQuery.addEventListener('change', handleChange);
+
+    // Nettoyage à la démonture du composant
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, [theme]);
+
+  // Mettre à jour le thème réel lorsque la préférence utilisateur change
   useEffect(() => {
     if (theme === 'system') {
-      setCurrentTheme(systemPrefersDark ? 'dark' : 'light');
+      setActualTheme(systemPrefersDark ? 'dark' : 'light');
     } else {
-      setCurrentTheme(theme as ActualTheme);
+      setActualTheme(theme);
     }
   }, [theme, systemPrefersDark]);
 
-  // Appliquer la classe de thème au document HTML
+  // Appliquer la classe de thème au document
   useEffect(() => {
+    // Retirer toutes les classes de thème
     document.documentElement.classList.remove('light-theme', 'dark-theme');
-    document.documentElement.classList.add(`${currentTheme}-theme`);
-  }, [currentTheme]);
 
-  // Enregistrer la préférence dans le localStorage lorsque le thème change
+    // Ajouter la classe du thème actuel
+    document.documentElement.classList.add(`${actualTheme}-theme`);
+
+    // Ajouter également une classe directement au body pour plus de fiabilité
+    document.body.classList.remove('light-theme', 'dark-theme');
+    document.body.classList.add(`${actualTheme}-theme`);
+  }, [actualTheme]);
+
+  // Enregistrer la préférence dans le localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem(THEME_STORAGE_KEY, theme);
@@ -76,13 +98,13 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
 
   // Fonction pour basculer entre thème clair et sombre
   const toggleTheme = () => {
-    setTheme(currentTheme === 'light' ? 'dark' : 'light');
+    setTheme(actualTheme === 'light' ? 'dark' : 'light');
   };
 
   // Valeur du contexte
   const contextValue: ThemeContextType = {
     theme,
-    currentTheme,
+    actualTheme,
     setTheme,
     toggleTheme
   };

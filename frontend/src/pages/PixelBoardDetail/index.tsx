@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useCooldown } from '@/hooks/useCooldown'; // Importez notre nouveau hook
-import CooldownIndicator from '@/components/pixel-board/CooldownIndicator'; // Importez le nouvel indicateur
+import { useCooldown } from '@/hooks/useCooldown';
+import CooldownIndicator from '@/components/pixel-board/CooldownIndicator';
 import ApiService from '@/services/api.service';
 import PixelBoardService from '@/services/pixelboard.service';
 import { PixelBoard } from '@/types';
@@ -166,6 +166,7 @@ const PixelBoardDetail: React.FC = () => {
           remainingSeconds={cooldownStatus.remainingSeconds}
           isPremium={cooldownStatus.isPremium}
           canPlace={cooldownStatus.canPlace}
+          totalCooldown={board.cooldown}
         />
       )}
 
