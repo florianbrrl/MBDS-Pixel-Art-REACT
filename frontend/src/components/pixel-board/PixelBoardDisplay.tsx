@@ -20,7 +20,6 @@ const PixelBoardDisplay: React.FC<PixelBoardDisplayProps> = ({
   selectedColor = '#000000',
   canEdit = false,
 }) => {
-  const [infoVisible, setInfoVisible] = useState(true);
   const [currentColor, setCurrentColor] = useState(selectedColor);
   const [notification, setNotification] = useState<string | null>(null);
 
@@ -39,44 +38,27 @@ const PixelBoardDisplay: React.FC<PixelBoardDisplayProps> = ({
       return;
     }
 
+    // Appeler la fonction parente sans afficher directement une notification
+    // La notification de succès sera conditionnelle au niveau parent
     onPixelPlaced(x, y, currentColor);
-
-    // Afficher une notification de succès
-    setNotification(`Pixel placé en (${x}, ${y})`);
-    setTimeout(() => setNotification(null), 2000);
-  };
-
-  const toggleInfo = () => {
-    setInfoVisible(!infoVisible);
   };
 
   return (
     <div className="pixel-board-display">
       <div className="display-header">
         <h2>{board.title}</h2>
-        <div className="display-controls">
-          <button
-            className="toggle-info-button"
-            onClick={toggleInfo}
-            title={infoVisible ? 'Masquer les informations' : 'Afficher les informations'}
-          >
-            {infoVisible ? 'Masquer infos' : 'Afficher infos'}
-          </button>
-        </div>
       </div>
 
       {notification && <div className="pixel-notification">{notification}</div>}
 
-      <div className={`display-container ${infoVisible ? 'with-info' : 'without-info'}`}>
-        {infoVisible && (
-          <div className="info-panel">
-            <PixelBoardInfo board={board} />
+      <div className="display-container with-info">
+        <div className="info-panel">
+          <PixelBoardInfo board={board} />
 
-            {canEdit && !readOnly && (
-              <ColorPicker selectedColor={currentColor} onColorSelect={handleColorChange} />
-            )}
-          </div>
-        )}
+          {canEdit && !readOnly && (
+            <ColorPicker selectedColor={currentColor} onColorSelect={handleColorChange} />
+          )}
+        </div>
         <div className="canvas-panel">
           <PixelBoardCanvas
             board={board}
