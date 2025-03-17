@@ -27,8 +27,14 @@ const PixelBoardService = {
     return apiClient.delete<void>(`/pixelboards/${id}`);
   },
 
+  // Placer un pixel sur le tableau
   placePixel: async (boardId: string, x: number, y: number, color: string): Promise<any> => {
     return apiClient.post(`/pixelboards/${boardId}/pixel`, { x, y, color });
+  },
+
+  // Vérifier le statut du cooldown
+  checkCooldown: async (boardId: string) => {
+    return apiClient.get(`/pixelboards/${boardId}/cooldown`);
   }
 };
 

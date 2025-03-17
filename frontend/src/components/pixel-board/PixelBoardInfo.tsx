@@ -52,8 +52,6 @@ const PixelBoardInfo: React.FC<PixelBoardInfoProps> = ({ board }) => {
 
   return (
     <div className="pixel-board-info">
-      <h2 className="pixel-board-title">{board.title}</h2>
-
       <div className="pixel-board-meta">
         <div className="pixel-board-meta-item">
           <span className="meta-label">Dimensions:</span>
