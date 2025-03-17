@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { PixelBoard } from '@/types';
 import './../../styles/PixelBoardCanvas.css';
 
@@ -21,9 +21,11 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [hoveredPixel, setHoveredPixel] = useState<{ x: number; y: number } | null>(null);
+  const [lastPlacedPixel, setLastPlacedPixel] = useState<{ x: number; y: number } | null>(null);
+  const [showPlacementAnimation, setShowPlacementAnimation] = useState<boolean>(false);
 
   // Calculer la taille de pixel basée sur la taille du canvas et le zoom
-  const calculatePixelSize = (): number => {
+  const calculatePixelSize = useCallback((): number => {
     if (!canvasRef.current) return 0;
 
     const containerWidth = canvasRef.current.width;
@@ -34,37 +36,40 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
     const basePixelSize = Math.min(containerWidth / board.width, containerHeight / board.height);
 
     return basePixelSize * zoom;
-  };
+  }, [board.width, board.height, zoom]);
 
   // Fonction pour convertir les coordonnées du canvas en coordonnées de la grille
-  const canvasToGrid = (canvasX: number, canvasY: number): { x: number; y: number } | null => {
-    if (!canvasRef.current) return null;
+  const canvasToGrid = useCallback(
+    (canvasX: number, canvasY: number): { x: number; y: number } | null => {
+      if (!canvasRef.current) return null;
 
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
+      const canvas = canvasRef.current;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
 
-    // Coordonnées ajustées au scaling du canvas
-    const x = (canvasX - rect.left) * scaleX;
-    const y = (canvasY - rect.top) * scaleY;
+      // Coordonnées ajustées au scaling du canvas
+      const x = (canvasX - rect.left) * scaleX;
+      const y = (canvasY - rect.top) * scaleY;
 
-    const pixelSize = calculatePixelSize();
+      const pixelSize = calculatePixelSize();
 
-    // Convertir en coordonnées de grille en tenant compte du zoom et du décalage
-    const gridX = Math.floor((x - offset.x) / pixelSize);
-    const gridY = Math.floor((y - offset.y) / pixelSize);
+      // Convertir en coordonnées de grille en tenant compte du zoom et du décalage
+      const gridX = Math.floor((x - offset.x) / pixelSize);
+      const gridY = Math.floor((y - offset.y) / pixelSize);
 
-    // Vérifier si les coordonnées sont dans les limites du board
-    if (gridX >= 0 && gridX < board.width && gridY >= 0 && gridY < board.height) {
-      return { x: gridX, y: gridY };
-    }
+      // Vérifier si les coordonnées sont dans les limites du board
+      if (gridX >= 0 && gridX < board.width && gridY >= 0 && gridY < board.height) {
+        return { x: gridX, y: gridY };
+      }
 
-    return null;
-  };
+      return null;
+    },
+    [calculatePixelSize, board.width, board.height, offset.x, offset.y],
+  );
 
-  // Dessiner le tableau de pixels
-  const drawBoard = () => {
+  // Dessiner le tableau de pixels avec les améliorations visuelles
+  const drawBoard = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -140,7 +145,30 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
       ctx.fillStyle = `${selectedColor}80`; // 50% de transparence
       ctx.fillRect(canvasX, canvasY, pixelSize, pixelSize);
     }
-  };
+
+    // Dessiner l'animation de placement de pixel
+    if (showPlacementAnimation && lastPlacedPixel) {
+      const canvasX = lastPlacedPixel.x * pixelSize + offset.x;
+      const canvasY = lastPlacedPixel.y * pixelSize + offset.y;
+
+      // Créer un effet de "pulsation"
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(canvasX - 2, canvasY - 2, pixelSize + 4, pixelSize + 4);
+    }
+  }, [
+    board.grid,
+    board.height,
+    board.width,
+    calculatePixelSize,
+    hoveredPixel,
+    lastPlacedPixel,
+    offset.x,
+    offset.y,
+    readOnly,
+    selectedColor,
+    showPlacementAnimation,
+  ]);
 
   // Gérer le redimensionnement du canvas
   useEffect(() => {
@@ -167,20 +195,37 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
     return () => {
       window.removeEventListener('resize', resizeCanvas);
     };
-  }, [board, zoom, offset, hoveredPixel]);
+  }, [drawBoard]);
 
   // Re-dessiner le board lorsqu'il change
   useEffect(() => {
     drawBoard();
-  }, [board, zoom, offset, hoveredPixel]);
+  }, [board, zoom, offset, hoveredPixel, drawBoard]);
 
-  // Gérer le clic sur un pixel
+  // Effet pour l'animation de placement de pixel
+  useEffect(() => {
+    if (!lastPlacedPixel) return;
+
+    setShowPlacementAnimation(true);
+
+    // Masquer l'animation après 500ms
+    const timer = setTimeout(() => {
+      setShowPlacementAnimation(false);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [lastPlacedPixel]);
+
+  // Gérer le clic sur un pixel - amélioré avec animation
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (readOnly || !onPixelClick) return;
+    if (readOnly || !onPixelClick) return; // Changé de onPixelPlaced à onPixelClick
 
     const gridCoords = canvasToGrid(e.clientX, e.clientY);
     if (gridCoords) {
-      onPixelClick(gridCoords.x, gridCoords.y);
+      onPixelClick(gridCoords.x, gridCoords.y); // Changé de onPixelPlaced à onPixelClick
+
+      // Déclencher l'animation de placement
+      setLastPlacedPixel(gridCoords);
     }
   };
 
@@ -293,11 +338,13 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
       <div className="canvas-controls">
         <div className="zoom-info">Zoom: {Math.round(zoom * 100)}%</div>
         <div className="zoom-controls">
-          <button onClick={handleZoomOut} disabled={zoom <= 0.1}>
+          <button onClick={handleZoomOut} disabled={zoom <= 0.1} title="Réduire">
             -
           </button>
-          <button onClick={handleResetZoom}>Reset</button>
-          <button onClick={handleZoomIn} disabled={zoom >= 10}>
+          <button onClick={handleResetZoom} title="Réinitialiser le zoom">
+            Reset
+          </button>
+          <button onClick={handleZoomIn} disabled={zoom >= 10} title="Agrandir">
             +
           </button>
         </div>
