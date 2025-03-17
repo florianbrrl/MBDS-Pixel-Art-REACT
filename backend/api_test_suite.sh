@@ -380,6 +380,67 @@ run_test "/pixelboards/$active_pixelboard_id/pixel" "POST" "400" "Place a pixel 
 run_test "/pixelboards/invalid-id/pixel" "POST" "404" "Place a pixel on a non-existent board" '{"x": 5, "y": 5, "color": "#FF0000"}' "$USER_TOKEN" ""
 
 # ==========================================
+# Pixel History Tests
+# ==========================================
+echo "Testing pixel history endpoints..."
+
+# Get board history
+run_test "/pixelboards/$active_pixelboard_id/history" "GET" "200" "Get complete board history" "" "" ""
+
+# Place a pixel at a specific position to ensure history exists
+echo "Placing pixel at fixed position (10,10) for position history test..."
+curl -s -X POST "$API_BASE_URL/pixelboards/$active_pixelboard_id/pixel" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -d '{"x": 10, "y": 10, "color": "#FF00FF"}'
+
+# Get position history
+# Need to format the URLs properly
+position_history_url1="$API_BASE_URL/pixelboards/$active_pixelboard_id/position-history"
+echo -e "${BLUE}TEST $((++TESTS_TOTAL))${NC}: Get position history without coordinates"
+response=$(curl -s "$position_history_url1")
+if echo "$response" | grep -q "Coordonnées (x, y) requises"; then
+  echo -e "  ${GREEN}✓ Status: 400 (Expected: 400)${NC}"
+  TESTS_PASSED=$((TESTS_PASSED + 1))
+else
+  echo -e "  ${RED}✗ Status: unexpected (Expected: 400)${NC}"
+  TESTS_FAILED=$((TESTS_FAILED + 1))
+fi
+
+position_history_url2="$API_BASE_URL/pixelboards/$active_pixelboard_id/position-history?x=invalid&y=5"
+echo -e "${BLUE}TEST $((++TESTS_TOTAL))${NC}: Get position history with invalid coordinates"
+response=$(curl -s "$position_history_url2")
+if echo "$response" | grep -q "Les coordonnées doivent être des nombres"; then
+  echo -e "  ${GREEN}✓ Status: 400 (Expected: 400)${NC}"
+  TESTS_PASSED=$((TESTS_PASSED + 1))
+else
+  echo -e "  ${RED}✗ Status: unexpected (Expected: 400)${NC}"
+  TESTS_FAILED=$((TESTS_FAILED + 1))
+fi
+
+position_history_url3="$API_BASE_URL/pixelboards/$active_pixelboard_id/position-history?x=10&y=10"
+echo -e "${BLUE}TEST $((++TESTS_TOTAL))${NC}: Get position history with valid coordinates"
+response=$(curl -s "$position_history_url3")
+if echo "$response" | grep -q "success"; then
+  echo -e "  ${GREEN}✓ Status: 200 (Expected: 200)${NC}"
+  TESTS_PASSED=$((TESTS_PASSED + 1))
+else
+  echo -e "  ${RED}✗ Status: unexpected (Expected: 200)${NC}"
+  TESTS_FAILED=$((TESTS_FAILED + 1))
+fi
+
+position_history_url4="$API_BASE_URL/pixelboards/invalid-id/position-history?x=5&y=5"
+echo -e "${BLUE}TEST $((++TESTS_TOTAL))${NC}: Get position history with invalid board ID"
+response=$(curl -s "$position_history_url4")
+if echo "$response" | grep -q "PixelBoard non trouvé"; then
+  echo -e "  ${GREEN}✓ Status: 404 (Expected: 404)${NC}"
+  TESTS_PASSED=$((TESTS_PASSED + 1))
+else
+  echo -e "  ${RED}✗ Status: unexpected (Expected: 404)${NC}"
+  TESTS_FAILED=$((TESTS_FAILED + 1))
+fi
+run_test "/pixelboards/invalid-id/history" "GET" "404" "Get board history with invalid board ID" "" "" ""
+
 # Cooldown Tests
 # ==========================================
 echo -e "\n${BLUE}=== Testing Cooldown System ===${NC}"
@@ -569,7 +630,8 @@ if [ -n "$cooldown_board_id" ]; then
   fi
 fi
 
-# ==========================================
+# 
+===================================
 # Summary and Results
 # ==========================================
 echo -e "\n${BLUE}=== Test Suite Complete ===${NC}"
