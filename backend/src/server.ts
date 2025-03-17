@@ -1,5 +1,7 @@
 import app from './app';
 import config from './config';
+import { PixelBoardModel } from './models/pixelboard.model';
+
 
 // Gestion des erreurs non capturées
 process.on('uncaughtException', err => {
@@ -12,8 +14,9 @@ process.on('uncaughtException', err => {
 const port = config.server.port;
 
 // Démarrage du serveur
-const server = app.listen(port, () => {
+const server = app.listen(port, async() => {
 	console.log(`Server running in ${config.server.env} mode on port ${port}`);
+	await PixelBoardModel.updateActiveStatus();
 	console.log(`API available at ${config.server.apiPrefix}`);
 });
 

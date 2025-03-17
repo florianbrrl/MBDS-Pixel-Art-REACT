@@ -346,4 +346,37 @@ export class PixelBoardModel {
 			return updatedBoard;
 		});
 	}
+
+	/**
+   * Met à jour le statut actif de tous les PixelBoards en fonction des dates
+   * @returns Nombre de PixelBoards mis à jour
+   */
+	static async updateActiveStatus(): Promise<number> {
+		const now = new Date();
+
+		// Mettre à jour les PixelBoards dont la date de fin est passée
+		const expiredBoards = await prisma.pixelBoard.updateMany({
+		  where: {
+			is_active: true,
+			end_time: { lt: now }
+		  },
+		  data: {
+			is_active: false
+		  }
+		});
+
+		// Mettre à jour les PixelBoards dont la date de début est arrivée
+		const startedBoards = await prisma.pixelBoard.updateMany({
+		  where: {
+			is_active: false,
+			start_time: { lte: now },
+			end_time: { gt: now }
+		  },
+		  data: {
+			is_active: true
+		  }
+		});
+
+		return expiredBoards.count + startedBoards.count;
+	  }
 }
