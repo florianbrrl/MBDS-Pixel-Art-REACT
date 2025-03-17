@@ -25,6 +25,10 @@ const PixelBoardService = {
   // Supprimer un PixelBoard
   deleteBoard: async (id: string) => {
     return apiClient.delete<void>(`/pixelboards/${id}`);
+  },
+
+  placePixel: async (boardId: string, x: number, y: number, color: string): Promise<any> => {
+    return apiClient.post(`/pixelboards/${boardId}/pixel`, { x, y, color });
   }
 };
 

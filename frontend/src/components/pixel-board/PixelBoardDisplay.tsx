@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { PixelBoard } from '@/types';
 import PixelBoardCanvas from './PixelBoardCanvas';
 import PixelBoardInfo from './PixelBoardInfo';
+import ColorPicker from './ColorPicker';
 import './../../styles/PixelBoardDisplay.css';
 
 interface PixelBoardDisplayProps {
@@ -20,10 +21,29 @@ const PixelBoardDisplay: React.FC<PixelBoardDisplayProps> = ({
   canEdit = false,
 }) => {
   const [infoVisible, setInfoVisible] = useState(true);
+  const [currentColor, setCurrentColor] = useState(selectedColor);
+  const [notification, setNotification] = useState<string | null>(null);
+
+  const handleColorChange = (color: string) => {
+    setCurrentColor(color);
+  };
 
   const handlePixelClick = (x: number, y: number) => {
     if (readOnly || !onPixelPlaced) return;
-    onPixelPlaced(x, y, selectedColor);
+
+    // Vérifier si on peut écraser le pixel
+    const pixelKey = `${x},${y}`;
+    if (board.grid[pixelKey] && !board.allow_overwrite) {
+      setNotification('Ce pixel ne peut pas être modifié');
+      setTimeout(() => setNotification(null), 3000);
+      return;
+    }
+
+    onPixelPlaced(x, y, currentColor);
+
+    // Afficher une notification de succès
+    setNotification(`Pixel placé en (${x}, ${y})`);
+    setTimeout(() => setNotification(null), 2000);
   };
 
   const toggleInfo = () => {
@@ -45,10 +65,16 @@ const PixelBoardDisplay: React.FC<PixelBoardDisplayProps> = ({
         </div>
       </div>
 
+      {notification && <div className="pixel-notification">{notification}</div>}
+
       <div className={`display-container ${infoVisible ? 'with-info' : 'without-info'}`}>
         {infoVisible && (
           <div className="info-panel">
             <PixelBoardInfo board={board} />
+
+            {canEdit && !readOnly && (
+              <ColorPicker selectedColor={currentColor} onColorSelect={handleColorChange} />
+            )}
           </div>
         )}
         <div className="canvas-panel">
@@ -56,7 +82,7 @@ const PixelBoardDisplay: React.FC<PixelBoardDisplayProps> = ({
             board={board}
             readOnly={readOnly}
             onPixelClick={handlePixelClick}
-            selectedColor={selectedColor}
+            selectedColor={currentColor}
           />
         </div>
       </div>
