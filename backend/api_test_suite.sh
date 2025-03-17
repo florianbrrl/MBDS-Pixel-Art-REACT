@@ -121,13 +121,13 @@ run_test() {
 
     # Modify command to include status code output
     cmd_with_status="${cmd} -o ${response_file} -w '%{http_code}'"
-    
+
     # Execute command and capture HTTP status code
     http_status=$(eval "${cmd_with_status}" 2>/dev/null || echo "error")
-    
+
     # Read the response from file for display
     response=$(cat "${response_file}" 2>/dev/null || echo '{"error":"Reading response failed"}')
-    
+
     # If we didn't get a valid status code, handle special cases
     if [ -z "$http_status" ] || [ "$http_status" = "error" ]; then
         # If this is a pixelboard sorting test, just use 200
@@ -380,6 +380,196 @@ run_test "/pixelboards/$active_pixelboard_id/pixel" "POST" "400" "Place a pixel 
 run_test "/pixelboards/invalid-id/pixel" "POST" "404" "Place a pixel on a non-existent board" '{"x": 5, "y": 5, "color": "#FF0000"}' "$USER_TOKEN" ""
 
 # ==========================================
+# Cooldown Tests
+# ==========================================
+echo -e "\n${BLUE}=== Testing Cooldown System ===${NC}"
+
+# Create a new PixelBoard specifically for cooldown testing with a short cooldown
+echo "Creating a test board for cooldown testing..."
+COOLDOWN_BOARD_DATA='{
+  "title": "Cooldown Test Board",
+  "width": 20,
+  "height": 20,
+  "cooldown": 5,
+  "allow_overwrite": true,
+  "start_time": "2023-01-01T00:00:00Z",
+  "end_time": "2030-12-31T23:59:59Z"
+}'
+
+# Create the cooldown test board as admin
+cooldown_board_response=$(curl -s -X POST "$API_BASE_URL/pixelboards" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -d "$COOLDOWN_BOARD_DATA")
+
+# Extract the ID of the newly created board
+cooldown_board_id=$(echo "$cooldown_board_response" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+
+if [ -n "$cooldown_board_id" ]; then
+  echo -e "${GREEN}✓ Cooldown test board created (ID: $cooldown_board_id)${NC}"
+
+  # Test 1: Check initial cooldown status for regular user
+  echo -e "\n${BLUE}TEST $((++TESTS_TOTAL))${NC}: Initial cooldown status for regular user"
+  initial_cooldown_response=$(curl -s -X GET "$API_BASE_URL/pixelboards/$cooldown_board_id/cooldown" \
+    -H "Authorization: Bearer $USER_TOKEN")
+
+  # Extract cooldown status
+  can_place=$(echo "$initial_cooldown_response" | grep -o '"canPlace":[^,]*' | cut -d':' -f2)
+  remaining_seconds=$(echo "$initial_cooldown_response" | grep -o '"remainingSeconds":[^,}]*' | cut -d':' -f2)
+
+  echo "  - Can place pixel: $can_place"
+  echo "  - Remaining seconds: $remaining_seconds"
+
+  # Validate initial cooldown status
+  if [[ "$can_place" == "true" ]]; then
+    echo -e "  ${GREEN}✓ Initial cooldown status is correct${NC}"
+    TESTS_PASSED=$((TESTS_PASSED + 1))
+  else
+    echo -e "  ${RED}✗ Initial cooldown status is incorrect${NC}"
+    TESTS_FAILED=$((TESTS_FAILED + 1))
+    FAILED_TESTS["$TESTS_TOTAL"]="Initial cooldown status for regular user"
+  fi
+
+  # Test 2: Place a pixel with regular user
+  echo -e "\n${BLUE}TEST $((++TESTS_TOTAL))${NC}: Place first pixel with regular user"
+  pixel_placement_response=$(curl -s -X POST "$API_BASE_URL/pixelboards/$cooldown_board_id/pixel" \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer $USER_TOKEN" \
+    -d '{"x": 0, "y": 0, "color": "#FF0000"}' \
+    -w '%{http_code}' -o "${RESULTS_DIR}/cooldown_place_first_pixel.json")
+
+  if [[ "$pixel_placement_response" == "200" || "$pixel_placement_response" == "201" ]]; then
+    echo -e "  ${GREEN}✓ First pixel placed successfully (Status: $pixel_placement_response)${NC}"
+    TESTS_PASSED=$((TESTS_PASSED + 1))
+  else
+    echo -e "  ${RED}✗ Failed to place first pixel (Status: $pixel_placement_response)${NC}"
+    TESTS_FAILED=$((TESTS_FAILED + 1))
+    FAILED_TESTS["$TESTS_TOTAL"]="Place first pixel with regular user (Got: $pixel_placement_response, Expected: 200)"
+  fi
+
+  # Test 3: Check cooldown status after placing a pixel
+  echo -e "\n${BLUE}TEST $((++TESTS_TOTAL))${NC}: Cooldown status after placing a pixel"
+  after_cooldown_response=$(curl -s -X GET "$API_BASE_URL/pixelboards/$cooldown_board_id/cooldown" \
+    -H "Authorization: Bearer $USER_TOKEN")
+
+  # Extract updated cooldown status
+  can_place_after=$(echo "$after_cooldown_response" | grep -o '"canPlace":[^,]*' | cut -d':' -f2)
+  remaining_seconds_after=$(echo "$after_cooldown_response" | grep -o '"remainingSeconds":[^,}]*' | cut -d':' -f2)
+
+  echo "  - Can place pixel: $can_place_after"
+  echo "  - Remaining seconds: $remaining_seconds_after"
+
+  # Validate cooldown is active
+  if [[ "$can_place_after" == "false" && "$remaining_seconds_after" > "0" ]]; then
+    echo -e "  ${GREEN}✓ Cooldown is active after placing pixel${NC}"
+    TESTS_PASSED=$((TESTS_PASSED + 1))
+  else
+    echo -e "  ${RED}✗ Cooldown is not active after placing pixel${NC}"
+    TESTS_FAILED=$((TESTS_FAILED + 1))
+    FAILED_TESTS["$TESTS_TOTAL"]="Cooldown status after placing a pixel"
+  fi
+
+  # Test 4: Try to place another pixel immediately (should fail due to cooldown)
+  echo -e "\n${BLUE}TEST $((++TESTS_TOTAL))${NC}: Attempt to place second pixel during cooldown"
+  second_pixel_response=$(curl -s -X POST "$API_BASE_URL/pixelboards/$cooldown_board_id/pixel" \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer $USER_TOKEN" \
+    -d '{"x": 1, "y": 0, "color": "#00FF00"}' \
+    -w '%{http_code}' -o "${RESULTS_DIR}/cooldown_place_second_pixel.json")
+
+  # This should fail with status 429 (Too Many Requests) or similar
+  if [[ "$second_pixel_response" == "429" || "$second_pixel_response" == "400" || "$second_pixel_response" == "403" ]]; then
+    echo -e "  ${GREEN}✓ Second pixel placement correctly rejected during cooldown (Status: $second_pixel_response)${NC}"
+    TESTS_PASSED=$((TESTS_PASSED + 1))
+  else
+    echo -e "  ${RED}✗ Second pixel placement was not rejected during cooldown (Status: $second_pixel_response)${NC}"
+    TESTS_FAILED=$((TESTS_FAILED + 1))
+    FAILED_TESTS["$TESTS_TOTAL"]="Attempt to place second pixel during cooldown (Got: $second_pixel_response, Expected: 429 or similar)"
+  fi
+
+  # Test 5: Place a pixel with premium user (should bypass cooldown)
+  echo -e "\n${BLUE}TEST $((++TESTS_TOTAL))${NC}: Place pixel as premium user (should bypass cooldown)"
+  premium_pixel_response=$(curl -s -X POST "$API_BASE_URL/pixelboards/$cooldown_board_id/pixel" \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer $PREMIUM_TOKEN" \
+    -d '{"x": 2, "y": 0, "color": "#0000FF"}' \
+    -w '%{http_code}' -o "${RESULTS_DIR}/cooldown_place_premium_pixel.json")
+
+  if [[ "$premium_pixel_response" == "200" || "$premium_pixel_response" == "201" ]]; then
+    echo -e "  ${GREEN}✓ Premium user successfully placed pixel (Status: $premium_pixel_response)${NC}"
+    TESTS_PASSED=$((TESTS_PASSED + 1))
+  else
+    echo -e "  ${RED}✗ Premium user failed to place pixel (Status: $premium_pixel_response)${NC}"
+    TESTS_FAILED=$((TESTS_FAILED + 1))
+    FAILED_TESTS["$TESTS_TOTAL"]="Place pixel as premium user (Got: $premium_pixel_response, Expected: 200)"
+  fi
+
+  # Test 6: Check premium user cooldown status
+  echo -e "\n${BLUE}TEST $((++TESTS_TOTAL))${NC}: Check premium user cooldown status"
+  premium_cooldown_response=$(curl -s -X GET "$API_BASE_URL/pixelboards/$cooldown_board_id/cooldown" \
+    -H "Authorization: Bearer $PREMIUM_TOKEN")
+
+  # Extract premium cooldown status
+  can_place_premium=$(echo "$premium_cooldown_response" | grep -o '"canPlace":[^,]*' | cut -d':' -f2)
+  is_premium=$(echo "$premium_cooldown_response" | grep -o '"isPremium":[^,}]*' | cut -d':' -f2)
+
+  echo "  - Can place pixel: $can_place_premium"
+  echo "  - Is premium: $is_premium"
+
+  # Validate premium status allows pixel placement
+  if [[ "$can_place_premium" == "true" && "$is_premium" == "true" ]]; then
+    echo -e "  ${GREEN}✓ Premium status correctly identified and allows placement${NC}"
+    TESTS_PASSED=$((TESTS_PASSED + 1))
+  else
+    echo -e "  ${RED}✗ Premium status not working correctly${NC}"
+    TESTS_FAILED=$((TESTS_FAILED + 1))
+    FAILED_TESTS["$TESTS_TOTAL"]="Check premium user cooldown status"
+  fi
+
+  # If cooldown is short enough, we might wait and test after expiration
+  if [[ "$remaining_seconds_after" -le "10" && "$remaining_seconds_after" -gt "0" ]]; then
+    echo -e "\nWaiting $(($remaining_seconds_after + 1)) seconds for cooldown to expire..."
+    sleep $(($remaining_seconds_after + 1))
+
+    # Test 7: Try to place a pixel after cooldown expires
+    echo -e "\n${BLUE}TEST $((++TESTS_TOTAL))${NC}: Place pixel after cooldown expires"
+    after_wait_response=$(curl -s -X POST "$API_BASE_URL/pixelboards/$cooldown_board_id/pixel" \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Bearer $USER_TOKEN" \
+      -d '{"x": 3, "y": 0, "color": "#FFFF00"}' \
+      -w '%{http_code}' -o "${RESULTS_DIR}/cooldown_place_after_expiry.json")
+
+    if [[ "$after_wait_response" == "200" || "$after_wait_response" == "201" ]]; then
+      echo -e "  ${GREEN}✓ Successfully placed pixel after cooldown expired (Status: $after_wait_response)${NC}"
+      TESTS_PASSED=$((TESTS_PASSED + 1))
+    else
+      echo -e "  ${RED}✗ Failed to place pixel after cooldown expired (Status: $after_wait_response)${NC}"
+      TESTS_FAILED=$((TESTS_FAILED + 1))
+      FAILED_TESTS["$TESTS_TOTAL"]="Place pixel after cooldown expires (Got: $after_wait_response, Expected: 200)"
+    fi
+  else
+    echo -e "\n${YELLOW}Skipping wait for cooldown expiry test (cooldown too long: $remaining_seconds_after seconds)${NC}"
+  fi
+
+  echo -e "\n${GREEN}✓ Cooldown functionality tests completed${NC}"
+else
+  echo -e "${RED}✗ Failed to create cooldown test board${NC}"
+fi
+
+# Clean up the cooldown test board
+if [ -n "$cooldown_board_id" ]; then
+  cleanup_response=$(curl -s -X DELETE "$API_BASE_URL/pixelboards/$cooldown_board_id" \
+    -H "Authorization: Bearer $ADMIN_TOKEN" \
+    -w '%{http_code}')
+
+  if [[ "$cleanup_response" == "204" || "$cleanup_response" == "200" ]]; then
+    echo -e "${GREEN}✓ Cooldown test board cleaned up${NC}"
+  else
+    echo -e "${YELLOW}! Failed to clean up cooldown test board (Status: $cleanup_response)${NC}"
+  fi
+fi
+
+# ==========================================
 # Summary and Results
 # ==========================================
 echo -e "\n${BLUE}=== Test Suite Complete ===${NC}"
@@ -427,3 +617,4 @@ else
     echo "Some tests failed. Check the logs and results directory for details." >> "$SUMMARY_FILE"
     exit 1
 fi
+
