@@ -4,6 +4,9 @@ import ApiService from '@/services/api.service';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ErrorMessage from '@/components/common/ErrorMessage';
 
+type SortField = 'email' | 'role' | 'created_at' | 'status';
+type SortDirection = 'asc' | 'desc';
+
 interface UserListProps {
   onSelectUser: (user: UserProfile) => void;
 }
@@ -16,6 +19,8 @@ const UserList: React.FC<UserListProps> = ({ onSelectUser }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<UserRole | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'blocked'>('all');
+  const [sortField, setSortField] = useState<SortField>('email');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -62,8 +67,36 @@ const UserList: React.FC<UserListProps> = ({ onSelectUser }) => {
       result = result.filter(user => user.is_blocked === isBlocked);
     }
 
+    // Tri des résultats
+    result = [...result].sort((a, b) => {
+      let compareA: any;
+      let compareB: any;
+
+      if (sortField === 'email') {
+        compareA = a.email.toLowerCase();
+        compareB = b.email.toLowerCase();
+      } else if (sortField === 'role') {
+        compareA = a.role || '';
+        compareB = b.role || '';
+      } else if (sortField === 'created_at') {
+        compareA = new Date(a.created_at).getTime();
+        compareB = new Date(b.created_at).getTime();
+      } else if (sortField === 'status') {
+        compareA = a.is_blocked ? 1 : 0;
+        compareB = b.is_blocked ? 1 : 0;
+      } else {
+        return 0;
+      }
+
+      if (sortDirection === 'asc') {
+        return compareA < compareB ? -1 : compareA > compareB ? 1 : 0;
+      } else {
+        return compareA > compareB ? -1 : compareA < compareB ? 1 : 0;
+      }
+    });
+
     setFilteredUsers(result);
-  }, [users, searchTerm, roleFilter, statusFilter]);
+  }, [users, searchTerm, roleFilter, statusFilter, sortField, sortDirection]);
 
   const handleRoleChange = async (user: UserProfile, newRole: UserRole) => {
     try {
@@ -108,37 +141,46 @@ const UserList: React.FC<UserListProps> = ({ onSelectUser }) => {
     onSelectUser(user);
   };
 
+  const handleSort = (field: SortField) => {
+    if (field === sortField) {
+      // Si on clique sur le même champ, on inverse la direction
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Sinon, on change le champ de tri et on remet en ascendant
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
   return (
     <div className="user-list-container">
       {error && <ErrorMessage message={error} onClose={() => setError(null)} />}
       
       <div className="user-filters mb-6">
-        <div className="flex flex-wrap gap-4 md:flex-nowrap">
-          {/* Recherche par email */}
-          <div className="w-full md:w-1/3">
-            <label htmlFor="search" className="block text-sm font-medium mb-1">
-              Rechercher par email
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="flex items-center">
+            <label htmlFor="search" className="flex-shrink-0 w-32 text-sm font-medium">
+              Rechercher:
             </label>
             <input
               type="text"
               id="search"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Rechercher..."
-              className="w-full p-2 border rounded"
+              placeholder="Email..."
+              className="flex-grow p-2 border rounded"
             />
           </div>
           
-          {/* Filtre par rôle */}
-          <div className="w-full md:w-1/3">
-            <label htmlFor="role-filter" className="block text-sm font-medium mb-1">
-              Filtrer par rôle
+          <div className="flex items-center">
+            <label htmlFor="role-filter" className="flex-shrink-0 w-20 text-sm font-medium">
+              Rôle:
             </label>
             <select
               id="role-filter"
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value as UserRole | 'all')}
-              className="w-full p-2 border rounded"
+              className="flex-grow p-2 border rounded"
             >
               <option value="all">Tous les rôles</option>
               <option value="guest">Invité</option>
@@ -148,16 +190,15 @@ const UserList: React.FC<UserListProps> = ({ onSelectUser }) => {
             </select>
           </div>
           
-          {/* Filtre par statut */}
-          <div className="w-full md:w-1/3">
-            <label htmlFor="status-filter" className="block text-sm font-medium mb-1">
-              Filtrer par statut
+          <div className="flex items-center">
+            <label htmlFor="status-filter" className="flex-shrink-0 w-20 text-sm font-medium">
+              Statut:
             </label>
             <select
               id="status-filter"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'blocked')}
-              className="w-full p-2 border rounded"
+              className="flex-grow p-2 border rounded"
             >
               <option value="all">Tous les statuts</option>
               <option value="active">Actifs</option>
@@ -172,12 +213,44 @@ const UserList: React.FC<UserListProps> = ({ onSelectUser }) => {
       ) : (
         <div className="users-table-container overflow-x-auto">
           <table className="w-full min-w-full bg-white rounded-lg overflow-hidden shadow">
-            <thead className="bg-gray-100">
+            <thead>
               <tr>
-                <th className="py-3 px-4 text-left">Email</th>
-                <th className="py-3 px-4 text-left">Rôle</th>
-                <th className="py-3 px-4 text-left">Date de création</th>
-                <th className="py-3 px-4 text-left">Statut</th>
+                <th 
+                  className="py-3 px-4 text-left cursor-pointer" 
+                  onClick={() => handleSort('email')}
+                >
+                  Email
+                  {sortField === 'email' && (
+                    <span className="ml-1">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+                  )}
+                </th>
+                <th 
+                  className="py-3 px-4 text-left cursor-pointer" 
+                  onClick={() => handleSort('role')}
+                >
+                  Rôle
+                  {sortField === 'role' && (
+                    <span className="ml-1">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+                  )}
+                </th>
+                <th 
+                  className="py-3 px-4 text-left cursor-pointer" 
+                  onClick={() => handleSort('created_at')}
+                >
+                  Date de création
+                  {sortField === 'created_at' && (
+                    <span className="ml-1">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+                  )}
+                </th>
+                <th 
+                  className="py-3 px-4 text-left cursor-pointer" 
+                  onClick={() => handleSort('status')}
+                >
+                  Statut
+                  {sortField === 'status' && (
+                    <span className="ml-1">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+                  )}
+                </th>
                 <th className="py-3 px-4 text-center">Actions</th>
               </tr>
             </thead>

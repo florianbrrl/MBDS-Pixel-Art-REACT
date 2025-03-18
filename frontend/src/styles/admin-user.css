@@ -135,3 +135,19 @@
 .user-filters label {
   color: var(--label-text-color);
 }
+
+/* Sort Indicators */
+.users-table-container th {
+  position: relative;
+}
+
+.users-table-container th span {
+  font-size: 10px;
+  vertical-align: middle;
+  display: inline-block;
+  margin-left: 5px;
+}
+
+.users-table-container th:hover {
+  background-color: var(--table-hover-color);
+}
