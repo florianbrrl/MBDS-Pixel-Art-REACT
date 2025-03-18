@@ -42,6 +42,11 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
                   Profil
                 </Link>
               </li>
+              <li className="mobile-nav-item">
+                <Link to="/contributions" className="mobile-nav-link" onClick={onClose}>
+                  Mes Contributions
+                </Link>
+              </li>
               {isAdmin && (
                 <li className="mobile-nav-item">
                   <Link to="/admin" className="mobile-nav-link" onClick={onClose}>
