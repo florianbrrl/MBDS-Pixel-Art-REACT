@@ -14,6 +14,7 @@ export interface UserProfile {
   theme_preference?: ThemePreference;
   created_at: string;
   updated_at?: string;
+  is_blocked?: boolean;
 }
 
 // Interface pour les identifiants de connexion
