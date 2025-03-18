@@ -6,14 +6,6 @@
   box-shadow: var(--shadow, 0 1px 3px rgba(0, 0, 0, 0.1));
 }
 
-.pixel-board-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 16px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--border-color, #eee);
-}
-
 .pixel-board-meta {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -99,10 +91,6 @@
 @media (prefers-color-scheme: dark) {
   .pixel-board-info {
     background-color: #1f2937;
-  }
-
-  .pixel-board-title {
-    border-bottom-color: #374151;
   }
 
   .meta-label {

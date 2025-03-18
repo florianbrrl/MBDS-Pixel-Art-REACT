@@ -252,55 +252,71 @@
   }
 
   /* Support du mode sombre */
-  @media (prefers-color-scheme: dark) {
-    .profile-card {
-      background-color: #1f2937;
-      color: #f9fafb;
-    }
+  .dark-theme .profile-card,
+  .dark-theme .profile-section {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+  }
 
-    .profile-section {
-      border-bottom-color: #374151;
-    }
+  .dark-theme .edit-button,
+  .dark-theme .primary-button,
+  .dark-theme .secondary-button {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+  }
 
-    .form-group input,
-    .form-group select {
-      background-color: #374151;
-      border-color: #4b5563;
-      color: #f9fafb;
-    }
+  .dark-theme .edit-button:hover,
+  .dark-theme .secondary-button:hover {
+    background-color: var(--border-color-hover);
+  }
 
-    .secondary-button {
-      background-color: #4b5563;
-      color: #f9fafb;
-    }
+  .dark-theme .primary-button {
+    background-color: var(--color-primary);
+    color: white;
+  }
 
-    .secondary-button:hover {
-      background-color: #6b7280;
-    }
+  .dark-theme .primary-button:hover {
+    background-color: #2563eb;
+  }
 
-    .success-message {
-      background-color: #064e3b;
-      color: #a7f3d0;
-    }
+  .dark-theme .profile-page a,
+  .dark-theme .stat-value,
+  .dark-theme .stat-label {
+    color: white;
+  }
 
-    .error-message {
-      background-color: #7f1d1d;
-      color: #fecaca;
-    }
+  .dark-theme .boards-list a {
+    text-decoration: underline;
+  }
 
-    .stat-item {
-      background-color: #374151;
-    }
+  .dark-theme .boards-list a:hover {
+    color: lightgray;
+  }
 
-    .stat-label {
-      color: #9ca3af;
-    }
+  .dark-theme .section-header h2,
+  .dark-theme .profile-details strong {
+    color: var(--text-primary);
+  }
 
-    .boards-list li {
-      border-bottom-color: #374151;
-    }
+  .dark-theme .form-group input,
+  .dark-theme .form-group select {
+    background-color: var(--input-bg);
+    color: var(--text-primary);
+    border-color: var(--input-border);
+  }
 
-    .boards-list a {
-      color: #60a5fa;
-    }
+  .dark-theme .stat-item {
+    background-color: var(--bg-tertiary);
+  }
+
+  .dark-theme .success-message {
+    background-color: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+  }
+
+  .dark-theme .error-message {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: #f87171;
   }

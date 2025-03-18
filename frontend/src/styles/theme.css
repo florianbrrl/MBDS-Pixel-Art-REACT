@@ -9,8 +9,10 @@
   --color-warning: #f59e0b;
   --color-danger: #ef4444;
   --color-info: #0ea5e9;
+}
 
-  /* Thème clair (par défaut) */
+/* Thème clair (par défaut) */
+:root, .light-theme {
   --bg-primary: #ffffff;
   --bg-secondary: #f9fafb;
   --bg-tertiary: #f1f5f9;
@@ -62,35 +64,30 @@
   --pixel-border: #4b5563;
 }
 
-.light-theme {
-  /* Utilise les valeurs par défaut définies dans :root */
-}
-
-/* Classe d'application pour garantir que tout le contenu utilise les variables CSS */
-.app {
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-  min-height: 100vh;
+/* Styles pour les boutons de thème */
+.theme-toggle-button {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s;
 }
 
-.app-main {
-  flex: 1;
-  max-width: 1200px;
-  width: 100%;
-  margin: 0 auto;
-  padding: 2rem;
+.theme-toggle-button:hover {
+  background-color: var(--border-color-hover);
+  transform: scale(1.05);
 }
 
-/* Classes utilitaires pour l'utilisation des variables */
-.bg-primary { background-color: var(--bg-primary); }
-.bg-secondary { background-color: var(--bg-secondary); }
-.bg-tertiary { background-color: var(--bg-tertiary); }
-
-.text-primary { color: var(--text-primary); }
-.text-secondary { color: var(--text-secondary); }
-.text-tertiary { color: var(--text-tertiary); }
+.theme-toggle-button:active {
+  transform: scale(0.95);
+}
 
 /* Transition pour les changements de thème */
 * {
@@ -98,72 +95,4 @@
               color var(--transition-speed) ease,
               border-color var(--transition-speed) ease,
               box-shadow var(--transition-speed) ease;
-}
-
-/* Styles de base pour les boutons */
-button {
-  cursor: pointer;
-  border: none;
-  background-color: var(--bg-tertiary);
-  color: var(--text-primary);
-  padding: 0.5rem 1rem;
-  border-radius: var(--border-radius);
-  transition: background-color 0.2s ease;
-}
-
-button:hover {
-  background-color: var(--border-color-hover);
-}
-
-button:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--color-primary);
-}
-
-/* Sélection de texte et curseur */
-body,
-div,
-p,
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-span,
-a,
-li,
-ul,
-section,
-article,
-header,
-footer,
-main {
-  user-select: none;
-  cursor: default;
-}
-
-input,
-textarea,
-select,
-[contenteditable='true'] {
-  user-select: text;
-  cursor: text;
-}
-
-a,
-button,
-[role='button'] {
-  cursor: pointer;
-}
-
-/* Media queries pour la responsivité */
-@media (max-width: 768px) {
-  .app-header {
-    padding: 1rem;
-  }
-
-  .app-main {
-    padding: 1rem;
-  }
 }

@@ -1,29 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useCooldown } from '@/hooks/useCooldown';
+import CooldownIndicator from '@/components/pixel-board/CooldownIndicator';
 import ApiService from '@/services/api.service';
+import PixelBoardService from '@/services/pixelboard.service';
 import { PixelBoard } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ErrorMessage from '@/components/common/ErrorMessage';
-import { useAuth } from '@/contexts/AuthContext';
 import PixelBoardDisplay from '@/components/pixel-board/PixelBoardDisplay';
-import PixelBoardService from '@/services/pixelboard.service'; // Importation du service
 
 const PixelBoardDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isAuthenticated, currentUser } = useAuth();
+  const { isAuthenticated } = useAuth();
 
-  // États pour les données
+  // États pour les données du board
   const [board, setBoard] = useState<PixelBoard | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [cooldownEnd, setCooldownEnd] = useState<Date | null>(null);
-  const [selectedColor, setSelectedColor] = useState<string>('#000000'); // État pour stocker la couleur sélectionnée
 
   // État pour le succès du placement de pixel
   const [placementSuccess, setPlacementSuccess] = useState<string | null>(null);
   const [placementError, setPlacementError] = useState<string | null>(null);
-  const [placingPixel, setPlacingPixel] = useState<boolean>(false); // Nouvel état pour suivre le chargement du placement
+  const [placingPixel, setPlacingPixel] = useState<boolean>(false);
+  const [selectedColor, setSelectedColor] = useState<string>('#000000');
+
+  // Utiliser notre hook de cooldown
+  const {
+    status: cooldownStatus,
+    refresh: refreshCooldown
+  } = useCooldown(id);
 
   // Charger les détails du PixelBoard
   useEffect(() => {
@@ -51,28 +58,29 @@ const PixelBoardDetail: React.FC = () => {
   const canPlacePixel = (): boolean => {
     if (!board || !board.is_active) return false;
     if (!isAuthenticated) return false;
-    if (cooldownEnd && new Date() < cooldownEnd) return false;
-    if (placingPixel) return false; // Ne pas permettre le placement pendant le chargement
-    return true;
+    if (placingPixel) return false;
+
+    // Utiliser l'état du cooldown
+    return cooldownStatus.canPlace || cooldownStatus.isPremium;
   };
 
-  // Fonction pour placer un pixel - MODIFIÉE POUR UTILISER L'API
+  // Fonction pour placer un pixel
   const handlePixelPlaced = async (x: number, y: number, color: string) => {
     if (!canPlacePixel() || !board || !id) return;
 
     setPlacementSuccess(null);
     setPlacementError(null);
-    setPlacingPixel(true); // Début du chargement
-
-    // Vérifier si on peut écraser le pixel existant
-    const pixelKey = `${x},${y}`;
-    if (board.grid[pixelKey] && !board.allow_overwrite) {
-      setPlacementError('Ce pixel a déjà été placé et ne peut pas être écrasé.');
-      setPlacingPixel(false);
-      return;
-    }
+    setPlacingPixel(true);
 
     try {
+      // Vérifier si on peut écraser le pixel existant
+      const pixelKey = `${x},${y}`;
+      if (board.grid[pixelKey] && !board.allow_overwrite) {
+        setPlacementError('Ce pixel a déjà été placé et ne peut pas être écrasé.');
+        setPlacingPixel(false);
+        return;
+      }
+
       // Appel à l'API pour sauvegarder le pixel
       const response = await PixelBoardService.placePixel(id, x, y, color);
 
@@ -88,18 +96,16 @@ const PixelBoardDetail: React.FC = () => {
           grid: newGrid,
         });
 
-        // Configurer le cooldown
-        const cooldownTime = new Date();
-        cooldownTime.setSeconds(cooldownTime.getSeconds() + board.cooldown);
-        setCooldownEnd(cooldownTime);
-
         setPlacementSuccess(`Pixel placé avec succès en (${x}, ${y})`);
+
+        // Rafraîchir le statut du cooldown
+        refreshCooldown();
       }
     } catch (error) {
       console.error('Erreur lors du placement du pixel:', error);
       setPlacementError('Erreur lors du placement du pixel. Veuillez réessayer.');
     } finally {
-      setPlacingPixel(false); // Fin du chargement
+      setPlacingPixel(false);
 
       // Réinitialiser les messages après 3 secondes
       setTimeout(() => {
@@ -154,11 +160,14 @@ const PixelBoardDetail: React.FC = () => {
         </div>
       )}
 
-      {cooldownEnd && new Date() < cooldownEnd && (
-        <div className="info-message mb-4">
-          Prochain placement de pixel disponible dans{' '}
-          {Math.ceil((cooldownEnd.getTime() - new Date().getTime()) / 1000)} secondes.
-        </div>
+      {/* Intégrer l'indicateur de cooldown ici */}
+      {isAuthenticated && board.is_active && (
+        <CooldownIndicator
+          remainingSeconds={cooldownStatus.remainingSeconds}
+          isPremium={cooldownStatus.isPremium}
+          canPlace={cooldownStatus.canPlace}
+          totalCooldown={board.cooldown}
+        />
       )}
 
       <div className="board-interaction">
