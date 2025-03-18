@@ -192,7 +192,7 @@ const UserList: React.FC<UserListProps> = ({ onSelectUser }) => {
                 filteredUsers.map((user) => (
                   <tr 
                     key={user.id} 
-                    className={`border-t hover:bg-gray-50 ${user.is_blocked ? 'bg-red-50' : ''}`}
+                    className={`border-t ${user.is_blocked ? 'blocked-user' : ''}`}
                     onClick={() => handleUserSelect(user)}
                   >
                     <td className="py-3 px-4">{user.email}</td>

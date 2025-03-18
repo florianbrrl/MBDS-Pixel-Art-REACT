@@ -21,7 +21,6 @@
 }
 
 .users-table-container th {
-  background-color: rgb(243, 244, 246);
   padding: 0.75rem 1rem;
   text-align: left;
   font-weight: 600;
@@ -30,12 +29,51 @@
 
 .users-table-container td {
   padding: 0.75rem 1rem;
-  border-top: 1px solid rgb(229, 231, 235);
+}
+
+.users-table-container tr {
+  cursor: pointer;
+}
+
+/* Theme compatibility */
+:root {
+  --table-header-bg: rgb(243, 244, 246);
+  --table-border-color: rgb(229, 231, 235);
+  --table-hover-color: rgb(249, 250, 251);
+  --modal-overlay-color: rgba(0, 0, 0, 0.5);
+  --modal-bg-color: white;
+  --blocked-bg-color: rgba(254, 202, 202, 0.5);
+  --input-bg-color: white;
+  --input-text-color: black;
+  --input-border-color: rgb(209, 213, 219);
+}
+
+.dark-theme {
+  --table-header-bg: rgb(31, 41, 55);
+  --table-border-color: rgb(55, 65, 81);
+  --table-hover-color: rgb(55, 65, 81);
+  --modal-overlay-color: rgba(0, 0, 0, 0.7);
+  --modal-bg-color: rgb(31, 41, 55);
+  --blocked-bg-color: rgba(220, 38, 38, 0.2);
+  --input-bg-color: rgb(17, 24, 39);
+  --input-text-color: white;
+  --input-border-color: rgb(75, 85, 99);
+}
+
+.users-table-container th {
+  background-color: var(--table-header-bg);
+}
+
+.users-table-container td {
+  border-top: 1px solid var(--table-border-color);
 }
 
 .users-table-container tr:hover {
-  background-color: rgb(249, 250, 251);
-  cursor: pointer;
+  background-color: var(--table-hover-color);
+}
+
+.users-table-container tr.blocked-user {
+  background-color: var(--blocked-bg-color);
 }
 
 /* User Detail Modal */
@@ -45,7 +83,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: var(--modal-overlay-color);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -53,7 +91,7 @@
 }
 
 .user-detail-modal > div {
-  background-color: white;
+  background-color: var(--modal-bg-color);
   border-radius: 0.5rem;
   padding: 1.5rem;
   max-width: 42rem;
@@ -72,4 +110,21 @@
   .user-info .grid {
     grid-template-columns: 1fr 1fr;
   }
+}
+
+/* Form elements */
+.user-filters input[type="text"],
+.user-filters select,
+.users-table-container select {
+  background-color: var(--input-bg-color);
+  color: var(--input-text-color);
+  border-color: var(--input-border-color);
+}
+
+.user-filters input[type="text"]:focus,
+.user-filters select:focus,
+.users-table-container select:focus {
+  border-color: #4f46e5;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.25);
 }
