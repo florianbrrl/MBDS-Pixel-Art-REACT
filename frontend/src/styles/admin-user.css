@@ -46,6 +46,7 @@
   --input-bg-color: white;
   --input-text-color: black;
   --input-border-color: rgb(209, 213, 219);
+  --label-text-color: rgb(55, 65, 81);
 }
 
 .dark-theme {
@@ -58,6 +59,7 @@
   --input-bg-color: rgb(17, 24, 39);
   --input-text-color: white;
   --input-border-color: rgb(75, 85, 99);
+  --label-text-color: rgb(209, 213, 219);
 }
 
 .users-table-container th {
@@ -127,4 +129,9 @@
   border-color: #4f46e5;
   outline: none;
   box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.25);
+}
+
+/* Labels */
+.user-filters label {
+  color: var(--label-text-color);
 }
