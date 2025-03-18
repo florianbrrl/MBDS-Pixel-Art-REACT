@@ -19,6 +19,7 @@ import Profile from './pages/Profile';
 import Admin from './pages/Admin';
 import NotFound from './pages/NotFound';
 import AccessDenied from './pages/AccessDenied';
+import UserContributions from './pages/UserContributions';
 
 const Router: React.FC = () => {
   return (
@@ -44,6 +45,7 @@ const Router: React.FC = () => {
             {/* Routes protégées par l'authentification */}
             <Route element={<PrivateRoute />}>
               <Route path="/profile" element={<Profile />} />
+              <Route path="/contributions" element={<UserContributions />} />
             </Route>
 
             {/* Routes protégées pour les administrateurs */}

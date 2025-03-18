@@ -64,6 +64,11 @@ const MainLayout: React.FC = () => {
                       Profil
                     </Link>
                   </li>
+                  <li className="nav-item">
+                    <Link to="/contributions" className="nav-link">
+                      Mes Contributions
+                    </Link>
+                  </li>
                   {isAdmin && (
                     <li className="nav-item">
                       <Link to="/admin" className="nav-link">
