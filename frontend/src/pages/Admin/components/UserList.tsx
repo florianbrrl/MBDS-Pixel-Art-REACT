@@ -157,9 +157,9 @@ const UserList: React.FC<UserListProps> = ({ onSelectUser }) => {
       {error && <ErrorMessage message={error} onClose={() => setError(null)} />}
       
       <div className="user-filters mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="flex items-center">
-            <label htmlFor="search" className="flex-shrink-0 w-32 text-sm font-medium">
+        <div className="flex flex-col md:flex-row md:items-center gap-4">
+          <div className="flex items-center min-w-[250px]">
+            <label htmlFor="search" className="flex-shrink-0 w-24 text-sm font-medium">
               Rechercher:
             </label>
             <input
@@ -172,8 +172,8 @@ const UserList: React.FC<UserListProps> = ({ onSelectUser }) => {
             />
           </div>
           
-          <div className="flex items-center">
-            <label htmlFor="role-filter" className="flex-shrink-0 w-20 text-sm font-medium">
+          <div className="flex items-center min-w-[200px]">
+            <label htmlFor="role-filter" className="flex-shrink-0 w-16 text-sm font-medium">
               Rôle:
             </label>
             <select
@@ -190,8 +190,8 @@ const UserList: React.FC<UserListProps> = ({ onSelectUser }) => {
             </select>
           </div>
           
-          <div className="flex items-center">
-            <label htmlFor="status-filter" className="flex-shrink-0 w-20 text-sm font-medium">
+          <div className="flex items-center min-w-[200px]">
+            <label htmlFor="status-filter" className="flex-shrink-0 w-16 text-sm font-medium">
               Statut:
             </label>
             <select
