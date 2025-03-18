@@ -1,0 +1,153 @@
+/* Admin User Management Styles */
+
+/* User List */
+.user-list-container {
+  margin-bottom: 2rem;
+}
+
+.user-filters {
+  margin-bottom: 1.5rem;
+}
+
+.users-table-container {
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.users-table-container table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.users-table-container th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.users-table-container td {
+  padding: 0.75rem 1rem;
+}
+
+.users-table-container tr {
+  cursor: pointer;
+}
+
+/* Theme compatibility */
+:root {
+  --table-header-bg: rgb(243, 244, 246);
+  --table-border-color: rgb(229, 231, 235);
+  --table-hover-color: rgb(249, 250, 251);
+  --modal-overlay-color: rgba(0, 0, 0, 0.5);
+  --modal-bg-color: white;
+  --blocked-bg-color: rgba(254, 202, 202, 0.5);
+  --input-bg-color: white;
+  --input-text-color: black;
+  --input-border-color: rgb(209, 213, 219);
+  --label-text-color: rgb(55, 65, 81);
+}
+
+.dark-theme {
+  --table-header-bg: rgb(31, 41, 55);
+  --table-border-color: rgb(55, 65, 81);
+  --table-hover-color: rgb(55, 65, 81);
+  --modal-overlay-color: rgba(0, 0, 0, 0.7);
+  --modal-bg-color: rgb(31, 41, 55);
+  --blocked-bg-color: rgba(220, 38, 38, 0.2);
+  --input-bg-color: rgb(17, 24, 39);
+  --input-text-color: white;
+  --input-border-color: rgb(75, 85, 99);
+  --label-text-color: rgb(209, 213, 219);
+}
+
+.users-table-container th {
+  background-color: var(--table-header-bg);
+}
+
+.users-table-container td {
+  border-top: 1px solid var(--table-border-color);
+}
+
+.users-table-container tr:hover {
+  background-color: var(--table-hover-color);
+}
+
+.users-table-container tr.blocked-user {
+  background-color: var(--blocked-bg-color);
+}
+
+/* User Detail Modal */
+.user-detail-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--modal-overlay-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.user-detail-modal > div {
+  background-color: var(--modal-bg-color);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  max-width: 42rem;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.user-info .grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .user-info .grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Form elements */
+.user-filters input[type="text"],
+.user-filters select,
+.users-table-container select {
+  background-color: var(--input-bg-color);
+  color: var(--input-text-color);
+  border-color: var(--input-border-color);
+}
+
+.user-filters input[type="text"]:focus,
+.user-filters select:focus,
+.users-table-container select:focus {
+  border-color: #4f46e5;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.25);
+}
+
+/* Labels */
+.user-filters label {
+  color: var(--label-text-color);
+}
+
+/* Sort Indicators */
+.users-table-container th {
+  position: relative;
+}
+
+.users-table-container th span {
+  font-size: 10px;
+  vertical-align: middle;
+  display: inline-block;
+  margin-left: 5px;
+}
+
+.users-table-container th:hover {
+  background-color: var(--table-hover-color);
+}

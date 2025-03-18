@@ -1,6 +1,7 @@
 // src/pages/Admin/index.tsx (mise à jour)
 import React, { useEffect, useState } from 'react';
 import PixelBoardManagement from './PixelBoardManagement';
+import UserManagement from './components/UserManagement';
 import ApiService from '@/services/api.service';
 import '../../styles/admin-dashboard.css';
 
@@ -165,9 +166,7 @@ const Admin: React.FC = () => {
 
         {activeTab === 'users' && (
           <div className="users-content">
-            {/* Contenu de gestion des utilisateurs ici */}
-            <h2 className="text-xl font-bold mb-4">Gestion des utilisateurs</h2>
-            <p>Fonctionnalité à venir...</p>
+            <UserManagement />
           </div>
         )}
       </div>

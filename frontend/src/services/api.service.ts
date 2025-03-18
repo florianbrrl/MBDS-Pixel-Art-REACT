@@ -135,6 +135,43 @@ const ApiService = {
     }
   },
 
+  // Utilisateurs
+  getAllUsers: async (): Promise<ApiResponse<User[]>> => {
+    try {
+      const response = await axiosInstance.get('/admin/users');
+      return { data: response.data.data };
+    } catch (error: any) {
+      return { error: error.error || 'Impossible de récupérer la liste des utilisateurs' };
+    }
+  },
+
+  getUserById: async (userId: string): Promise<ApiResponse<User>> => {
+    try {
+      const response = await axiosInstance.get(`/admin/users/${userId}`);
+      return { data: response.data.data };
+    } catch (error: any) {
+      return { error: error.error || "Impossible de récupérer les détails de l'utilisateur" };
+    }
+  },
+
+  updateUserRole: async (userId: string, role: string): Promise<ApiResponse<User>> => {
+    try {
+      const response = await axiosInstance.put(`/admin/users/${userId}/role`, { role });
+      return { data: response.data.data };
+    } catch (error: any) {
+      return { error: error.error || 'Impossible de mettre à jour le rôle' };
+    }
+  },
+
+  toggleUserStatus: async (userId: string, isBlocked: boolean): Promise<ApiResponse<User>> => {
+    try {
+      const response = await axiosInstance.put(`/admin/users/${userId}/status`, { isBlocked });
+      return { data: response.data.data };
+    } catch (error: any) {
+      return { error: error.error || "Impossible de mettre à jour le statut de l'utilisateur" };
+    }
+  },
+
   // Contributions utilisateur
   getUserContributions: async (userId: string): Promise<ApiResponse<any>> => {
     try {
