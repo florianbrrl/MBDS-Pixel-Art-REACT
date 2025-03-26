@@ -1,0 +1,1 @@
+{"status":"fail","message":"Vous devez attendre encore 5 secondes avant de placer un nouveau pixel","stack":"Error: Vous devez attendre encore 5 secondes avant de placer un nouveau pixel\n    at /home/uncyzer/Documents/react/MBDS-Pixel-Art-REACT/backend/src/controllers/pixelboard.controller.ts:315:7"}

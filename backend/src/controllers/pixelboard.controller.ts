@@ -349,7 +349,8 @@ export class PixelBoardController {
 			};
 
 			// Émettre l'événement de mise à jour aux clients connectés à ce tableau
-			io.to(id).emit('pixel-update', pixelUpdateData);
+			// Utilisez la nouvelle méthode SimpleWSService
+			io.emitPixelUpdate(id, pixelUpdateData);
 
 			res.status(200).json({
 				status: 'success',
