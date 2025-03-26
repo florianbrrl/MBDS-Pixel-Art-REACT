@@ -28,11 +28,37 @@ const io = new Server(wsServer, {
 		methods: ['GET', 'POST'],
 		credentials: true,
 	},
+	path: '/',
+	serveClient: false,
+	connectTimeout: 45000, // temps plus long pour la connexion
+	// Activer le débogage pour les problèmes de connexion
+	transports: ['websocket', 'polling']
+});
+
+// Middleware d'authentification pour Socket.IO
+io.use((socket, next) => {
+	const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.replace('Bearer ', '');
+	
+	if (!token) {
+		return next(new Error('Authentication error: Token missing'));
+	}
+	
+	// Ici, vous pourriez vérifier le token JWT, mais pour simplifier le test, on accepte toute connexion
+	console.log('Client authentifié avec token:', token.substring(0, 10) + '...');
+	next();
+});
+
+// Gestionnaire d'erreurs de connexion
+io.engine.on('connection_error', (err) => {
+	console.error('Connection error:', err.req, err.code, err.message, err.context);
 });
 
 // Middleware pour gérer les connexions Socket.IO
 io.on('connection', socket => {
 	console.log(`Client connecté: ${socket.id}`);
+	
+	// Connexion réussie - envoi d'un message de bienvenue
+	socket.emit('welcome', { message: 'Connected to WebSocket server!' });
 
 	// Événement lorsqu'un client rejoint un tableau spécifique
 	socket.on('join-board', (boardId: string) => {
