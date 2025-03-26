@@ -35,6 +35,11 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
               Pixel Boards
             </Link>
           </li>
+          <li className="mobile-nav-item">
+            <Link to="/super-board" className="mobile-nav-link" onClick={onClose}>
+              SuperPixelBoard
+            </Link>
+          </li>
           {isAuthenticated ? (
             <>
               <li className="mobile-nav-item">

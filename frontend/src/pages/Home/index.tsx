@@ -105,6 +105,23 @@ const Home: React.FC = () => {
         <p className="subtitle">Créez et partagez des pixel arts avec la communauté !</p>
       </section>
 
+      <section className="feature-section">
+        <h2 className="section-title">SuperPixelBoard</h2>
+        <div className="feature-card">
+          <div className="feature-description">
+            <h3>Explorez le SuperPixelBoard</h3>
+            <p>
+              Découvrez toutes les créations PixelBoard combinées en une seule toile
+              géante. Voyez comment la communauté a contribué à travers les différents
+              tableaux et explorez l'art pixel collaboratif.
+            </p>
+            <Link to="/super-board" className="cta-button">
+              Voir le SuperPixelBoard
+            </Link>
+          </div>
+        </div>
+      </section>
+
       <section className="stats-section">
         <h2 className="section-title">Statistiques</h2>
 
