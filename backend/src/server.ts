@@ -11,23 +11,27 @@ process.on('uncaughtException', err => {
 	process.exit(1);
 });
 
-// Port du serveur (depuis la configuration)
-const port = config.server.port;
+// Ports du serveur (depuis la configuration)
+const httpPort = config.server.port;
+const wsPort = 3001; // Port séparé pour WebSocket
 
-// Création du serveur HTTP pour pouvoir y attacher Socket.IO
+// Création du serveur HTTP
 const httpServer = http.createServer(app);
 
-// Création de l'instance Socket.IO avec CORS configuré
-const io = new Server(httpServer, {
+// Création d'un serveur HTTP séparé pour Socket.IO
+const wsServer = http.createServer();
+
+// Création de l'instance Socket.IO avec CORS configuré sur un port dédié
+const io = new Server(wsServer, {
 	cors: {
 		origin: config.cors.origin,
-		methods: ["GET", "POST"],
-		credentials: true
-	}
+		methods: ['GET', 'POST'],
+		credentials: true,
+	},
 });
 
 // Middleware pour gérer les connexions Socket.IO
-io.on('connection', (socket) => {
+io.on('connection', socket => {
 	console.log(`Client connecté: ${socket.id}`);
 
 	// Événement lorsqu'un client rejoint un tableau spécifique
@@ -43,26 +47,38 @@ io.on('connection', (socket) => {
 	});
 
 	// Événement pour récupérer les mises à jour manquées (système anti-perte de données)
-	socket.on('get-missed-updates', async (data: { boardId: string, lastTimestamp: string }, callback) => {
-		try {
-			// Convertir la chaîne de timestamp en objet Date
-			const lastTimestamp = new Date(data.lastTimestamp);
-			
-			// Importer de manière dynamique pour éviter les dépendances circulaires
-			const { WebSocketService } = await import('./services/websocket.service');
-			
-			// Récupérer les mises à jour depuis le dernier timestamp connu
-			const missedUpdates = await WebSocketService.getUpdatesAfterTimestamp(data.boardId, lastTimestamp);
-			
-			// Envoyer les mises à jour au client via la fonction de callback
-			callback({ success: true, updates: missedUpdates });
-			
-			console.log(`Envoi de ${missedUpdates.length} mises à jour manquées au client ${socket.id} pour le tableau ${data.boardId}`);
-		} catch (error) {
-			console.error('Erreur lors de la récupération des mises à jour manquées:', error);
-			callback({ success: false, error: 'Erreur lors de la récupération des mises à jour', updates: [] });
+	socket.on(
+		'get-missed-updates',
+		async (data: { boardId: string; lastTimestamp: string }, callback) => {
+			try {
+				// Convertir la chaîne de timestamp en objet Date
+				const lastTimestamp = new Date(data.lastTimestamp);
+
+				// Importer de manière dynamique pour éviter les dépendances circulaires
+				const { WebSocketService } = await import('./services/websocket.service');
+
+				// Récupérer les mises à jour depuis le dernier timestamp connu
+				const missedUpdates = await WebSocketService.getUpdatesAfterTimestamp(
+					data.boardId,
+					lastTimestamp
+				);
+
+				// Envoyer les mises à jour au client via la fonction de callback
+				callback({ success: true, updates: missedUpdates });
+
+				console.log(
+					`Envoi de ${missedUpdates.length} mises à jour manquées au client ${socket.id} pour le tableau ${data.boardId}`
+				);
+			} catch (error) {
+				console.error('Erreur lors de la récupération des mises à jour manquées:', error);
+				callback({
+					success: false,
+					error: 'Erreur lors de la récupération des mises à jour',
+					updates: [],
+				});
+			}
 		}
-	});
+	);
 
 	// Événement de déconnexion
 	socket.on('disconnect', () => {
@@ -73,12 +89,16 @@ io.on('connection', (socket) => {
 // Exposer l'instance io pour l'utiliser ailleurs dans l'application
 export { io };
 
-// Démarrage du serveur HTTP avec Socket.IO
-const server = httpServer.listen(port, async() => {
-	console.log(`Server running in ${config.server.env} mode on port ${port}`);
+// Démarrage du serveur HTTP pour l'API REST
+const server = httpServer.listen(httpPort, async () => {
+	console.log(`API Server running in ${config.server.env} mode on port ${httpPort}`);
 	await PixelBoardModel.updateActiveStatus();
 	console.log(`API available at ${config.server.apiPrefix}`);
-	console.log('WebSocket server initialized');
+});
+
+// Démarrage du serveur WebSocket sur un port séparé
+wsServer.listen(wsPort, () => {
+	console.log(`WebSocket server initialized on port ${wsPort}`);
 });
 
 // Gestion des rejets de promesses non gérées
