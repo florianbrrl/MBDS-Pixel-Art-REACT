@@ -9,6 +9,8 @@ import {
 import { PixelHistoryModel } from '../models/pixel-history.model';
 import { PixelCooldownModel } from '../models/pixel-cooldown.model';
 import { randomUUID } from 'crypto';
+import { io } from '../server';
+import { PixelUpdateData } from '../types/socket.types';
 
 /**
  * Fonction de validation pour les données PixelBoard
@@ -336,15 +338,22 @@ export class PixelBoardController {
 
 			const updatedPixelBoard = await PixelBoardModel.placePixel(id, pixelData);
 
+			// Créer les données pour la mise à jour en temps réel
+			const pixelUpdateData: PixelUpdateData = {
+				pixelboard_id: updatedPixelBoard.id,
+				x: parsedX,
+				y: parsedY,
+				color: normalizedColor,
+				timestamp: new Date(),
+				user_id: req.user?.id
+			};
+
+			// Émettre l'événement de mise à jour aux clients connectés à ce tableau
+			io.to(id).emit('pixel-update', pixelUpdateData);
+
 			res.status(200).json({
 				status: 'success',
-				data: {
-					pixelboard_id: updatedPixelBoard.id,
-					x: parsedX,
-					y: parsedY,
-					color: normalizedColor,
-					timestamp: new Date()
-				}
+				data: pixelUpdateData
 			});
 		} catch (error: any) {
 			// Gérer les erreurs spécifiques au placement de pixels
