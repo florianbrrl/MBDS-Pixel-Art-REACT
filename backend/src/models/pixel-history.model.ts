@@ -27,6 +27,25 @@ export class PixelHistoryModel {
 			orderBy: { timestamp: 'desc' },
 		});
 	}
+	
+	/**
+	 * Obtenir l'historique des pixels pour un tableau spécifique après un timestamp donné
+	 * Utilisé pour les mises à jour en temps réel lors des reconnexions WebSocket
+	 * @param boardId - L'UUID du tableau
+	 * @param timestamp - Timestamp à partir duquel récupérer l'historique
+	 * @returns Tableau des entrées d'historique de pixels
+	 */
+	static async findByBoardIdAfterTimestamp(boardId: string, timestamp: Date): Promise<PixelHistory[]> {
+		return prisma.pixelHistory.findMany({
+			where: { 
+				board_id: boardId,
+				timestamp: {
+					gt: timestamp
+				}
+			},
+			orderBy: { timestamp: 'asc' },
+		});
+	}
 
 	/**
 	 * Obtenir l'historique des pixels pour un utilisateur spécifique
