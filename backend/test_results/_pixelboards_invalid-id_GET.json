@@ -1,0 +1,1 @@
+{"status":"fail","message":"PixelBoard non trouvé","stack":"Error: PixelBoard non trouvé\n    at /home/uncyzer/Documents/react/MBDS-Pixel-Art-REACT/backend/src/controllers/pixelboard.controller.ts:497:17"}

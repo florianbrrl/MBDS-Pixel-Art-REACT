@@ -19,7 +19,7 @@ export class SimpleWSService {
    */
   static initialize(server?: http.Server, port = 3001) {
     if (this.isInitialized) return;
-    
+
     if (server) {
       this.wss = new WebSocketServer({ server });
       console.log('WebSocket server attached to existing HTTP server');
@@ -30,7 +30,7 @@ export class SimpleWSService {
 
     this.wss.on('connection', (ws, req) => {
       console.log('Client connected to WebSocket server');
-      
+
       // Extraire le token d'authentification si présent
       const authHeader = req.headers.authorization;
       if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -39,8 +39,8 @@ export class SimpleWSService {
       }
 
       // Envoyer un message de bienvenue
-      ws.send(JSON.stringify({ 
-        type: 'welcome', 
+      ws.send(JSON.stringify({
+        type: 'welcome',
         data: { message: 'Connected to WebSocket server!' }
       }));
 
@@ -48,7 +48,7 @@ export class SimpleWSService {
       ws.on('message', (message) => {
         try {
           const parsedMessage = JSON.parse(message.toString());
-          
+
           // Gérer les différents types de messages
           switch (parsedMessage.type) {
             case 'join-board':

@@ -1,0 +1,1 @@
+{"status":"fail","message":"User with this email already exists","stack":"Error: User with this email already exists\n    at registerUser (/home/uncyzer/Documents/react/MBDS-Pixel-Art-REACT/backend/src/services/auth.service.ts:12:9)\n    at /home/uncyzer/Documents/react/MBDS-Pixel-Art-REACT/backend/src/controllers/auth.controller.ts:11:18"}
