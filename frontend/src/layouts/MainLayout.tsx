@@ -57,6 +57,11 @@ const MainLayout: React.FC = () => {
                   Pixel Boards
                 </Link>
               </li>
+              <li className="nav-item">
+                <Link to="/super-board" className="nav-link">
+                  SuperPixelBoard
+                </Link>
+              </li>
               {isAuthenticated ? (
                 <>
                   <li className="nav-item">
@@ -125,6 +130,9 @@ const MainLayout: React.FC = () => {
             </Link>
             <Link to="/pixel-boards" className="footer-link">
               Pixel Boards
+            </Link>
+            <Link to="/super-board" className="footer-link">
+              Super Pixel Board
             </Link>
             {isAuthenticated ? (
               <Link to="/profile" className="footer-link">

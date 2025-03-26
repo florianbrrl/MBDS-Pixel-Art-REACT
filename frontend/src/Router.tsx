@@ -20,6 +20,7 @@ import Admin from './pages/Admin';
 import NotFound from './pages/NotFound';
 import AccessDenied from './pages/AccessDenied';
 import UserContributions from './pages/UserContributions';
+import SuperPixelBoard from './pages/SuperPixelBoard';
 
 const Router: React.FC = () => {
   return (
@@ -33,6 +34,7 @@ const Router: React.FC = () => {
               <Route path="/" element={<Home />} />
               <Route path="/pixel-boards" element={<PixelBoards />} />
               <Route path="/pixel-boards/:id" element={<PixelBoardDetail />} />
+              <Route path="/super-board" element={<SuperPixelBoard />} />
               <Route path="/access-denied" element={<AccessDenied />} />
             </Route>
 
