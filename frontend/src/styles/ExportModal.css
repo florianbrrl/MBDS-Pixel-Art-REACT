@@ -96,7 +96,7 @@
   }
 
   .dimension-input input {
-    width: 100%;
+    width: 90%;
     padding: 8px;
     border: 1px solid var(--border-color, #e5e7eb);
     border-radius: var(--border-radius, 4px);

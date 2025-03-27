@@ -19,16 +19,15 @@ const ExportModal: React.FC<ExportModalProps> = ({ board, onClose }) => {
     try {
       setIsExporting(true);
 
-      // Créer une copie modifiée du board si dimensions personnalisées
-      const exportBoard = {
-        ...board,
-        // Si vous voulez gérer les dimensions personnalisées, vous pouvez le faire ici
-      };
+      // Créer les options avec les dimensions personnalisées si nécessaire
+      const exportOptions = exportSize === 'custom'
+        ? { customWidth, customHeight }
+        : undefined;
 
       if (exportType === 'svg') {
-        exportToSVG(exportBoard);
+        exportToSVG(board, exportOptions);
       } else {
-        await exportToPNG(exportBoard);
+        await exportToPNG(board, exportOptions);
       }
 
       // Fermer le modal après l'export

@@ -83,6 +83,10 @@
     background-color: #2563eb;
   }
 
+    .floating-export-button span {
+        cursor: pointer;;
+    }
+
   /* Adaptations pour les écrans mobiles */
   @media (max-width: 768px) {
     .pixel-board-detail-page {

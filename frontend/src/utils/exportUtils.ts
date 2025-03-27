@@ -4,13 +4,22 @@ export const generateSVG = (board: {
     height: number;
     grid: Record<string, string>;
     title?: string;
+  }, options?: {
+    customWidth?: number;
+    customHeight?: number;
   }): string => {
     const { width, height, grid, title } = board;
     const pixelSize = 10; // Taille fixe pour chaque pixel
-    const svgWidth = width * pixelSize;
-    const svgHeight = height * pixelSize;
 
-    let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgWidth} ${svgHeight}" width="${svgWidth}" height="${svgHeight}">`;
+    // Utiliser les dimensions personnalisées si disponibles
+    const svgWidth = options?.customWidth || (width * pixelSize);
+    const svgHeight = options?.customHeight || (height * pixelSize);
+
+    // Calculer le facteur d'échelle si des dimensions personnalisées sont utilisées
+    const scaleX = options?.customWidth ? options.customWidth / (width * pixelSize) : 1;
+    const scaleY = options?.customHeight ? options.customHeight / (height * pixelSize) : 1;
+
+    let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width * pixelSize} ${height * pixelSize}" width="${svgWidth}" height="${svgHeight}">`;
 
     // Ajouter un titre si fourni
     if (title) {
@@ -18,7 +27,7 @@ export const generateSVG = (board: {
     }
 
     // Fond blanc
-    svgContent += `<rect width="${svgWidth}" height="${svgHeight}" fill="white"/>`;
+    svgContent += `<rect width="${width * pixelSize}" height="${height * pixelSize}" fill="white"/>`;
 
     // Dessiner chaque pixel
     Object.entries(grid).forEach(([pos, color]) => {
@@ -31,13 +40,16 @@ export const generateSVG = (board: {
   };
 
   // Fonction pour exporter en SVG
-  export const exportToSVG = (board: {
+export const exportToSVG = (board: {
     width: number;
     height: number;
     grid: Record<string, string>;
     title: string;
+  }, options?: {
+    customWidth?: number;
+    customHeight?: number;
   }): void => {
-    const svgContent = generateSVG(board);
+    const svgContent = generateSVG(board, options);
     const blob = new Blob([svgContent], { type: 'image/svg+xml' });
     const url = URL.createObjectURL(blob);
 
@@ -56,8 +68,11 @@ export const generateSVG = (board: {
     height: number;
     grid: Record<string, string>;
     title: string;
+  }, options?: {
+    customWidth?: number;
+    customHeight?: number;
   }): Promise<void> => {
-    const svgContent = generateSVG(board);
+    const svgContent = generateSVG(board, options);
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
 
@@ -66,9 +81,8 @@ export const generateSVG = (board: {
     }
 
     // Définir la taille du canvas
-    const pixelSize = 10;
-    canvas.width = board.width * pixelSize;
-    canvas.height = board.height * pixelSize;
+    canvas.width = options?.customWidth || (board.width * 10);
+    canvas.height = options?.customHeight || (board.height * 10);
 
     // Créer une image à partir du SVG
     const img = new Image();
@@ -78,7 +92,7 @@ export const generateSVG = (board: {
     return new Promise((resolve, reject) => {
       img.onload = () => {
         // Dessiner l'image sur le canvas
-        ctx.drawImage(img, 0, 0);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
         // Convertir le canvas en blob PNG
         canvas.toBlob((blob) => {
