@@ -1,0 +1,118 @@
+.heatmap-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    min-height: 400px;
+  }
+
+  .heatmap-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: var(--bg-secondary, #f3f4f6);
+    border-bottom: 1px solid var(--border-color, #e5e7eb);
+  }
+
+  .zoom-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .zoom-controls button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-tertiary, #e5e7eb);
+    border: 1px solid var(--border-color, #d1d5db);
+    border-radius: var(--border-radius, 4px);
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .zoom-controls button:hover:not(:disabled) {
+    background-color: var(--border-color-hover, #9ca3af);
+  }
+
+  .zoom-controls button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .zoom-controls span {
+    min-width: 50px;
+    text-align: center;
+    font-size: 0.9rem;
+  }
+
+  .heatmap-info {
+    font-size: 0.9rem;
+    color: var(--text-secondary, #4b5563);
+  }
+
+  .heatmap-canvas-container {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background-color: var(--bg-secondary, #f3f4f6);
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: var(--border-radius, 4px);
+  }
+
+  .heatmap-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+  }
+
+  .heatmap-canvas.dragging {
+    cursor: grabbing;
+  }
+
+  /* Mode sombre */
+  @media (prefers-color-scheme: dark) {
+    .heatmap-canvas-container {
+      background-color: var(--bg-tertiary, #1f2937);
+    }
+
+    .heatmap-controls {
+      background-color: var(--bg-tertiary, #1f2937);
+      border-color: var(--border-color, #374151);
+    }
+
+    .zoom-controls button {
+      background-color: var(--bg-primary, #111827);
+      border-color: var(--border-color, #4b5563);
+      color: var(--text-primary, #f9fafb);
+    }
+
+    .zoom-controls button:hover:not(:disabled) {
+      background-color: var(--border-color-hover, #6b7280);
+    }
+
+    .heatmap-info {
+      color: var(--text-tertiary, #9ca3af);
+    }
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .heatmap-controls {
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .zoom-controls {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .heatmap-info {
+      text-align: center;
+    }
+  }

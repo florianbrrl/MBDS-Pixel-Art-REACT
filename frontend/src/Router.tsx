@@ -15,6 +15,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import PixelBoards from './pages/PixelBoards';
 import PixelBoardDetail from './pages/PixelBoardDetail';
+import PixelBoardHeatmapPage from './pages/PixelBoardHeatmapPage'; // Nouvelle importation
 import Profile from './pages/Profile';
 import Admin from './pages/Admin';
 import NotFound from './pages/NotFound';
@@ -34,6 +35,8 @@ const Router: React.FC = () => {
               <Route path="/" element={<Home />} />
               <Route path="/pixel-boards" element={<PixelBoards />} />
               <Route path="/pixel-boards/:id" element={<PixelBoardDetail />} />
+              {/* Nouvelle route pour la heatmap */}
+              <Route path="/pixel-boards/:id/heatmap" element={<PixelBoardHeatmapPage />} />
               <Route path="/super-board" element={<SuperPixelBoard />} />
               <Route path="/access-denied" element={<AccessDenied />} />
             </Route>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useCooldown } from '@/hooks/useCooldown';
 import CooldownIndicator from '@/components/pixel-board/CooldownIndicator';
 import ApiService from '@/services/api.service';
@@ -204,6 +204,17 @@ const PixelBoardDetail: React.FC = () => {
           canPlace={cooldownStatus.canPlace}
           totalCooldown={board.cooldown}
         />
+      )}
+
+      {board && (
+        <div className="board-actions">
+          <Link
+            to={`/pixel-boards/${board.id}/heatmap`}
+            className="heatmap-button"
+          >
+            Voir la Heatmap d'activité
+          </Link>
+        </div>
       )}
 
       <div className="board-interaction">
