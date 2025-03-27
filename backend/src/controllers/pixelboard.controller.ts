@@ -177,45 +177,58 @@ export class PixelBoardController {
 
 	/**
 	 * Récupérer l'historique des pixels pour une position spécifique d'un PixelBoard
+	 * avec les informations d'utilisateur
 	 */
 	static getPositionHistory = catchAsync(
 		async (req: Request, res: Response, next: NextFunction) => {
-			const { id } = req.params;
-			const { x, y } = req.query;
+		const { id } = req.params;
+		const { x, y } = req.query;
 
-			if (!id) {
-				return next(new AppErrorClass('ID du PixelBoard requis', 400));
-			}
+		if (!id) {
+			return next(new AppErrorClass('ID du PixelBoard requis', 400));
+		}
 
-			if (x === undefined || y === undefined) {
-				return next(new AppErrorClass('Coordonnées (x, y) requises', 400));
-			}
+		if (x === undefined || y === undefined) {
+			return next(new AppErrorClass('Coordonnées (x, y) requises', 400));
+		}
 
-			// Vérifier si le PixelBoard existe
-			const pixelBoard = await PixelBoardModel.findById(id);
-			if (!pixelBoard) {
-				return next(new AppErrorClass('PixelBoard non trouvé', 404));
-			}
+		// Vérifier si le PixelBoard existe
+		const pixelBoard = await PixelBoardModel.findById(id);
+		if (!pixelBoard) {
+			return next(new AppErrorClass('PixelBoard non trouvé', 404));
+		}
 
-			// Conversion des coordonnées en nombres
-			const parsedX = parseInt(x as string, 10);
-			const parsedY = parseInt(y as string, 10);
+		// Conversion des coordonnées en nombres
+		const parsedX = parseInt(x as string, 10);
+		const parsedY = parseInt(y as string, 10);
 
-			if (isNaN(parsedX) || isNaN(parsedY)) {
-				return next(new AppErrorClass('Les coordonnées doivent être des nombres', 400));
-			}
+		if (isNaN(parsedX) || isNaN(parsedY)) {
+			return next(new AppErrorClass('Les coordonnées doivent être des nombres', 400));
+		}
 
-			// Vérifier si les coordonnées sont valides
-			if (parsedX < 0 || parsedX >= pixelBoard.width || parsedY < 0 || parsedY >= pixelBoard.height) {
-				return next(new AppErrorClass('Coordonnées hors limites', 400));
-			}
+		// Vérifier si les coordonnées sont valides
+		if (parsedX < 0 || parsedX >= pixelBoard.width || parsedY < 0 || parsedY >= pixelBoard.height) {
+			return next(new AppErrorClass('Coordonnées hors limites', 400));
+		}
 
-			const history = await PixelHistoryModel.findByCoordinate(id, parsedX, parsedY);
+		// Utiliser la méthode qui inclut les informations utilisateur
+		const history = await PixelHistoryModel.findByCoordinateWithUserInfo(id, parsedX, parsedY);
 
-			res.status(200).json({
-				status: 'success',
-				data: history,
-			});
+		// Transformer les données pour l'API
+		const formattedHistory = history.map(item => ({
+			board_id: item.board_id,
+			x: item.x,
+			y: item.y,
+			color: item.color,
+			user_id: item.user_id,
+			user_email: item.user ? item.user.email : null,
+			timestamp: item.timestamp
+		}));
+
+		res.status(200).json({
+			status: 'success',
+			data: formattedHistory,
+		});
 		}
 	);
 

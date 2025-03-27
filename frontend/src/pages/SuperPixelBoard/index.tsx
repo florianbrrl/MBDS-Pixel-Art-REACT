@@ -20,6 +20,7 @@ const SuperPixelBoardPage: React.FC = () => {
   const [filterActive, setFilterActive] = useState(true);
   const [filterInactive, setFilterInactive] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [historyAvailable, setHistoryAvailable] = useState(false);
 
   useEffect(() => {
     const fetchSuperPixelBoardData = async () => {
@@ -34,6 +35,9 @@ const SuperPixelBoardPage: React.FC = () => {
         } else if (response.data) {
           setBoardsData(response.data.boards);
           setDimensions(response.data.dimensions);
+
+          // Si nous avons des données, la fonctionnalité d'historique est disponible
+          setHistoryAvailable(response.data.boards.length > 0);
         }
       } catch (err: any) {
         setError(err.message || 'Une erreur est survenue lors du chargement des données');
@@ -82,6 +86,7 @@ const SuperPixelBoardPage: React.FC = () => {
         <h1>SuperPixelBoard</h1>
         <p className="page-description">
           Visualisez toutes les créations PixelBoard combinées en une seule toile
+          {historyAvailable && " avec l'historique des pixels au survol"}
         </p>
       </div>
 
@@ -121,6 +126,12 @@ const SuperPixelBoardPage: React.FC = () => {
           <span className="stats-label">Tableaux affichés:</span>
           <span className="stats-value">{filteredBoards.length}</span>
         </div>
+        {historyAvailable && (
+          <div className="stats-item">
+            <span className="stats-label">Astuce:</span>
+            <span className="stats-value">Survolez un pixel pour voir son historique</span>
+          </div>
+        )}
       </div>
 
       <div className="super-board-container">
