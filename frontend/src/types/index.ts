@@ -41,3 +41,13 @@ export interface ApiResponse<T> {
   error?: string;
   message?: string;
 }
+
+// Type pour les données de mise à jour de pixel
+export interface PixelUpdateData {
+  pixelboard_id: string;
+  x: number;
+  y: number;
+  color: string;
+  timestamp: string;
+  user_id?: string;
+}

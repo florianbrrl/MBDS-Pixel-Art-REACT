@@ -4,7 +4,8 @@ import { useCooldown } from '@/hooks/useCooldown';
 import CooldownIndicator from '@/components/pixel-board/CooldownIndicator';
 import ApiService from '@/services/api.service';
 import PixelBoardService from '@/services/pixelboard.service';
-import { PixelBoard } from '@/types';
+import WebSocketService from '@/services/websocket.service';
+import { PixelBoard, PixelUpdateData } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ErrorMessage from '@/components/common/ErrorMessage';
@@ -53,6 +54,42 @@ const PixelBoardDetail: React.FC = () => {
 
     loadBoard();
   }, [id]);
+
+  // useEffect pour la connexion WebSocket
+  useEffect(() => {
+    if (!id) return;
+
+    // Connecter au WebSocket et rejoindre le canal du board
+    WebSocketService.connect();
+    WebSocketService.joinBoard(id);
+
+    // S'abonner aux mises à jour de pixels
+    const handlePixelUpdate = (data: PixelUpdateData) => {
+      // Vérifier que les données concernent bien ce tableau
+      if (data.pixelboard_id === id && board) {
+        console.log('Received pixel update:', data);
+
+        // Mettre à jour l'état du board avec le nouveau pixel
+        setBoard(prevBoard => {
+          if (!prevBoard) return prevBoard;
+
+          const newGrid = { ...prevBoard.grid };
+          const pixelKey = `${data.x},${data.y}`;
+          newGrid[pixelKey] = data.color;
+
+          return { ...prevBoard, grid: newGrid };
+        });
+      }
+    };
+
+    WebSocketService.onPixelUpdate(handlePixelUpdate);
+
+    // Nettoyage à la démonture du composant
+    return () => {
+      WebSocketService.offPixelUpdate(handlePixelUpdate);
+      WebSocketService.disconnect();
+    };
+  }, [id, board]);
 
   // Vérifier si un pixel peut être placé
   const canPlacePixel = (): boolean => {
