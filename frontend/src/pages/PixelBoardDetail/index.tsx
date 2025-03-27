@@ -95,7 +95,6 @@ const PixelBoardDetail: React.FC = () => {
   const canPlacePixel = (): boolean => {
     if (!board || !board.is_active) return false;
     if (!isAuthenticated) return false;
-    if (placingPixel) return false;
 
     // Utiliser l'état du cooldown
     return cooldownStatus.canPlace || cooldownStatus.isPremium;
@@ -124,7 +123,7 @@ const PixelBoardDetail: React.FC = () => {
       if (response.error) {
         setPlacementError(response.error || 'Erreur lors du placement du pixel.');
       } else {
-        // Mise à jour locale après confirmation du serveur
+        // Mise à jour locale immédiate, sans attendre la mise à jour WebSocket
         const newGrid = { ...board.grid };
         newGrid[pixelKey] = color;
 
