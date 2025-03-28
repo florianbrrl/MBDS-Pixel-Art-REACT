@@ -149,12 +149,22 @@ export class StatsController {
         return next(new AppErrorClass('Authentification requise', 401));
       }
 
-      const stats = await StatsService.getUserContributionStats(userId);
+      try {
+        const stats = await StatsService.getUserContributionStats(userId);
 
-      res.status(200).json({
-        status: 'success',
-        data: stats,
-      });
+        res.status(200).json({
+          status: 'success',
+          data: stats,
+        });
+      } catch (error: any) {
+        // Handle common errors
+        if (error.message && error.message.includes("Invalid input")) {
+          return next(new AppErrorClass('Données invalides', 400));
+        }
+        // Log the error and send a generic message
+        console.error("Error in getUserContributionStats:", error);
+        return next(new AppErrorClass('Erreur lors de la récupération des statistiques', 500));
+      }
     }
   );
 
