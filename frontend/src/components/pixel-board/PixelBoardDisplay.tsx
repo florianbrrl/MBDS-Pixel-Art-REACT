@@ -11,6 +11,7 @@ interface PixelBoardDisplayProps {
   onPixelPlaced?: (x: number, y: number, color: string) => void;
   selectedColor?: string;
   canEdit?: boolean;
+  onColorSelect?: (color: string) => void; // Add this line
 }
 
 const PixelBoardDisplay: React.FC<PixelBoardDisplayProps> = ({

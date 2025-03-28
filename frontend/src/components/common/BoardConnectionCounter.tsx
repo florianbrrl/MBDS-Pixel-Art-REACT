@@ -16,6 +16,11 @@ const BoardConnectionCounter: React.FC<BoardConnectionCounterProps> = ({ boardId
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Définir le type pour les données de réponse
+    interface ConnectionResponse {
+      activeConnections: number;
+    }
+
     // Fonction pour récupérer le nombre de connexions
     const fetchConnectionCount = async () => {
       try {
@@ -23,7 +28,8 @@ const BoardConnectionCounter: React.FC<BoardConnectionCounterProps> = ({ boardId
         if (response.error) {
           setError(response.error);
         } else if (response.data) {
-          setConnectionCount(response.data.activeConnections || 0);
+          const data = response.data as ConnectionResponse;
+          setConnectionCount(data.activeConnections || 0);
         }
       } catch (err: any) {
         setError(err.message || 'Erreur lors de la récupération des connexions');

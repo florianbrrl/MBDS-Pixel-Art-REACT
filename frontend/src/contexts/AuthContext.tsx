@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '@/types';
 import { AuthService } from '@/services/api.service';
-import { ThemePreference, UserRole } from '@/types/auth.types';
+import { ThemePreference } from '@/types/auth.types';
 
 // Interface pour les données utilisateur stockées dans le contexte
 interface AuthContextType {
