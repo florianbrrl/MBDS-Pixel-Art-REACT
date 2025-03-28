@@ -66,7 +66,7 @@ const PixelBoardDetail: React.FC = () => {
     // S'abonner aux mises à jour de pixels
     const handlePixelUpdate = (data: PixelUpdateData) => {
       // Vérifier que les données concernent bien ce tableau
-      if (data.pixelboard_id === id && board) {
+      if (data.pixelboard_id === id) {
         console.log('Received pixel update:', data);
 
         // Mettre à jour l'état du board avec le nouveau pixel
@@ -89,7 +89,7 @@ const PixelBoardDetail: React.FC = () => {
       WebSocketService.offPixelUpdate(handlePixelUpdate);
       WebSocketService.disconnect();
     };
-  }, [id, board]);
+  }, [id]);
 
   // Vérifier si un pixel peut être placé
   const canPlacePixel = (): boolean => {
