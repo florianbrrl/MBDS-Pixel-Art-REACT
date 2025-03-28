@@ -3,6 +3,7 @@ import authRoutes from './auth.routes';
 import userRoutes from './user.routes';
 import pixelBoardRoutes from './pixelboard.routes';
 import websocketRoutes from './websocket.routes';
+import statsRoutes from './stats.routes';
 import { authenticateToken, restrictTo } from '../middleware/auth.middleware';
 
 /**
@@ -117,6 +118,9 @@ router.use('/pixelboards', pixelBoardRoutes);
 
 // Routes WebSocket
 router.use('/websocket', websocketRoutes);
+
+// Routes Statistics
+router.use('/stats', statsRoutes);
 
 /**
  * @swagger

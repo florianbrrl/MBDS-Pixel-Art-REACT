@@ -640,11 +640,41 @@ run_test "/websocket/stats" "GET" "200" "Get global WebSocket stats" "" "" ""
 
 # Test WebSocket stats for specific board
 if [ -n "$active_pixelboard_id" ]; then
-  run_test "/pixelboards/$active_pixelboard_id/connections" "GET" "200" "Get board-specific WebSocket stats" "" "" ""
-  run_test "/websocket/stats/$active_pixelboard_id" "GET" "200" "Get board-specific WebSocket stats (alt endpoint)" "" "" ""
+  run_test "/pixelboards/$active_pixelboard_id/connections" "GET" "200" "Get board-specific WebSocket connections" "" "" ""
+  run_test "/websocket/stats/$active_pixelboard_id" "GET" "200" "Get board-specific WebSocket stats" "" "" ""
 fi
 
-#
+# ==========================================
+# Statistics API Tests
+# ==========================================
+echo -e "\n${BLUE}=== Testing Statistics API Endpoints ===${NC}"
+
+# Global and Admin Stats Endpoints (require admin authentication)
+run_test "/stats/global" "GET" "401" "Get global stats without auth" "" "" ""
+run_test "/stats/global" "GET" "403" "Get global stats with user auth" "" "$USER_TOKEN" ""
+run_test "/stats/global" "GET" "200" "Get global stats with admin auth" "" "$ADMIN_TOKEN" ""
+run_test "/stats/users/activity" "GET" "200" "Get user activity stats" "" "$ADMIN_TOKEN" ""
+run_test "/stats/engagement" "GET" "200" "Get engagement metrics" "" "$ADMIN_TOKEN" ""
+run_test "/stats/activity/recent" "GET" "200" "Get recent activity" "" "$ADMIN_TOKEN" ""
+
+# Public Stats Endpoints
+run_test "/stats/super-board" "GET" "200" "Get SuperPixelBoard stats" "" "" ""
+run_test "/stats/pixelboard/placement" "GET" "200" "Get pixel placement stats" "" "" ""
+
+# Board-specific Stats
+if [ -n "$active_pixelboard_id" ]; then
+  run_test "/stats/pixelboards/$active_pixelboard_id" "GET" "200" "Get board-specific stats" "" "" ""
+  run_test "/pixelboards/$active_pixelboard_id/heatmap" "GET" "200" "Get board heatmap" "" "" ""
+  run_test "/pixelboards/$active_pixelboard_id/heatmap" "GET" "200" "Get board heatmap with timeframe" "" "" "?timeFrame=24h"
+fi
+
+# User-specific Stats (require authentication)
+run_test "/stats/users/me/statistics" "GET" "401" "Get user stats without auth" "" "" ""
+run_test "/users/me/statistics" "GET" "200" "Get authenticated user stats" "" "$USER_TOKEN" ""
+if [ -n "$active_pixelboard_id" ]; then
+  run_test "/users/me/pixelboards/$active_pixelboard_id/contributions" "GET" "200" "Get user board contributions" "" "$USER_TOKEN" ""
+fi
+
 # ==========================================
 # Summary and Results
 # ==========================================

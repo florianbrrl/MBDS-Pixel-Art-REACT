@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { UserController } from '../controllers/user.controller';
+import { StatsController } from '../controllers/stats.controller';
 import { authenticateToken, restrictTo } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -286,5 +287,82 @@ router.get('/contributions', UserController.getUserContributions);
  *         description: User not found
  */
 router.get('/:id/contributions', UserController.getUserContributions);
+
+/**
+ * @swagger
+ * /users/me/statistics:
+ *   get:
+ *     summary: Get detailed statistics about the current user's contributions
+ *     tags: [Users, Statistics]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User contribution statistics
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     totalPixelsPlaced:
+ *                       type: integer
+ *                     boardsContributed:
+ *                       type: array
+ *                     mostActiveBoard:
+ *                       type: object
+ *                     activityTimeline:
+ *                       type: array
+ *                     recentPlacements:
+ *                       type: array
+ *                     contributionByColor:
+ *                       type: array
+ */
+router.get('/me/statistics', restrictTo('user', 'premium', 'admin'), StatsController.getUserStats);
+
+/**
+ * @swagger
+ * /users/me/pixelboards/{id}/contributions:
+ *   get:
+ *     summary: Get details of user's contributions to a specific board
+ *     tags: [Users, PixelBoards, Statistics]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the PixelBoard
+ *     responses:
+ *       200:
+ *         description: User's contributions to the specified PixelBoard
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     totalContributions:
+ *                       type: integer
+ *                     contributionPercentage:
+ *                       type: number
+ *                     placementHistory:
+ *                       type: array
+ *                     heatmap:
+ *                       type: object
+ */
+router.get('/me/pixelboards/:id/contributions', restrictTo('user', 'premium', 'admin'), StatsController.getUserBoardContributions);
 
 export default router;

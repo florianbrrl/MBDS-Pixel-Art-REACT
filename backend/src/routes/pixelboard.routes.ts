@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { PixelBoardController } from '../controllers/pixelboard.controller';
+import { StatsController } from '../controllers/stats.controller';
 import { authenticateToken, restrictTo } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -613,6 +614,54 @@ router.get('/:id/connections', (req, res, next) => {
     next(error);
   }
 });
+
+/**
+ * @swagger
+ * /pixelboards/{id}/heatmap:
+ *   get:
+ *     summary: Get heatmap data for pixel placements on a specific board
+ *     tags: [PixelBoards, Statistics]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID du PixelBoard
+ *       - in: query
+ *         name: timeFrame
+ *         schema:
+ *           type: string
+ *           enum: [24h, 7d, 30d, all]
+ *         description: Time frame for the heatmap data
+ *     responses:
+ *       200:
+ *         description: Heatmap data for the specified PixelBoard
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     boardId:
+ *                       type: string
+ *                     width:
+ *                       type: integer
+ *                     height:
+ *                       type: integer
+ *                     timeFrame:
+ *                       type: string
+ *                     grid:
+ *                       type: array
+ *       404:
+ *         description: PixelBoard not found
+ */
+router.get('/:id/heatmap', StatsController.getPixelBoardHeatmap);
 
 // Les routes protégées restent inchangées...
 router.use(authenticateToken);
