@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import SuperPixelBoard from '@/components/super-board/SuperPixelBoard';
-import PixelBoardService from '@/services/pixelboard.service';
+import { PixelBoardService } from '@/services/api.service';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ErrorMessage from '@/components/common/ErrorMessage';
 import './../../styles/SuperPixelBoardPage.css';
@@ -10,7 +10,8 @@ const SuperPixelBoardPage: React.FC = () => {
   const [dimensions, setDimensions] = useState({ width: 100, height: 100 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [pixelInfo, setPixelInfo] = useState<{
+  // We track pixel info in state but don't need to reference it in this component
+  const [, setPixelInfo] = useState<{
     x: number;
     y: number;
     color: string;

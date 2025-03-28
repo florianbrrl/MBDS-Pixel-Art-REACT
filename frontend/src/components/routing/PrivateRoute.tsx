@@ -8,7 +8,7 @@ interface PrivateRouteProps {
 }
 
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ requiredRoles = [] }) => {
-  const { isAuthenticated, isLoading, currentUser, hasRole } = useAuth();
+  const { isAuthenticated, isLoading, hasRole } = useAuth();
   const location = useLocation();
 
   // Attendre que la vérification d'authentification soit terminée
