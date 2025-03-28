@@ -45,9 +45,6 @@ const PixelBoardDisplay: React.FC<PixelBoardDisplayProps> = ({
 
   return (
     <div className="pixel-board-display">
-      <div className="display-header">
-        <h2>{board.title}</h2>
-      </div>
 
       {notification && <div className="pixel-notification">{notification}</div>}
 

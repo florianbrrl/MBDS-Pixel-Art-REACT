@@ -4,9 +4,10 @@
 export interface User {
   id: string;
   email: string;
+  role: string;
   created_at: string;
   updated_at?: string;
-  theme_preference: "light" | "dark" | "system";
+  theme_preference: "light" | "dark" | "system" | "sys";
 }
 
 // Type PixelBoard

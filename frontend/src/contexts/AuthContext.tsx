@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '@/types';
 import { AuthService } from '@/services/api.service';
-import { ThemePreference } from '@/types/auth.types';
+import { ThemePreference, UserRole } from '@/types/auth.types';
 
 // Interface pour les données utilisateur stockées dans le contexte
 interface AuthContextType {
@@ -137,7 +137,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   // Fonction pour mettre à jour uniquement le thème
-  const updateTheme = async (theme: "light" | "dark" | "system") => {
+  const updateTheme = async (theme: ThemePreference) => {
     setIsLoading(true);
     try {
       const response = await AuthService.updateTheme(theme);
@@ -195,10 +195,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   // Fonction pour vérifier si l'utilisateur a l'un des rôles spécifiés
-  const hasRole = (_roles: string[]): boolean => {
-    // Access role through an alternative property or API call if needed
-    // For now, returning false to fix type errors
-    return false;
+  const hasRole = (roles: string[]): boolean => {
+    if (!currentUser || !currentUser.role) {
+      return false;
+    }
+
+    return roles.includes(currentUser.role);
   };
 
   // Valeur du contexte
@@ -210,7 +212,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     register,
     logout,
     updateProfile,
-    updateTheme: updateTheme as (theme: ThemePreference) => Promise<void>,
+    updateTheme,
     hasRole,
     changePassword,
     getUserContributions
