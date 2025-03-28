@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { UserController } from '../controllers/user.controller';
 import { authenticateToken, restrictTo } from '../middleware/auth.middleware';
+import { StatsController } from '../controllers/stats.controller';
 
 const router = Router();
 
@@ -286,5 +287,88 @@ router.get('/contributions', UserController.getUserContributions);
  *         description: User not found
  */
 router.get('/:id/contributions', UserController.getUserContributions);
+
+/**
+ * @swagger
+ * /users/me/statistics:
+ *   get:
+ *     summary: Récupérer les statistiques de contribution de l'utilisateur connecté
+ *     tags: [Users, Statistics]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Statistiques détaillées des contributions de l'utilisateur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     totalPixelsPlaced:
+ *                       type: integer
+ *                     boardsContributed:
+ *                       type: array
+ *                     mostActiveBoard:
+ *                       type: object
+ *                     activityTimeline:
+ *                       type: object
+ *                     recentPlacements:
+ *                       type: array
+ *                     contributionByColor:
+ *                       type: object
+ *       401:
+ *         description: Non authentifié
+ */
+router.get('/me/statistics', restrictTo('user', 'premium', 'admin'), StatsController.getUserContributionStats);
+
+/**
+ * @swagger
+ * /users/me/pixelboards/{id}/contributions:
+ *   get:
+ *     summary: Récupérer les statistiques de contribution de l'utilisateur sur un tableau spécifique
+ *     tags: [Users, Statistics]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID du PixelBoard
+ *     responses:
+ *       200:
+ *         description: Statistiques détaillées des contributions de l'utilisateur sur le tableau
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     totalContributions:
+ *                       type: integer
+ *                     contributionPercentage:
+ *                       type: number
+ *                     placementHistory:
+ *                       type: array
+ *                     heatmap:
+ *                       type: object
+ *       401:
+ *         description: Non authentifié
+ *       404:
+ *         description: PixelBoard non trouvé
+ */
+router.get('/me/pixelboards/:id/contributions', restrictTo('user', 'premium', 'admin'), StatsController.getUserBoardContributionStats);
 
 export default router;

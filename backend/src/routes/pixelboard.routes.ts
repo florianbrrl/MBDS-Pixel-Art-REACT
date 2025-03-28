@@ -614,6 +614,54 @@ router.get('/:id/connections', (req, res, next) => {
   }
 });
 
+/**
+ * @swagger
+ * /pixelboards/{id}/heatmap:
+ *   get:
+ *     summary: Obtenir la heatmap des placements de pixels sur un tableau
+ *     tags: [PixelBoards]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID du PixelBoard
+ *       - in: query
+ *         name: timeFrame
+ *         schema:
+ *           type: string
+ *           enum: [24h, 7d, 30d, all]
+ *         description: Période de temps pour la heatmap (dernières 24h, 7 jours, 30 jours, ou toutes les données)
+ *     responses:
+ *       200:
+ *         description: Données de heatmap pour le tableau spécifié
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     boardId:
+ *                       type: string
+ *                     timeFrame:
+ *                       type: string
+ *                     boardTitle:
+ *                       type: string
+ *                     boardDimensions:
+ *                       type: object
+ *                     heatmap:
+ *                       type: object
+ *       404:
+ *         description: PixelBoard non trouvé
+ */
+router.get('/:id/heatmap', PixelBoardController.getBoardHeatmap);
+
 // Les routes protégées restent inchangées...
 router.use(authenticateToken);
 
