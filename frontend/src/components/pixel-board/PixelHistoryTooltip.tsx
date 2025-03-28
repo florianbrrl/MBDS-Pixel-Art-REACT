@@ -12,7 +12,6 @@ interface PixelHistoryTooltipProps {
 const PixelHistoryTooltip: React.FC<PixelHistoryTooltipProps> = ({
   history,
   loading,
-  position,
   style
 }) => {
   if (loading) {

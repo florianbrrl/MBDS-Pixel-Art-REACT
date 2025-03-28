@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { PixelBoard } from '@/types';
 import PixelBoardCard from './PixelBoardCard';
 import LoadingSpinner from '@/components/common/LoadingSpinner';

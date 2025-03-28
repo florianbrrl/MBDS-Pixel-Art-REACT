@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import PixelBoardService from '@/services/pixelboard.service';
+import { PixelBoardService } from '@/services/api.service';
 
 interface CooldownStatus {
   canPlace: boolean;
@@ -34,7 +34,7 @@ export function useCooldown(boardId: string | undefined) {
       if (response.error) {
         setError(response.error);
       } else if (response.data) {
-        setStatus(response.data);
+        setStatus(response.data as CooldownStatus);
       }
     } catch (err: any) {
       setError(err.message || 'Erreur lors de la vérification du cooldown');

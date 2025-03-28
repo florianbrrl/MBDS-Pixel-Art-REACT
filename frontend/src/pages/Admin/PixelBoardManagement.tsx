@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import PixelBoardService from '@/services/pixelboard.service';
+import { PixelBoardService } from '@/services/api.service';
 import { PixelBoard } from '@/types';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ErrorMessage from '@/components/common/ErrorMessage';

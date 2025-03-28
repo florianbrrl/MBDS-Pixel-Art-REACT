@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import ReactDOM from 'react-dom';
 import { PixelBoard } from '@/types';
 import PixelHistoryTooltip from './PixelHistoryTooltip';
-import PixelBoardService from '@/services/pixelboard.service';
+import { PixelBoardService } from '@/services/api.service';
 import './../../styles/PixelBoardCanvas.css';
 
 interface PixelBoardCanvasProps {
@@ -40,7 +39,7 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
     try {
       const response = await PixelBoardService.getPixelHistory(board.id, x, y);
       if (response.data) {
-        setPixelHistory(response.data);
+        setPixelHistory(response.data as any[]);
       } else {
         setPixelHistory([]);
       }
@@ -60,7 +59,6 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
     const containerHeight = canvasRef.current.height;
 
     // Prendre la plus petite dimension pour garantir que tout le board est visible
-    const maxDimension = Math.max(board.width, board.height);
     const basePixelSize = Math.min(containerWidth / board.width, containerHeight / board.height);
 
     return basePixelSize * zoom;

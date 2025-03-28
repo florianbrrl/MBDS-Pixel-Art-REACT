@@ -2,9 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCooldown } from '@/hooks/useCooldown';
 import CooldownIndicator from '@/components/pixel-board/CooldownIndicator';
-import ApiService from '@/services/api.service';
-import PixelBoardService from '@/services/pixelboard.service';
-import WebSocketService from '@/services/websocket.service';
+import ApiService, { PixelBoardService, WebSocketService } from '@/services/api.service';
 import { PixelBoard, PixelUpdateData } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
@@ -25,7 +23,7 @@ const PixelBoardDetail: React.FC = () => {
   const [placementSuccess, setPlacementSuccess] = useState<string | null>(null);
   const [placementError, setPlacementError] = useState<string | null>(null);
   const [placingPixel, setPlacingPixel] = useState<boolean>(false);
-  const [selectedColor, setSelectedColor] = useState<string>('#000000');
+  const [selectedColor] = useState<string>('#000000');
 
   // Utiliser notre hook de cooldown
   const {

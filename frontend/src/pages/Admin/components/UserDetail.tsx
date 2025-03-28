@@ -14,25 +14,25 @@ const UserDetail: React.FC<UserDetailProps> = ({ user, onClose }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchContributions = async () => {
-      setLoading(true);
-      setError(null);
+  const fetchContributions = async () => {
+    setLoading(true);
+    setError(null);
 
-      try {
-        const response = await ApiService.getUserContributions(user.id);
-        if (response.error) {
-          setError(response.error);
-        } else if (response.data) {
-          setContributions(response.data);
-        }
-      } catch (err: any) {
-        setError(err.message || 'Erreur lors du chargement des contributions');
-      } finally {
-        setLoading(false);
+    try {
+      const response = await ApiService.getUserContributions(user.id);
+      if (response.error) {
+        setError(response.error);
+      } else if (response.data) {
+        setContributions(response.data);
       }
-    };
+    } catch (err: any) {
+      setError(err.message || 'Erreur lors du chargement des contributions');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchContributions();
   }, [user.id]);
 
@@ -51,7 +51,7 @@ const UserDetail: React.FC<UserDetailProps> = ({ user, onClose }) => {
           </button>
         </div>
 
-        {error && <ErrorMessage message={error} onClose={() => setError(null)} />}
+        {error && <ErrorMessage message={error} onRetry={() => fetchContributions()} />}
 
         <div className="user-info mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

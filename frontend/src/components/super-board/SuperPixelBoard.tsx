@@ -1,9 +1,8 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import ReactDOM from 'react-dom';
 import '../../styles/SuperPixelBoard.css';
 import LoadingSpinner from '../common/LoadingSpinner';
 import { PixelBoard } from '@/types';
-import PixelBoardService from '@/services/pixelboard.service';
+import { PixelBoardService } from '@/services/api.service';
 import PixelHistoryTooltip from '../pixel-board/PixelHistoryTooltip';
 
 interface SuperPixelBoardProps {
@@ -15,8 +14,6 @@ interface SuperPixelBoardProps {
 
 const SuperPixelBoard: React.FC<SuperPixelBoardProps> = ({
   boardsData,
-  width,
-  height,
   onPixelHover
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -50,7 +47,7 @@ const SuperPixelBoard: React.FC<SuperPixelBoardProps> = ({
     try {
       const response = await PixelBoardService.getPixelHistory(boardId, x, y);
       if (response.data) {
-        setPixelHistory(response.data);
+        setPixelHistory(response.data as any[]);
       } else {
         setPixelHistory([]);
       }
@@ -68,7 +65,6 @@ const SuperPixelBoard: React.FC<SuperPixelBoardProps> = ({
 
     const canvas = canvasRef.current;
     const maxCanvasWidth = canvas.width;
-    const maxCanvasHeight = canvas.height;
 
     // Calculer la taille d'un pixel en fonction du zoom
     const pixelSize = Math.max(1, zoom);

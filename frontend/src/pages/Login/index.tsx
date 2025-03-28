@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import LoadingSpinner from '@/components/common/LoadingSpinner';
+// We use inline spinner instead of the LoadingSpinner component
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');

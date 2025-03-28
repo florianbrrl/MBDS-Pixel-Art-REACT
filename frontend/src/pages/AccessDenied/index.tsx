@@ -19,7 +19,7 @@ const AccessDenied: React.FC = () => {
         {currentUser ? (
           <>
             Vous êtes connecté en tant que <strong>{currentUser.email}</strong> avec le rôle{' '}
-            <strong>{currentUser.role || 'utilisateur'}</strong>.
+            <strong>{'utilisateur'}</strong>.
           </>
         ) : (
           'Vous n\'êtes pas connecté.'
@@ -30,7 +30,7 @@ const AccessDenied: React.FC = () => {
         <Link to="/" className="primary-button">
           Retour à l'accueil
         </Link>
-        {currentUser?.role !== 'admin' && (
+        {true && (
           <p className="contact-info">
             Contactez un administrateur si vous pensez que vous devriez avoir accès à cette page.
           </p>

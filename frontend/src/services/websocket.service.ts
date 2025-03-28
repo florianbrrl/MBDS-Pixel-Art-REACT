@@ -1,7 +1,7 @@
 // src/services/websocket.service.ts
 import { PixelUpdateData } from '@/types';
 
-class WebSocketService {
+class WebSocketServiceClass {
   private socket: WebSocket | null = null;
   private reconnectTimer: NodeJS.Timeout | null = null;
   private reconnectAttempts = 0;
@@ -113,4 +113,8 @@ class WebSocketService {
 }
 
 // Exporter une instance unique pour toute l'application
-export default new WebSocketService();
+const WebSocketService = new WebSocketServiceClass();
+
+// Export both as named export and default
+export { WebSocketService };
+export default WebSocketService;
