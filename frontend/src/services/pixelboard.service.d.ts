@@ -1,17 +1,14 @@
 import { PixelBoard } from '@/types';
 declare const PixelBoardService: {
-    getAllBoards: () => Promise<ApiResponse<T>>;
-    getBoardById: (id: string) => Promise<ApiResponse<T>>;
-    createBoard: (boardData: Omit<PixelBoard, "id" | "created_at" | "is_active" | "grid" | "admin_id">) => Promise<ApiResponse<T>>;
-    updateBoard: (id: string, boardData: Partial<PixelBoard>) => Promise<ApiResponse<T>>;
-    deleteBoard: (id: string) => Promise<ApiResponse<T>>;
+    getAllBoards: () => Promise<any>;
+    getBoardById: (id: string) => Promise<any>;
+    createBoard: (boardData: Omit<PixelBoard, "id" | "created_at" | "is_active" | "grid" | "admin_id">) => Promise<any>;
+    updateBoard: (id: string, boardData: Partial<PixelBoard>) => Promise<any>;
+    deleteBoard: (id: string) => Promise<any>;
     placePixel: (boardId: string, x: number, y: number, color: string) => Promise<any>;
-    checkCooldown: (boardId: string) => Promise<ApiResponse<T>>;
-    getPixelHistory: (boardId: string, x: number, y: number) => Promise<ApiResponse<T>>;
+    checkCooldown: (boardId: string) => Promise<any>;
+    getPixelHistory: (boardId: string, x: number, y: number) => Promise<any>;
     getSuperPixelBoardData: () => Promise<{
-        error: any;
-        data?: undefined;
-    } | {
         data: {
             boards: any[];
             dimensions: {
@@ -20,6 +17,9 @@ declare const PixelBoardService: {
             };
         };
         error?: undefined;
+    } | {
+        error: any;
+        data?: undefined;
     }>;
 };
 export default PixelBoardService;

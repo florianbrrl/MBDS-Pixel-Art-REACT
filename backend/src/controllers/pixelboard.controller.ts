@@ -8,6 +8,7 @@ import {
 } from '../models/pixelboard.model';
 import { PixelHistoryModel } from '../models/pixel-history.model';
 import { PixelCooldownModel } from '../models/pixel-cooldown.model';
+import { StatsService } from '../services/stats.service';
 import { randomUUID } from 'crypto';
 import { io } from '../server';
 import { PixelUpdateData } from '../types/socket.types';
@@ -640,6 +641,47 @@ export class PixelBoardController {
 			await PixelBoardModel.delete(id);
 
 			res.status(204).send();
+		}
+	);
+
+	/**
+	 * Récupérer la heatmap d'un PixelBoard
+	 */
+	static getBoardHeatmap = catchAsync(
+		async (req: Request, res: Response, next: NextFunction) => {
+			const { id } = req.params;
+			const { timeFrame } = req.query;
+
+			if (!id) {
+				return next(new AppErrorClass('ID du PixelBoard requis', 400));
+			}
+
+			// Vérifier si le PixelBoard existe
+			const pixelBoard = await PixelBoardModel.findById(id);
+			if (!pixelBoard) {
+				return next(new AppErrorClass('PixelBoard non trouvé', 404));
+			}
+
+			const validTimeFrames = ['24h', '7d', '30d', 'all'];
+			const selectedTimeFrame = validTimeFrames.includes(timeFrame as string) 
+				? (timeFrame as string) 
+				: 'all';
+
+			const heatmap = await StatsService.getBoardHeatmap(id, selectedTimeFrame);
+
+			res.status(200).json({
+				status: 'success',
+				data: {
+					boardId: id,
+					timeFrame: selectedTimeFrame,
+					boardTitle: pixelBoard.title,
+					boardDimensions: {
+						width: pixelBoard.width,
+						height: pixelBoard.height
+					},
+					heatmap
+				}
+			});
 		}
 	);
 }

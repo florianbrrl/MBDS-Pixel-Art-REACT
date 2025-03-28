@@ -3,39 +3,144 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const api_client_1 = __importDefault(require("./api.client"));
+const axios_1 = __importDefault(require("axios"));
+// Configuration
+const API_URL = '/api';
+const API_TIMEOUT = 30000;
+// Create instance
+const axiosInstance = axios_1.default.create({
+    baseURL: API_URL,
+    timeout: API_TIMEOUT,
+    headers: {
+        'Content-Type': 'application/json',
+    },
+});
+// Add request interceptor
+axiosInstance.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token');
+    if (token && config.headers) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+}, (error) => {
+    console.error('Request error: ', error);
+    return Promise.reject(error);
+});
+// Add response interceptor
+axiosInstance.interceptors.response.use((response) => {
+    if (response.data && typeof response.data === 'object') {
+        if ('data' in response.data) {
+            response.data = response.data.data;
+        }
+    }
+    return response;
+}, (error) => {
+    if (error.response) {
+        if (error.response.status === 401) {
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+        }
+        const errorData = error.response.data || {};
+        const errorMsg = errorData.message || errorData.error || 'Une erreur est survenue';
+        console.error('Response error:', errorMsg);
+        return Promise.reject({ error: errorMsg });
+    }
+    if (error.request) {
+        console.error('Network error: No response received', error.request);
+        return Promise.reject({
+            error: 'Impossible de communiquer avec le serveur. Vérifiez votre connexion internet.',
+        });
+    }
+    console.error('Error:', error.message);
+    return Promise.reject({ error: error.message });
+});
+// Helper for error normalization
+function normalizeError(error) {
+    if (error.error) {
+        return { error: error.error };
+    }
+    return { error: 'Une erreur inattendue est survenue' };
+}
 const PixelBoardService = {
     // Récupérer tous les PixelBoards
     getAllBoards: async () => {
-        return api_client_1.default.get('/pixelboards');
+        try {
+            const response = await axiosInstance.get('/pixelboards');
+            return { data: response.data };
+        }
+        catch (error) {
+            return normalizeError(error);
+        }
     },
     // Récupérer un PixelBoard par ID
     getBoardById: async (id) => {
-        return api_client_1.default.get(`/pixelboards/${id}`);
+        try {
+            const response = await axiosInstance.get(`/pixelboards/${id}`);
+            return { data: response.data };
+        }
+        catch (error) {
+            return normalizeError(error);
+        }
     },
     // Créer un nouveau PixelBoard
     createBoard: async (boardData) => {
-        return api_client_1.default.post('/pixelboards', boardData);
+        try {
+            const response = await axiosInstance.post('/pixelboards', boardData);
+            return { data: response.data };
+        }
+        catch (error) {
+            return normalizeError(error);
+        }
     },
     // Mettre à jour un PixelBoard existant
     updateBoard: async (id, boardData) => {
-        return api_client_1.default.put(`/pixelboards/${id}`, boardData);
+        try {
+            const response = await axiosInstance.put(`/pixelboards/${id}`, boardData);
+            return { data: response.data };
+        }
+        catch (error) {
+            return normalizeError(error);
+        }
     },
     // Supprimer un PixelBoard
     deleteBoard: async (id) => {
-        return api_client_1.default.delete(`/pixelboards/${id}`);
+        try {
+            const response = await axiosInstance.delete(`/pixelboards/${id}`);
+            return { data: response.data };
+        }
+        catch (error) {
+            return normalizeError(error);
+        }
     },
     // Placer un pixel sur le tableau
     placePixel: async (boardId, x, y, color) => {
-        return api_client_1.default.post(`/pixelboards/${boardId}/pixel`, { x, y, color });
+        try {
+            const response = await axiosInstance.post(`/pixelboards/${boardId}/pixel`, { x, y, color });
+            return { data: response.data };
+        }
+        catch (error) {
+            return normalizeError(error);
+        }
     },
     // Vérifier le statut du cooldown
     checkCooldown: async (boardId) => {
-        return api_client_1.default.get(`/pixelboards/${boardId}/cooldown`);
+        try {
+            const response = await axiosInstance.get(`/pixelboards/${boardId}/cooldown`);
+            return { data: response.data };
+        }
+        catch (error) {
+            return normalizeError(error);
+        }
     },
     // Récupérer l'historique d'un pixel spécifique
     getPixelHistory: async (boardId, x, y) => {
-        return api_client_1.default.get(`/pixelboards/${boardId}/position-history?x=${x}&y=${y}`);
+        try {
+            const response = await axiosInstance.get(`/pixelboards/${boardId}/position-history?x=${x}&y=${y}`);
+            return { data: response.data };
+        }
+        catch (error) {
+            return normalizeError(error);
+        }
     },
     // Récupérer les données pour le SuperPixelBoard
     getSuperPixelBoardData: async () => {
@@ -43,12 +148,9 @@ const PixelBoardService = {
             // Puisque la route /pixelboards/all n'existe pas encore, nous allons utiliser une combinaison
             // des routes existantes pour obtenir tous les tableaux
             const [activeResponse, completedResponse] = await Promise.all([
-                api_client_1.default.get('/pixelboards/active'),
-                api_client_1.default.get('/pixelboards/completed')
+                axiosInstance.get('/pixelboards/active'),
+                axiosInstance.get('/pixelboards/completed')
             ]);
-            if (activeResponse.error && completedResponse.error) {
-                return { error: activeResponse.error || completedResponse.error };
-            }
             // Combiner les tableaux actifs et terminés
             const allBoards = [
                 ...(activeResponse.data || []),
