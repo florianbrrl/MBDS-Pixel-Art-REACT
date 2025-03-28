@@ -630,6 +630,20 @@ if [ -n "$cooldown_board_id" ]; then
   fi
 fi
 
+# ==========================================
+# WebSocket Stats Tests
+# ==========================================
+echo -e "\n${BLUE}=== Testing WebSocket Stats Endpoints ===${NC}"
+
+# Test WebSocket stats global endpoint
+run_test "/websocket/stats" "GET" "200" "Get global WebSocket stats" "" "" ""
+
+# Test WebSocket stats for specific board
+if [ -n "$active_pixelboard_id" ]; then
+  run_test "/pixelboards/$active_pixelboard_id/connections" "GET" "200" "Get board-specific WebSocket stats" "" "" ""
+  run_test "/websocket/stats/$active_pixelboard_id" "GET" "200" "Get board-specific WebSocket stats (alt endpoint)" "" "" ""
+fi
+
 #
 # ==========================================
 # Summary and Results

@@ -1,6 +1,6 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import http from 'http';
-import { PixelUpdateData } from '../types/socket.types';
+import { BoardConnectionStats, PixelUpdateData } from '../types/socket.types';
 
 // Stockage des connexions actives
 const activeConnections: Map<string, Set<WebSocket>> = new Map();
@@ -133,5 +133,42 @@ export class SimpleWSService {
         client.send(message);
       }
     });
+  }
+
+  /**
+   * Renvoie les statistiques de connexion pour un tableau spécifique
+   * @param boardId ID du tableau pour lequel obtenir les statistiques
+   * @returns Information sur le nombre de connexions actives
+   */
+  static getBoardConnectionStats(boardId: string): BoardConnectionStats {
+    const connections = activeConnections.get(boardId);
+    const count = connections ? connections.size : 0;
+    
+    return {
+      boardId,
+      activeConnections: count
+    };
+  }
+
+  /**
+   * Renvoie les statistiques de connexion pour tous les tableaux
+   * @returns Un tableau contenant les statistiques pour chaque tableau
+   */
+  static getAllConnectionStats(): BoardConnectionStats[] {
+    const stats: BoardConnectionStats[] = [];
+    
+    for (const [boardId, connections] of activeConnections.entries()) {
+      // Ne compter que les connexions actives
+      const activeClients = [...connections].filter(
+        client => client.readyState === WebSocket.OPEN
+      );
+      
+      stats.push({
+        boardId,
+        activeConnections: activeClients.length
+      });
+    }
+    
+    return stats;
   }
 }

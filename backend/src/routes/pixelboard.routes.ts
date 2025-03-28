@@ -573,6 +573,47 @@ router.get('/:id/position-history', PixelBoardController.getPositionHistory);
  */
 router.get('/:id/cooldown', authenticateToken, PixelBoardController.checkCooldown);
 
+/**
+ * @swagger
+ * /pixelboards/{id}/connections:
+ *   get:
+ *     summary: Obtenir les statistiques de connexion WebSocket pour un tableau
+ *     tags: [PixelBoards, WebSocket]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID du PixelBoard
+ *     responses:
+ *       200:
+ *         description: Statistiques de connexion pour le tableau spécifié
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   $ref: '#/components/schemas/BoardConnectionStats'
+ */
+router.get('/:id/connections', (req, res, next) => {
+  try {
+    const { SimpleWSService } = require('../services/simple-ws.service');
+    const stats = SimpleWSService.getBoardConnectionStats(req.params.id);
+    
+    return res.status(200).json({
+      status: 'success',
+      data: stats
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Les routes protégées restent inchangées...
 router.use(authenticateToken);
 
