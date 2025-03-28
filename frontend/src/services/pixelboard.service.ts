@@ -37,6 +37,11 @@ const PixelBoardService = {
     return apiClient.get(`/pixelboards/${boardId}/cooldown`);
   },
 
+  // Récupérer l'historique d'un pixel spécifique
+  getPixelHistory: async (boardId: string, x: number, y: number) => {
+    return apiClient.get(`/pixelboards/${boardId}/position-history?x=${x}&y=${y}`);
+  },
+
   // Récupérer les données pour le SuperPixelBoard
   getSuperPixelBoardData: async () => {
     try {
