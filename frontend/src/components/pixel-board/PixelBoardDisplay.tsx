@@ -11,6 +11,7 @@ interface PixelBoardDisplayProps {
   onPixelPlaced?: (x: number, y: number, color: string) => void;
   selectedColor?: string;
   canEdit?: boolean;
+  onColorSelect?: (color: string) => void; // Add this line
 }
 
 const PixelBoardDisplay: React.FC<PixelBoardDisplayProps> = ({
@@ -45,9 +46,6 @@ const PixelBoardDisplay: React.FC<PixelBoardDisplayProps> = ({
 
   return (
     <div className="pixel-board-display">
-      <div className="display-header">
-        <h2>{board.title}</h2>
-      </div>
 
       {notification && <div className="pixel-notification">{notification}</div>}
 

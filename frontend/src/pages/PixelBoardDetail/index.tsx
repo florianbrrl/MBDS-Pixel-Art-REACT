@@ -1,14 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCooldown } from '@/hooks/useCooldown';
 import CooldownIndicator from '@/components/pixel-board/CooldownIndicator';
-import ApiService, { PixelBoardService, WebSocketService } from '@/services/api.service';
+import ApiService from '@/services/api.service';
+import { WebSocketService } from '@/services/websocket.service';
 import { PixelBoard, PixelUpdateData } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ErrorMessage from '@/components/common/ErrorMessage';
 import PixelBoardDisplay from '@/components/pixel-board/PixelBoardDisplay';
 import ExportModal from '@/components/export/ExportModal';
+import BoardConnectionCounter from '@/components/common/BoardConnectionCounter';
+import '@/styles/connection-counter.css';
+import '@/styles/websocket-status.css';
 import '../../styles/PixelBoardDetail.css';
 
 const PixelBoardDetail: React.FC = () => {
@@ -20,12 +24,13 @@ const PixelBoardDetail: React.FC = () => {
   const [board, setBoard] = useState<PixelBoard | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [wsStatus, setWsStatus] = useState<'connected' | 'connecting' | 'disconnected'>('disconnected');
 
   // État pour le succès du placement de pixel
   const [placementSuccess, setPlacementSuccess] = useState<string | null>(null);
   const [placementError, setPlacementError] = useState<string | null>(null);
   const [placingPixel, setPlacingPixel] = useState<boolean>(false);
-  const [selectedColor] = useState<string>('#000000');
+  const [selectedColor, setSelectedColor] = useState<string>('#000000');
 
   // État pour l'exportation
   const [showExportModal, setShowExportModal] = useState(false);
@@ -44,55 +49,97 @@ const PixelBoardDetail: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      const response = await ApiService.getPixelBoardById(id);
+      try {
+        const response = await ApiService.getPixelBoardById(id);
 
-      if (response.error) {
-        setError(response.error);
-      } else {
-        setBoard(response.data || null);
+        if (response.error) {
+          setError(response.error);
+        } else {
+          setBoard(response.data || null);
+        }
+      } catch (err) {
+        console.error("Erreur lors du chargement du board:", err);
+        setError("Une erreur est survenue lors du chargement du tableau");
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     };
 
     loadBoard();
+  }, [id]);
+
+  // Gestionnaire de mise à jour de pixel via WebSocket
+  const handlePixelUpdate = useCallback((data: PixelUpdateData) => {
+    // Vérifier que les données concernent bien ce tableau
+    if (data.pixelboard_id === id) {
+      console.log('Processing pixel update:', data);
+
+      // Mettre à jour l'état du board avec le nouveau pixel
+      setBoard(prevBoard => {
+        if (!prevBoard) return prevBoard;
+
+        const newGrid = { ...prevBoard.grid };
+        const pixelKey = `${data.x},${data.y}`;
+        newGrid[pixelKey] = data.color;
+
+        return { ...prevBoard, grid: newGrid };
+      });
+    }
   }, [id]);
 
   // useEffect pour la connexion WebSocket
   useEffect(() => {
     if (!id) return;
 
-    // Connecter au WebSocket et rejoindre le canal du board
-    WebSocketService.connect();
-    WebSocketService.joinBoard(id);
+    setWsStatus('connecting');
+
+    // Initialiser la connexion WebSocket
+    try {
+      WebSocketService.connect(id);
+    } catch (err) {
+      console.error("Erreur lors de l'initialisation WebSocket:", err);
+      setWsStatus('disconnected');
+    }
 
     // S'abonner aux mises à jour de pixels
-    const handlePixelUpdate = (data: PixelUpdateData) => {
-      // Vérifier que les données concernent bien ce tableau
-      if (data.pixelboard_id === id) {
-        console.log('Received pixel update:', data);
+    const unsubscribe = WebSocketService.onPixelUpdate(handlePixelUpdate);
 
-        // Mettre à jour l'état du board avec le nouveau pixel
-        setBoard(prevBoard => {
-          if (!prevBoard) return prevBoard;
+    // Mettre à jour le statut initial
+    setWsStatus(WebSocketService.getConnectionStatus ?
+      WebSocketService.getConnectionStatus() === 'connected' ? 'connected' : 'connecting' :
+      WebSocketService.isConnected() ? 'connected' : 'connecting');
 
-          const newGrid = { ...prevBoard.grid };
-          const pixelKey = `${data.x},${data.y}`;
-          newGrid[pixelKey] = data.color;
+    // Timer pour vérifier périodiquement l'état de la connexion
+    const wsCheckInterval = setInterval(() => {
+      const status = WebSocketService.getConnectionStatus ?
+        WebSocketService.getConnectionStatus() :
+        WebSocketService.isConnected() ? 'connected' : 'disconnected';
 
-          return { ...prevBoard, grid: newGrid };
-        });
+      if (status === 'connected') {
+        setWsStatus('connected');
+      } else if (status === 'connecting') {
+        setWsStatus('connecting');
+      } else {
+        setWsStatus('disconnected');
+
+        // Tentative de reconnexion si déconnecté
+        if (status === 'disconnected' || status === 'error') {
+          console.log('Tentative de reconnexion WebSocket...');
+          try {
+            WebSocketService.connect(id);
+          } catch (err) {
+            console.error('Échec de la tentative de reconnexion:', err);
+          }
+        }
       }
-    };
-
-    WebSocketService.onPixelUpdate(handlePixelUpdate);
+    }, 3000);
 
     // Nettoyage à la démonture du composant
     return () => {
-      WebSocketService.offPixelUpdate(handlePixelUpdate);
-      WebSocketService.disconnect();
+      unsubscribe();
+      clearInterval(wsCheckInterval);
     };
-  }, [id]);
+  }, [id, handlePixelUpdate]);
 
   // Vérifier si un pixel peut être placé
   const canPlacePixel = (): boolean => {
@@ -121,7 +168,7 @@ const PixelBoardDetail: React.FC = () => {
       }
 
       // Appel à l'API pour sauvegarder le pixel
-      const response = await PixelBoardService.placePixel(id, x, y, color);
+      const response = await ApiService.placePixel(id, x, y, color);
 
       if (response.error) {
         setPlacementError(response.error || 'Erreur lors du placement du pixel.');
@@ -152,6 +199,10 @@ const PixelBoardDetail: React.FC = () => {
         setPlacementError(null);
       }, 3000);
     }
+  };
+
+  const handleColorSelect = (color: string) => {
+    setSelectedColor(color);
   };
 
   if (loading) {
@@ -188,10 +239,28 @@ const PixelBoardDetail: React.FC = () => {
 
   return (
     <div className="pixel-board-detail-page">
+      <div className="pixel-board-header">
+        <div className="header-content">
+          <h1>{board.title}</h1>
+
+          {/* Ajout du compteur de connexions */}
+          {id && <BoardConnectionCounter boardId={id} className="board-connections" />}
+        </div>
+      </div>
+
+      {/* Indicateur WebSocket */}
+      {wsStatus !== 'connected' && (
+        <div className={`websocket-status ${wsStatus}`}>
+          {wsStatus === 'connecting' ? 'Connexion en cours...' : 'Déconnecté. Les mises à jour en temps réel sont indisponibles.'}
+        </div>
+      )}
+
       {/* Afficher des alertes pour les erreurs ou succès */}
-      {placementSuccess && <div className="success-message mb-4">{placementSuccess}</div>}
-      {placementError && <div className="error-message mb-4">{placementError}</div>}
-      {placingPixel && <div className="info-message mb-4">Placement du pixel en cours...</div>}
+      <div className="notifications-container">
+        {placementSuccess && <div className="notification success-message">{placementSuccess}</div>}
+        {placementError && <div className="notification error-message">{placementError}</div>}
+        {placingPixel && <div className="notification info-message">{placingPixel ? 'Placement du pixel en cours...' : ''}</div>}
+      </div>
 
       {!isAuthenticated && board.is_active && (
         <div className="warning-message mb-4">
@@ -216,6 +285,7 @@ const PixelBoardDetail: React.FC = () => {
           onPixelPlaced={handlePixelPlaced}
           selectedColor={selectedColor}
           canEdit={board.is_active && isAuthenticated}
+          onColorSelect={handleColorSelect}
         />
       </div>
 

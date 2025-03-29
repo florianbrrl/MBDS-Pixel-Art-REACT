@@ -227,117 +227,8 @@ const getSuperPixelBoardData = async (): Promise<ApiResponse<any>> => {
   }
 };
 
-// WebSocket Class
-class WebSocketServiceClass {
-  private socket: WebSocket | null = null;
-  private reconnectTimer: NodeJS.Timeout | null = null;
-  private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
-  private reconnectDelay = 3000; // 3 seconds
-  private pixelUpdateCallbacks: ((data: any) => void)[] = [];
-  private boardId?: string;
-
-  connect(boardId?: string) {
-    if (boardId) {
-      this.boardId = boardId;
-    }
-
-    // Use the same host as the application
-    const wsUrl = `ws://${window.location.hostname}:3001`;
-    console.log('Connecting to WebSocket at:', wsUrl);
-
-    this.socket = new WebSocket(wsUrl);
-
-    this.socket.onopen = () => {
-      console.log('WebSocket connection established');
-      this.reconnectAttempts = 0;
-
-      // If we have a board ID, join the channel
-      if (this.boardId) {
-        this.joinBoard(this.boardId);
-      }
-    };
-
-    this.socket.onmessage = (event) => {
-      console.log('WebSocket message received:', event.data);
-
-      try {
-        const message = JSON.parse(event.data);
-        console.log('Parsed message:', message);
-
-        // Process different message types
-        if (message.type === 'pixel-update') {
-          console.log('Pixel update received:', message.data);
-          this.pixelUpdateCallbacks.forEach(callback => {
-            callback(message.data);
-          });
-        } else if (message.type === 'welcome') {
-          console.log('Welcome message received');
-          // If we have a board ID, join the channel after welcome
-          if (this.boardId) {
-            this.joinBoard(this.boardId);
-          }
-        } else if (message.type === 'board-joined') {
-          console.log('Board joined confirmation received');
-        }
-      } catch (error) {
-        console.error('Error parsing WebSocket message:', error);
-      }
-    };
-
-    this.socket.onclose = (event) => {
-      console.log('WebSocket connection closed', event.code, event.reason);
-
-      // Try to reconnect if the connection was lost involuntarily
-      if (!event.wasClean && this.reconnectAttempts < this.maxReconnectAttempts) {
-        this.reconnectTimer = setTimeout(() => {
-          this.reconnectAttempts++;
-          console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
-          this.connect();
-        }, this.reconnectDelay);
-      }
-    };
-
-    this.socket.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
-  }
-
-  disconnect() {
-    if (this.reconnectTimer) {
-      clearTimeout(this.reconnectTimer);
-      this.reconnectTimer = null;
-    }
-
-    if (this.socket) {
-      this.socket.close();
-      this.socket = null;
-    }
-  }
-
-  joinBoard(boardId: string) {
-    this.boardId = boardId;
-
-    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      console.log('Joining board:', boardId);
-      this.socket.send(JSON.stringify({
-        type: 'join-board',
-        boardId
-      }));
-    } else {
-      console.warn('Cannot join board: WebSocket not connected');
-    }
-  }
-
-  onPixelUpdate(callback: (data: any) => void) {
-    this.pixelUpdateCallbacks.push(callback);
-    return () => this.offPixelUpdate(callback); // Return cleanup function
-  }
-
-  offPixelUpdate(callback: (data: any) => void) {
-    this.pixelUpdateCallbacks = this.pixelUpdateCallbacks.filter(cb => cb !== callback);
-  }
-}
+// Import du service WebSocket séparé
+import WebSocketService from './websocket.service';
 
 // Export services
 export const apiClient = { get, post, put, delete: del };
@@ -367,7 +258,8 @@ export const PixelBoardService = {
   getSuperPixelBoardData
 };
 
-export const WebSocketService = new WebSocketServiceClass();
+// Exporter le service WebSocket importé
+export { WebSocketService };
 
 // Additional API methods for admin and user management
 const getAllUsers = async (): Promise<ApiResponse<any[]>> => {
@@ -401,7 +293,7 @@ const ApiService = {
   post,
   put,
   delete: del,
-  
+
   // Auth methods
   login,
   register,
@@ -413,7 +305,7 @@ const ApiService = {
   isAuthenticated,
   getToken,
   logout,
-  
+
   // PixelBoard methods
   getAllPixelBoards,
   getPixelBoardById,
@@ -426,14 +318,14 @@ const ApiService = {
   getSuperPixelBoardData,
   getActivePixelBoards,
   getCompletedPixelBoards,
-  
+
   // Admin methods
   getAllUsers,
   updateUserRole,
   toggleUserStatus,
   getGlobalStats,
-  
-  // WebSocket instance
+
+  // WebSocket instance - Référence au service externe
   WebSocketService
 };
 
