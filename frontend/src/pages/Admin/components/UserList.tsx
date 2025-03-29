@@ -22,26 +22,26 @@ const UserList: React.FC<UserListProps> = ({ onSelectUser }) => {
   const [sortField, setSortField] = useState<SortField>('email');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      setLoading(true);
-      setError(null);
+  const fetchUsers = async () => {
+    setLoading(true);
+    setError(null);
 
-      try {
-        const response = await ApiService.getAllUsers();
-        if (response.error) {
-          setError(response.error);
-        } else if (response.data) {
-          setUsers(response.data);
-          setFilteredUsers(response.data);
-        }
-      } catch (err: any) {
-        setError(err.message || 'Erreur lors du chargement des utilisateurs');
-      } finally {
-        setLoading(false);
+    try {
+      const response = await ApiService.getAllUsers();
+      if (response.error) {
+        setError(response.error);
+      } else if (response.data) {
+        setUsers(response.data);
+        setFilteredUsers(response.data);
       }
-    };
+    } catch (err: any) {
+      setError(err.message || 'Erreur lors du chargement des utilisateurs');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchUsers();
   }, []);
 
@@ -154,7 +154,7 @@ const UserList: React.FC<UserListProps> = ({ onSelectUser }) => {
 
   return (
     <div className="user-list-container">
-      {error && <ErrorMessage message={error} onClose={() => setError(null)} />}
+      {error && <ErrorMessage message={error} onRetry={() => fetchUsers()} />}
       
       <div className="user-filters mb-6">
         <div className="flex flex-col md:flex-row md:items-center gap-4">

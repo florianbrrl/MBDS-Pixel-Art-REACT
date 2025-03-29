@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import MobileNavigation from '@/components/navigation/MobileNavigation';
 
 const MainLayout: React.FC = () => {
-  const { isAuthenticated, logout, currentUser, hasRole } = useAuth();
+  const { isAuthenticated, logout, hasRole } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const toggleMobileMenu = () => {
@@ -104,7 +104,7 @@ const MainLayout: React.FC = () => {
             </ul>
           </nav>
 
-          <ThemeToggle className="theme-toggle-button" />
+          <ThemeToggle />
         </div>
 
         {/* Menu mobile */}

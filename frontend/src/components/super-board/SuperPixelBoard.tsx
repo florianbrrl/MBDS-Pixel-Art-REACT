@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import '../../styles/SuperPixelBoard.css';
 import LoadingSpinner from '../common/LoadingSpinner';
 import { PixelBoard } from '@/types';
+import { PixelBoardService } from '@/services/api.service';
+import PixelHistoryTooltip from '../pixel-board/PixelHistoryTooltip';
 
 interface SuperPixelBoardProps {
   boardsData: PixelBoard[];
@@ -12,8 +14,6 @@ interface SuperPixelBoardProps {
 
 const SuperPixelBoard: React.FC<SuperPixelBoardProps> = ({
   boardsData,
-  width,
-  height,
   onPixelHover
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -33,13 +33,38 @@ const SuperPixelBoard: React.FC<SuperPixelBoardProps> = ({
     [boardId: string]: { x: number; y: number }
   }>({});
 
+  // États pour l'historique des pixels
+  const [pixelHistory, setPixelHistory] = useState<any[] | null>(null);
+  const [historyLoading, setHistoryLoading] = useState<boolean>(false);
+  const [tooltipPosition, setTooltipPosition] = useState<{left: number, top: number}>({left: 0, top: 0});
+  const debounceTimerRef = useRef<number | null>(null);
+
+  // Fonction pour charger l'historique d'un pixel
+  const loadPixelHistory = async (boardId: string, x: number, y: number) => {
+    if (!boardId) return;
+
+    setHistoryLoading(true);
+    try {
+      const response = await PixelBoardService.getPixelHistory(boardId, x, y);
+      if (response.data) {
+        setPixelHistory(response.data as any[]);
+      } else {
+        setPixelHistory([]);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement de l\'historique du pixel:', error);
+      setPixelHistory([]);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
   // Calculer la disposition optimale des tableaux
   const calculateBoardLayout = useCallback(() => {
     if (!canvasRef.current) return;
 
     const canvas = canvasRef.current;
     const maxCanvasWidth = canvas.width;
-    const maxCanvasHeight = canvas.height;
 
     // Calculer la taille d'un pixel en fonction du zoom
     const pixelSize = Math.max(1, zoom);
@@ -257,26 +282,6 @@ const SuperPixelBoard: React.FC<SuperPixelBoardProps> = ({
         ctx.strokeStyle = '#3b82f6';
         ctx.lineWidth = 2;
         ctx.strokeRect(pixelX, pixelY, pixelSize, pixelSize);
-
-        // Dessiner une info-bulle
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(pixelX + pixelSize + 5, pixelY, 150, 60);
-        ctx.strokeStyle = '#d1d5db';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(pixelX + pixelSize + 5, pixelY, 150, 60);
-
-        ctx.fillStyle = '#000000';
-        ctx.font = '12px sans-serif';
-        ctx.fillText(`Tableau: ${hoveredPixel.boardTitle}`, pixelX + pixelSize + 10, pixelY + 15);
-        ctx.fillText(`Coordonnées: (${hoveredPixel.x}, ${hoveredPixel.y})`, pixelX + pixelSize + 10, pixelY + 35);
-
-        // Afficher la couleur
-        ctx.fillStyle = '#000000';
-        ctx.fillText('Couleur:', pixelX + pixelSize + 10, pixelY + 55);
-        ctx.fillStyle = hoveredPixel.color;
-        ctx.fillRect(pixelX + pixelSize + 70, pixelY + 45, 15, 15);
-        ctx.strokeStyle = '#000000';
-        ctx.strokeRect(pixelX + pixelSize + 70, pixelY + 45, 15, 15);
       }
     }
 
@@ -343,12 +348,35 @@ const SuperPixelBoard: React.FC<SuperPixelBoardProps> = ({
 
           setHoveredPixel(newHoveredPixel);
 
+          // Position pour l'info-bulle (fixée à côté du curseur)
+          setTooltipPosition({
+            left: e.clientX + 20,
+            top: e.clientY - 20
+          });
+
+          // Annuler le précédent timer de debounce si existe
+          if (debounceTimerRef.current) {
+            window.clearTimeout(debounceTimerRef.current);
+          }
+
+          // Configurer un nouveau timer de debounce pour charger l'historique
+          debounceTimerRef.current = window.setTimeout(() => {
+            loadPixelHistory(boardId, pixelX, pixelY);
+          }, 300);
+
           if (onPixelHover) {
             onPixelHover(pixelX, pixelY, color, boardId, boardTitle);
           }
         }
       } else {
         setHoveredPixel(null);
+        setPixelHistory(null);
+
+        // Annuler le timer de debounce existant
+        if (debounceTimerRef.current) {
+          window.clearTimeout(debounceTimerRef.current);
+          debounceTimerRef.current = null;
+        }
       }
     }
   };
@@ -375,6 +403,13 @@ const SuperPixelBoard: React.FC<SuperPixelBoardProps> = ({
   const handleMouseLeave = () => {
     setIsDragging(false);
     setHoveredPixel(null);
+    setPixelHistory(null);
+
+    // Annuler tout timer de debounce en cours
+    if (debounceTimerRef.current) {
+      window.clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
   };
 
   // Gérer le zoom avec la molette de la souris
@@ -446,6 +481,11 @@ const SuperPixelBoard: React.FC<SuperPixelBoardProps> = ({
                 style={{ backgroundColor: hoveredPixel.color }}
                 title={hoveredPixel.color}
               />
+              {!historyLoading && pixelHistory && pixelHistory.length > 0 && (
+                <span style={{ marginLeft: '8px' }}>
+                  • Placé par {pixelHistory[0].user_email || 'Anonyme'}
+                </span>
+              )}
             </div>
           ) : (
             <span className="help-tip">Alt + glisser pour naviguer, molette pour zoomer</span>
@@ -468,6 +508,21 @@ const SuperPixelBoard: React.FC<SuperPixelBoardProps> = ({
           <div className="loading-overlay">
             <LoadingSpinner />
           </div>
+        )}
+
+        {/* Affichage de l'historique du pixel au survol */}
+        {hoveredPixel && pixelHistory && pixelHistory.length > 0 && (
+          <PixelHistoryTooltip
+            history={pixelHistory}
+            loading={historyLoading}
+            position={hoveredPixel}
+            style={{
+              position: 'fixed',
+              left: Math.min(tooltipPosition.left, window.innerWidth - 200),
+              top: Math.min(tooltipPosition.top - 40, window.innerHeight - 100),
+              zIndex: 9999
+            }}
+          />
         )}
       </div>
 

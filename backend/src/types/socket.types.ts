@@ -6,3 +6,13 @@ export interface PixelUpdateData {
     timestamp: Date;
     user_id?: string;
 }
+
+export interface BoardConnectionStats {
+    boardId: string;
+    activeConnections: number;
+}
+
+export interface ConnectionStatsResponse {
+    status: string;
+    data: BoardConnectionStats[];
+}

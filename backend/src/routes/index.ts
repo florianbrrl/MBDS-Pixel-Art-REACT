@@ -1,7 +1,9 @@
 import { Router, Request, Response } from 'express';
 import authRoutes from './auth.routes';
 import userRoutes from './user.routes';
-import pixelBoardRoutes from './pixelboard.routes'; // Importer les nouvelles routes
+import pixelBoardRoutes from './pixelboard.routes';
+import websocketRoutes from './websocket.routes';
+import statsRoutes from './stats.routes';
 import { authenticateToken, restrictTo } from '../middleware/auth.middleware';
 
 /**
@@ -62,6 +64,8 @@ import { authenticateToken, restrictTo } from '../middleware/auth.middleware';
  *     description: Administrative operations
  *   - name: PixelBoards
  *     description: Operations related to pixel art boards
+ *   - name: WebSocket
+ *     description: Operations related to WebSocket connections and real-time statistics
  */
 
 const router = Router();
@@ -111,6 +115,12 @@ router.use('/users', userRoutes);
 
 // Routes PixelBoard
 router.use('/pixelboards', pixelBoardRoutes);
+
+// Routes WebSocket
+router.use('/websocket', websocketRoutes);
+
+// Routes Statistiques
+router.use('/stats', statsRoutes);
 
 /**
  * @swagger

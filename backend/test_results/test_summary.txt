@@ -1,8 +1,14 @@
 === API Test Suite Summary ===
-Date: Wed Mar 26 10:25:41 PM CET 2025
-Total Tests: 70
-Tests Passed: 70
-Tests Failed: 0
+Date: Fri Mar 28 10:46:20 PM CET 2025
+Total Tests: 111
+Tests Passed: 107
+Tests Failed: 4
 
-Passing percentage: 100%
-All tests passed successfully!
+Passing percentage: 96%
+
+Failed tests:
+  #104: Get user statistics (as premium) (Got: 500, Expected: 200)
+  #105: Get user statistics (as admin) (Got: 500, Expected: 200)
+  #103: Get user statistics (as regular user) (Got: 500, Expected: 200)
+  #96: Get pixel placement statistics (as admin) (Got: 500, Expected: 200)
+Some tests failed. Check the logs and results directory for details.

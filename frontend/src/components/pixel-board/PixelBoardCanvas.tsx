@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { PixelBoard } from '@/types';
+import PixelHistoryTooltip from './PixelHistoryTooltip';
+import { PixelBoardService } from '@/services/api.service';
 import './../../styles/PixelBoardCanvas.css';
 
 interface PixelBoardCanvasProps {
@@ -24,6 +26,31 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
   const [lastPlacedPixel, setLastPlacedPixel] = useState<{ x: number; y: number } | null>(null);
   const [showPlacementAnimation, setShowPlacementAnimation] = useState<boolean>(false);
 
+  // États pour l'historique des pixels
+  const [pixelHistory, setPixelHistory] = useState<any[] | null>(null);
+  const [historyLoading, setHistoryLoading] = useState<boolean>(false);
+  const [tooltipPosition, setTooltipPosition] = useState<{left: number, top: number}>({left: 0, top: 0});
+
+  // Fonction pour charger l'historique d'un pixel
+  const loadPixelHistory = async (x: number, y: number) => {
+    if (!board || !board.id) return;
+
+    setHistoryLoading(true);
+    try {
+      const response = await PixelBoardService.getPixelHistory(board.id, x, y);
+      if (response.data) {
+        setPixelHistory(response.data as any[]);
+      } else {
+        setPixelHistory([]);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement de l\'historique du pixel:', error);
+      setPixelHistory([]);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
   // Calculer la taille de pixel basée sur la taille du canvas et le zoom
   const calculatePixelSize = useCallback((): number => {
     if (!canvasRef.current) return 0;
@@ -32,7 +59,6 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
     const containerHeight = canvasRef.current.height;
 
     // Prendre la plus petite dimension pour garantir que tout le board est visible
-    const maxDimension = Math.max(board.width, board.height);
     const basePixelSize = Math.min(containerWidth / board.width, containerHeight / board.height);
 
     return basePixelSize * zoom;
@@ -218,16 +244,19 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
 
   // Gérer le clic sur un pixel - amélioré avec animation
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (readOnly || !onPixelClick) return; // Changé de onPixelPlaced à onPixelClick
+    if (readOnly || !onPixelClick) return;
 
     const gridCoords = canvasToGrid(e.clientX, e.clientY);
     if (gridCoords) {
-      onPixelClick(gridCoords.x, gridCoords.y); // Changé de onPixelPlaced à onPixelClick
+      onPixelClick(gridCoords.x, gridCoords.y);
 
       // Déclencher l'animation de placement
       setLastPlacedPixel(gridCoords);
     }
   };
+
+  // Variable pour stocker le timer de debounce
+  const debounceTimerRef = useRef<number | null>(null);
 
   // Gérer le mouvement de la souris pour la prévisualisation
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -245,10 +274,38 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
         x: e.clientX,
         y: e.clientY,
       });
-    } else if (!readOnly) {
+    } else {
       // Prévisualisation du pixel survolé
       const gridCoords = canvasToGrid(e.clientX, e.clientY);
-      setHoveredPixel(gridCoords);
+
+      if (gridCoords) {
+        setHoveredPixel(gridCoords);
+
+        // Position pour l'info-bulle (fixée à côté du curseur)
+        setTooltipPosition({
+          left: e.clientX + 20,
+          top: e.clientY - 20
+        });
+
+        // Annuler le précédent timer de debounce si existe
+        if (debounceTimerRef.current) {
+          window.clearTimeout(debounceTimerRef.current);
+        }
+
+        // Configurer un nouveau timer de debounce pour charger l'historique
+        debounceTimerRef.current = window.setTimeout(() => {
+          loadPixelHistory(gridCoords.x, gridCoords.y);
+        }, 300);
+      } else {
+        setHoveredPixel(null);
+        setPixelHistory(null);
+
+        // Annuler le timer de debounce existant
+        if (debounceTimerRef.current) {
+          window.clearTimeout(debounceTimerRef.current);
+          debounceTimerRef.current = null;
+        }
+      }
     }
   };
 
@@ -274,6 +331,13 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
   const handleMouseLeave = () => {
     setIsDragging(false);
     setHoveredPixel(null);
+    setPixelHistory(null);
+
+    // Annuler tout timer de debounce en cours
+    if (debounceTimerRef.current) {
+      window.clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
   };
 
   // Gérer le zoom avec la molette de la souris
@@ -333,6 +397,21 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
           onMouseLeave={handleMouseLeave}
           onWheel={handleWheel}
         />
+
+        {/* Affichage de l'historique du pixel au survol */}
+        {hoveredPixel && pixelHistory && pixelHistory.length > 0 && (
+          <PixelHistoryTooltip
+            history={pixelHistory}
+            loading={historyLoading}
+            position={hoveredPixel}
+            style={{
+              position: 'fixed',
+              left: Math.min(tooltipPosition.left, window.innerWidth - 200),
+              top: Math.min(tooltipPosition.top - 40, window.innerHeight - 100),
+              zIndex: 9999
+            }}
+          />
+        )}
       </div>
 
       <div className="canvas-controls">
@@ -352,6 +431,11 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
         {hoveredPixel && (
           <div className="position-info">
             Position: ({hoveredPixel.x}, {hoveredPixel.y})
+            {!historyLoading && pixelHistory && pixelHistory.length > 0 && (
+              <span style={{ marginLeft: '8px' }}>
+                • Placé par {pixelHistory[0].user_email || 'Anonyme'}
+              </span>
+            )}
           </div>
         )}
       </div>

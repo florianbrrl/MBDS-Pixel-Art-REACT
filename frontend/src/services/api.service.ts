@@ -1,186 +1,332 @@
 import axios from 'axios';
-import { User, PixelBoard, PixelHistory, ApiResponse } from '@/types';
+import { User, PixelBoard, ApiResponse } from '@/types';
 
-// Configuration de l'API
+// Configuration
 const API_URL = '/api';
+const API_TIMEOUT = 30000;
+
+// Create instance
 const axiosInstance = axios.create({
   baseURL: API_URL,
-  timeout: 10000,
+  timeout: API_TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Intercepteur pour ajouter le token d'authentification
+// Add request interceptor
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
-    if (token) {
+    if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => Promise.reject(error),
+  (error) => {
+    console.error('Request error: ', error);
+    return Promise.reject(error);
+  }
 );
 
-// Intercepteur pour normaliser les réponses d'erreur
+// Add response interceptor
 axiosInstance.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (response.data && typeof response.data === 'object') {
+      if ('data' in response.data) {
+        response.data = response.data.data;
+      }
+    }
+    return response;
+  },
   (error) => {
     if (error.response) {
-      // Le serveur a répondu avec un code d'erreur
+      if (error.response.status === 401) {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      }
+
+      const errorData = error.response.data as Record<string, any> || {};
+      const errorMsg = errorData.message || errorData.error || 'Une erreur est survenue';
+      console.error('Response error:', errorMsg);
+      return Promise.reject({ error: errorMsg });
+    }
+
+    if (error.request) {
+      console.error('Network error: No response received', error.request);
       return Promise.reject({
-        error: error.response.data.message || 'Une erreur est survenue.',
-        status: error.response.status,
-      });
-    } else if (error.request) {
-      // La requête a été envoyée mais pas de réponse
-      return Promise.reject({
-        error: 'Impossible de communiquer avec le serveur.',
-      });
-    } else {
-      // Une erreur s'est produite lors de la configuration de la requête
-      return Promise.reject({
-        error: error.message,
+        error: 'Impossible de communiquer avec le serveur. Vérifiez votre connexion internet.',
       });
     }
-  },
+
+    console.error('Error:', error.message);
+    return Promise.reject({ error: error.message });
+  }
 );
 
-// API Service
+// Helper for error normalization
+function normalizeError(error: any): ApiResponse<any> {
+  if (error.error) {
+    return { error: error.error };
+  }
+  return { error: 'Une erreur inattendue est survenue' };
+}
+
+// API Client functions
+async function get<T>(url: string, config?: any): Promise<ApiResponse<T>> {
+  try {
+    const response = await axiosInstance.get<T>(url, config);
+    return { data: response.data };
+  } catch (error) {
+    return normalizeError(error);
+  }
+}
+
+async function post<T>(url: string, data?: any, config?: any): Promise<ApiResponse<T>> {
+  try {
+    const response = await axiosInstance.post<T>(url, data, config);
+    return { data: response.data };
+  } catch (error) {
+    return normalizeError(error);
+  }
+}
+
+async function put<T>(url: string, data?: any, config?: any): Promise<ApiResponse<T>> {
+  try {
+    const response = await axiosInstance.put<T>(url, data, config);
+    return { data: response.data };
+  } catch (error) {
+    return normalizeError(error);
+  }
+}
+
+async function del<T>(url: string, config?: any): Promise<ApiResponse<T>> {
+  try {
+    const response = await axiosInstance.delete<T>(url, config);
+    return { data: response.data };
+  } catch (error) {
+    return normalizeError(error);
+  }
+}
+
+// Auth Service Functions
+const login = async (email: string, password: string): Promise<ApiResponse<{ token: string }>> => {
+  return post<{ token: string }>('/auth/login', { email, password });
+};
+
+const register = async (email: string, password: string): Promise<ApiResponse<{ userId: string }>> => {
+  return post<{ userId: string }>('/auth/register', { email, password });
+};
+
+const getProfile = async (): Promise<ApiResponse<User>> => {
+  return get<User>('/users/profile');
+};
+
+const updateProfile = async (data: Partial<User>): Promise<ApiResponse<User>> => {
+  return put<User>('/users/profile', data);
+};
+
+const updateTheme = async (theme: string): Promise<ApiResponse<{ theme: string }>> => {
+  return put<{ theme: string }>('/users/theme', { theme });
+};
+
+const changePassword = async (currentPassword: string, newPassword: string): Promise<ApiResponse<void>> => {
+  return post<void>('/users/password', { currentPassword, newPassword });
+};
+
+const getUserContributions = async (userId?: string): Promise<ApiResponse<{
+  totalPixels: number;
+  contributedBoards: { boardId: string; pixelCount: number }[];
+}>> => {
+  const endpoint = userId ? `/users/${userId}/contributions` : '/users/contributions';
+  return get(endpoint);
+};
+
+const isAuthenticated = (): boolean => {
+  return !!localStorage.getItem('token');
+};
+
+const getToken = (): string | null => {
+  return localStorage.getItem('token');
+};
+
+const logout = (): void => {
+  localStorage.removeItem('token');
+};
+
+// PixelBoard Service Functions
+const getAllPixelBoards = async (): Promise<ApiResponse<PixelBoard[]>> => {
+  return get<PixelBoard[]>('/pixelboards');
+};
+
+const getPixelBoardById = async (id: string): Promise<ApiResponse<PixelBoard>> => {
+  return get<PixelBoard>(`/pixelboards/${id}`);
+};
+
+const createPixelBoard = async (boardData: Omit<PixelBoard, 'id' | 'created_at' | 'is_active' | 'grid' | 'admin_id'>): Promise<ApiResponse<PixelBoard>> => {
+  return post<PixelBoard>('/pixelboards', boardData);
+};
+
+const updatePixelBoard = async (id: string, boardData: Partial<PixelBoard>): Promise<ApiResponse<PixelBoard>> => {
+  return put<PixelBoard>(`/pixelboards/${id}`, boardData);
+};
+
+const deletePixelBoard = async (id: string): Promise<ApiResponse<void>> => {
+  return del<void>(`/pixelboards/${id}`);
+};
+
+const placePixel = async (boardId: string, x: number, y: number, color: string): Promise<ApiResponse<any>> => {
+  return post(`/pixelboards/${boardId}/pixel`, { x, y, color });
+};
+
+const checkCooldown = async (boardId: string): Promise<ApiResponse<any>> => {
+  return get(`/pixelboards/${boardId}/cooldown`);
+};
+
+const getPixelHistory = async (boardId: string, x: number, y: number): Promise<ApiResponse<any>> => {
+  return get(`/pixelboards/${boardId}/position-history?x=${x}&y=${y}`);
+};
+
+const getSuperPixelBoardData = async (): Promise<ApiResponse<any>> => {
+  try {
+    const [activeResponse, completedResponse] = await Promise.all([
+      get<PixelBoard[]>('/pixelboards/active'),
+      get<PixelBoard[]>('/pixelboards/completed')
+    ]);
+
+    if (activeResponse.error && completedResponse.error) {
+      return { error: activeResponse.error || completedResponse.error };
+    }
+
+    // Combine active and completed boards
+    const allBoards = [
+      ...(activeResponse.data || []),
+      ...(completedResponse.data || [])
+    ];
+
+    // If no data returned
+    if (allBoards.length === 0) {
+      return { data: { boards: [], dimensions: { width: 100, height: 100 } } };
+    }
+
+    // Calculate maximum dimensions
+    const maxWidth = Math.max(...allBoards.map(board => board.width), 100);
+    const maxHeight = Math.max(...allBoards.map(board => board.height), 100);
+
+    return {
+      data: {
+        boards: allBoards,
+        dimensions: {
+          width: maxWidth,
+          height: maxHeight
+        }
+      }
+    };
+  } catch (error: any) {
+    return { error: error.message || 'Error retrieving data' };
+  }
+};
+
+// Import du service WebSocket séparé
+import WebSocketService from './websocket.service';
+
+// Export services
+export const apiClient = { get, post, put, delete: del };
+
+export const AuthService = {
+  login,
+  register,
+  getProfile,
+  updateProfile,
+  updateTheme,
+  changePassword,
+  getUserContributions,
+  isAuthenticated,
+  getToken,
+  logout
+};
+
+export const PixelBoardService = {
+  getAllBoards: getAllPixelBoards,
+  getBoardById: getPixelBoardById,
+  createBoard: createPixelBoard,
+  updateBoard: updatePixelBoard,
+  deleteBoard: deletePixelBoard,
+  placePixel,
+  checkCooldown,
+  getPixelHistory,
+  getSuperPixelBoardData
+};
+
+// Exporter le service WebSocket importé
+export { WebSocketService };
+
+// Additional API methods for admin and user management
+const getAllUsers = async (): Promise<ApiResponse<any[]>> => {
+  return get('/admin/users');
+};
+
+const updateUserRole = async (userId: string, role: string): Promise<ApiResponse<any>> => {
+  return put(`/admin/users/${userId}/role`, { role });
+};
+
+const toggleUserStatus = async (userId: string, newStatus: boolean): Promise<ApiResponse<any>> => {
+  return put(`/admin/users/${userId}/toggle-status`, { is_blocked: newStatus });
+};
+
+const getGlobalStats = async (): Promise<ApiResponse<any>> => {
+  return get('/stats/global');
+};
+
+const getActivePixelBoards = async (): Promise<ApiResponse<PixelBoard[]>> => {
+  return get<PixelBoard[]>('/pixelboards/active');
+};
+
+const getCompletedPixelBoards = async (): Promise<ApiResponse<PixelBoard[]>> => {
+  return get<PixelBoard[]>('/pixelboards/completed');
+};
+
+// Export as single API service
 const ApiService = {
-  // Authentification
-  login: async (email: string, password: string): Promise<ApiResponse<User>> => {
-    try {
-      const response = await axiosInstance.post('/auth/login', { email, password });
-      return { data: response.data.data };
-    } catch (error: any) {
-      return { error: error.error || 'Échec de connexion' };
-    }
-  },
+  // API client methods
+  get,
+  post,
+  put,
+  delete: del,
 
-  register: async (email: string, password: string): Promise<ApiResponse<User>> => {
-    try {
-      const response = await axiosInstance.post('/auth/register', { email, password });
-      return { data: response.data.data };
-    } catch (error: any) {
-      return { error: error.error || "Échec d'inscription" };
-    }
-  },
+  // Auth methods
+  login,
+  register,
+  getProfile,
+  updateProfile,
+  updateTheme,
+  changePassword,
+  getUserContributions,
+  isAuthenticated,
+  getToken,
+  logout,
 
-  // Mise à jour du profil
-  updateProfile: async (data: Partial<User>): Promise<ApiResponse<User>> => {
-    try {
-      const response = await axiosInstance.put('/users/profile', data);
-      return { data: response.data.data };
-    } catch (error: any) {
-      return { error: error.error || 'Échec de la mise à jour du profil' };
-    }
-  },
+  // PixelBoard methods
+  getAllPixelBoards,
+  getPixelBoardById,
+  createPixelBoard,
+  updatePixelBoard,
+  deletePixelBoard,
+  placePixel,
+  checkCooldown,
+  getPixelHistory,
+  getSuperPixelBoardData,
+  getActivePixelBoards,
+  getCompletedPixelBoards,
 
-  // PixelBoards
-  getActivePixelBoards: async (): Promise<ApiResponse<PixelBoard[]>> => {
-    try {
-      const response = await axiosInstance.get('/pixelboards/active');
-      return { data: response.data.data };
-    } catch (error: any) {
-      return { error: error.error || 'Impossible de récupérer les PixelBoards actifs' };
-    }
-  },
+  // Admin methods
+  getAllUsers,
+  updateUserRole,
+  toggleUserStatus,
+  getGlobalStats,
 
-  getCompletedPixelBoards: async (): Promise<ApiResponse<PixelBoard[]>> => {
-    try {
-      const response = await axiosInstance.get('/pixelboards/completed');
-      return { data: response.data.data };
-    } catch (error: any) {
-      return { error: error.error || 'Impossible de récupérer les PixelBoards terminés' };
-    }
-  },
-
-  getAllPixelBoards: async (): Promise<ApiResponse<PixelBoard[]>> => {
-    try {
-      const response = await axiosInstance.get('/pixelboards');
-      return { data: response.data.data };
-    } catch (error: any) {
-      return { error: error.error || 'Impossible de récupérer les PixelBoards' };
-    }
-  },
-
-  getPixelBoardById: async (id: string): Promise<ApiResponse<PixelBoard>> => {
-    try {
-      const response = await axiosInstance.get(`/pixelboards/${id}`);
-      return { data: response.data.data };
-    } catch (error: any) {
-      return { error: error.error || 'Impossible de récupérer les détails du PixelBoard' };
-    }
-  },
-
-  // Historique des pixels
-  getPixelHistory: async (boardId: string): Promise<ApiResponse<PixelHistory[]>> => {
-    try {
-      const response = await axiosInstance.get(`/pixelboards/${boardId}/history`);
-      return { data: response.data.data };
-    } catch (error: any) {
-      return { error: error.error || "Impossible de récupérer l'historique des pixels" };
-    }
-  },
-
-  // Statistiques
-  getGlobalStats: async (): Promise<ApiResponse<any>> => {
-    try {
-      const response = await axiosInstance.get('/stats');
-      return { data: response.data.data };
-    } catch (error: any) {
-      return { error: error.error || 'Impossible de récupérer les statistiques globales' };
-    }
-  },
-
-  // Utilisateurs
-  getAllUsers: async (): Promise<ApiResponse<User[]>> => {
-    try {
-      const response = await axiosInstance.get('/admin/users');
-      return { data: response.data.data };
-    } catch (error: any) {
-      return { error: error.error || 'Impossible de récupérer la liste des utilisateurs' };
-    }
-  },
-
-  getUserById: async (userId: string): Promise<ApiResponse<User>> => {
-    try {
-      const response = await axiosInstance.get(`/admin/users/${userId}`);
-      return { data: response.data.data };
-    } catch (error: any) {
-      return { error: error.error || "Impossible de récupérer les détails de l'utilisateur" };
-    }
-  },
-
-  updateUserRole: async (userId: string, role: string): Promise<ApiResponse<User>> => {
-    try {
-      const response = await axiosInstance.put(`/admin/users/${userId}/role`, { role });
-      return { data: response.data.data };
-    } catch (error: any) {
-      return { error: error.error || 'Impossible de mettre à jour le rôle' };
-    }
-  },
-
-  toggleUserStatus: async (userId: string, isBlocked: boolean): Promise<ApiResponse<User>> => {
-    try {
-      const response = await axiosInstance.put(`/admin/users/${userId}/status`, { isBlocked });
-      return { data: response.data.data };
-    } catch (error: any) {
-      return { error: error.error || "Impossible de mettre à jour le statut de l'utilisateur" };
-    }
-  },
-
-  // Contributions utilisateur
-  getUserContributions: async (userId: string): Promise<ApiResponse<any>> => {
-    try {
-      const response = await axiosInstance.get(`/users/${userId}/contributions`);
-      return { data: response.data.data };
-    } catch (error: any) {
-      return { error: error.error || 'Impossible de récupérer les contributions' };
-    }
-  },
+  // WebSocket instance - Référence au service externe
+  WebSocketService
 };
 
 export default ApiService;

@@ -573,6 +573,95 @@ router.get('/:id/position-history', PixelBoardController.getPositionHistory);
  */
 router.get('/:id/cooldown', authenticateToken, PixelBoardController.checkCooldown);
 
+/**
+ * @swagger
+ * /pixelboards/{id}/connections:
+ *   get:
+ *     summary: Obtenir les statistiques de connexion WebSocket pour un tableau
+ *     tags: [PixelBoards, WebSocket]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID du PixelBoard
+ *     responses:
+ *       200:
+ *         description: Statistiques de connexion pour le tableau spécifié
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   $ref: '#/components/schemas/BoardConnectionStats'
+ */
+router.get('/:id/connections', (req, res, next) => {
+  try {
+    const { SimpleWSService } = require('../services/simple-ws.service');
+    const stats = SimpleWSService.getBoardConnectionStats(req.params.id);
+    
+    return res.status(200).json({
+      status: 'success',
+      data: stats
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * @swagger
+ * /pixelboards/{id}/heatmap:
+ *   get:
+ *     summary: Obtenir la heatmap des placements de pixels sur un tableau
+ *     tags: [PixelBoards]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID du PixelBoard
+ *       - in: query
+ *         name: timeFrame
+ *         schema:
+ *           type: string
+ *           enum: [24h, 7d, 30d, all]
+ *         description: Période de temps pour la heatmap (dernières 24h, 7 jours, 30 jours, ou toutes les données)
+ *     responses:
+ *       200:
+ *         description: Données de heatmap pour le tableau spécifié
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     boardId:
+ *                       type: string
+ *                     timeFrame:
+ *                       type: string
+ *                     boardTitle:
+ *                       type: string
+ *                     boardDimensions:
+ *                       type: object
+ *                     heatmap:
+ *                       type: object
+ *       404:
+ *         description: PixelBoard non trouvé
+ */
+router.get('/:id/heatmap', PixelBoardController.getBoardHeatmap);
+
 // Les routes protégées restent inchangées...
 router.use(authenticateToken);
 

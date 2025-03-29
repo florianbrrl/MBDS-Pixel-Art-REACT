@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '@/types';
-import AuthService from '@/services/auth.service';
+import { AuthService } from '@/services/api.service';
 import { ThemePreference } from '@/types/auth.types';
 
 // Interface pour les données utilisateur stockées dans le contexte
@@ -124,7 +124,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response = await AuthService.updateProfile(data);
 
       if (response.data) {
-        setCurrentUser(prev => prev ? { ...prev, ...response.data } : response.data);
+        setCurrentUser(prev => prev ? { ...prev, ...response.data } : response.data as User);
       } else {
         throw new Error(response.error || 'Échec de la mise à jour du profil');
       }
@@ -196,7 +196,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Fonction pour vérifier si l'utilisateur a l'un des rôles spécifiés
   const hasRole = (roles: string[]): boolean => {
-    if (!currentUser || !currentUser.role) return false;
+    if (!currentUser || !currentUser.role) {
+      return false;
+    }
+
     return roles.includes(currentUser.role);
   };
 

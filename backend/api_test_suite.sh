@@ -630,6 +630,83 @@ if [ -n "$cooldown_board_id" ]; then
   fi
 fi
 
+# ==========================================
+# WebSocket Stats Tests
+# ==========================================
+echo -e "\n${BLUE}=== Testing WebSocket Stats Endpoints ===${NC}"
+
+# Test WebSocket stats global endpoint
+run_test "/websocket/stats" "GET" "200" "Get global WebSocket stats" "" "" ""
+
+# Test WebSocket stats for specific board
+if [ -n "$active_pixelboard_id" ]; then
+  run_test "/pixelboards/$active_pixelboard_id/connections" "GET" "200" "Get board-specific WebSocket stats" "" "" ""
+  run_test "/websocket/stats/$active_pixelboard_id" "GET" "200" "Get board-specific WebSocket stats (alt endpoint)" "" "" ""
+fi
+
+# ==========================================
+# Statistics API Tests
+# ==========================================
+echo -e "\n${BLUE}=== Testing Statistics API Endpoints ===${NC}"
+
+# Global Statistics Tests
+run_test "/stats/global" "GET" "200" "Get global statistics (as admin)" "" "$ADMIN_TOKEN" ""
+run_test "/stats/global" "GET" "403" "Get global statistics (as premium)" "" "$PREMIUM_TOKEN" ""
+run_test "/stats/global" "GET" "403" "Get global statistics (as regular user)" "" "$USER_TOKEN" ""
+run_test "/stats/global" "GET" "403" "Get global statistics (as guest)" "" "$GUEST_TOKEN" ""
+run_test "/stats/global" "GET" "401" "Get global statistics (without auth)" "" "" ""
+
+# User Activity Statistics Tests
+run_test "/stats/users/activity" "GET" "200" "Get user activity statistics (as admin)" "" "$ADMIN_TOKEN" ""
+run_test "/stats/users/activity" "GET" "403" "Get user activity statistics (as premium)" "" "$PREMIUM_TOKEN" ""
+run_test "/stats/users/activity" "GET" "403" "Get user activity statistics (as regular user)" "" "$USER_TOKEN" ""
+run_test "/stats/users/activity" "GET" "401" "Get user activity statistics (without auth)" "" "" ""
+
+# Board-level Statistics Tests
+run_test "/stats/pixelboards/$active_pixelboard_id" "GET" "200" "Get board-level statistics (with auth)" "" "$USER_TOKEN" ""
+run_test "/stats/pixelboards/$active_pixelboard_id" "GET" "401" "Get board-level statistics (without auth)" "" "" ""
+run_test "/stats/pixelboards/invalid-id" "GET" "404" "Get board-level statistics (invalid board)" "" "$USER_TOKEN" ""
+
+# Engagement Metrics Tests
+run_test "/stats/engagement" "GET" "200" "Get engagement metrics (as admin)" "" "$ADMIN_TOKEN" ""
+run_test "/stats/engagement" "GET" "403" "Get engagement metrics (as premium)" "" "$PREMIUM_TOKEN" ""
+run_test "/stats/engagement" "GET" "403" "Get engagement metrics (as regular user)" "" "$USER_TOKEN" ""
+run_test "/stats/engagement" "GET" "401" "Get engagement metrics (without auth)" "" "" ""
+
+# Activity Timeline Tests
+run_test "/stats/activity/recent" "GET" "200" "Get recent activity timeline (as admin)" "" "$ADMIN_TOKEN" ""
+run_test "/stats/activity/recent" "GET" "403" "Get recent activity timeline (as premium)" "" "$PREMIUM_TOKEN" ""
+run_test "/stats/activity/recent" "GET" "403" "Get recent activity timeline (as regular user)" "" "$USER_TOKEN" ""
+run_test "/stats/activity/recent" "GET" "401" "Get recent activity timeline (without auth)" "" "" ""
+
+# SuperBoard Statistics Tests
+run_test "/stats/super-board" "GET" "200" "Get super board statistics (with auth)" "" "$USER_TOKEN" ""
+run_test "/stats/super-board" "GET" "401" "Get super board statistics (without auth)" "" "" ""
+
+# Pixel Placement Statistics Tests
+run_test "/stats/pixelboard/placement" "GET" "200" "Get pixel placement statistics (as admin)" "" "$ADMIN_TOKEN" ""
+run_test "/stats/pixelboard/placement" "GET" "403" "Get pixel placement statistics (as premium)" "" "$PREMIUM_TOKEN" ""
+run_test "/stats/pixelboard/placement" "GET" "403" "Get pixel placement statistics (as regular user)" "" "$USER_TOKEN" ""
+run_test "/stats/pixelboard/placement" "GET" "401" "Get pixel placement statistics (without auth)" "" "" ""
+
+# Heatmap Tests
+run_test "/pixelboards/$active_pixelboard_id/heatmap" "GET" "200" "Get board heatmap" "" "" ""
+run_test "/pixelboards/$active_pixelboard_id/heatmap" "GET" "200" "Get board heatmap with timeframe" "" "" "?timeFrame=24h"
+run_test "/pixelboards/invalid-id/heatmap" "GET" "404" "Get invalid board heatmap" "" "" ""
+
+# User Contribution Statistics Tests
+run_test "/users/me/statistics" "GET" "200" "Get user statistics (as regular user)" "" "$USER_TOKEN" ""
+run_test "/users/me/statistics" "GET" "200" "Get user statistics (as premium)" "" "$PREMIUM_TOKEN" ""
+run_test "/users/me/statistics" "GET" "200" "Get user statistics (as admin)" "" "$ADMIN_TOKEN" ""
+run_test "/users/me/statistics" "GET" "401" "Get user statistics (without auth)" "" "" ""
+
+# User Board Contribution Tests
+run_test "/users/me/pixelboards/$active_pixelboard_id/contributions" "GET" "200" "Get user board contributions (as regular user)" "" "$USER_TOKEN" ""
+run_test "/users/me/pixelboards/$active_pixelboard_id/contributions" "GET" "200" "Get user board contributions (as premium)" "" "$PREMIUM_TOKEN" ""
+run_test "/users/me/pixelboards/$active_pixelboard_id/contributions" "GET" "200" "Get user board contributions (as admin)" "" "$ADMIN_TOKEN" ""
+run_test "/users/me/pixelboards/invalid-id/contributions" "GET" "404" "Get user board contributions (invalid board)" "" "$USER_TOKEN" ""
+run_test "/users/me/pixelboards/$active_pixelboard_id/contributions" "GET" "401" "Get user board contributions (without auth)" "" "" ""
+
 #
 # ==========================================
 # Summary and Results

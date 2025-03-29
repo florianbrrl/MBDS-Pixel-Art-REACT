@@ -27,7 +27,7 @@ export class PixelHistoryModel {
 			orderBy: { timestamp: 'desc' },
 		});
 	}
-	
+
 	/**
 	 * Obtenir l'historique des pixels pour un tableau spécifique après un timestamp donné
 	 * Utilisé pour les mises à jour en temps réel lors des reconnexions WebSocket
@@ -37,7 +37,7 @@ export class PixelHistoryModel {
 	 */
 	static async findByBoardIdAfterTimestamp(boardId: string, timestamp: Date): Promise<PixelHistory[]> {
 		return prisma.pixelHistory.findMany({
-			where: { 
+			where: {
 				board_id: boardId,
 				timestamp: {
 					gt: timestamp
@@ -70,6 +70,28 @@ export class PixelHistoryModel {
 		return prisma.pixelHistory.findMany({
 			where: { board_id: boardId, x, y },
 			orderBy: { timestamp: 'desc' },
+		});
+	}
+
+	/**
+	 * Obtenir l'historique des pixels pour une coordonnée spécifique avec les informations utilisateur
+	 * @param boardId - L'UUID du tableau
+	 * @param x - Coordonnée X
+	 * @param y - Coordonnée Y
+	 * @returns Tableau des entrées d'historique de pixels avec les informations utilisateur
+	 */
+	static async findByCoordinateWithUserInfo(boardId: string, x: number, y: number): Promise<any[]> {
+		return prisma.pixelHistory.findMany({
+			where: { board_id: boardId, x, y },
+			orderBy: { timestamp: 'desc' },
+			include: {
+				user: {
+					select: {
+						id: true,
+						email: true,
+					},
+				},
+			},
 		});
 	}
 
