@@ -1,153 +1,233 @@
-/* Admin User Management Styles */
-
-/* User List */
-.user-list-container {
-  margin-bottom: 2rem;
+/* Styles pour la gestion des utilisateurs dans l'admin */
+.user-management {
+  background-color: #1f2937;
+  border-radius: 0.5rem;
+  overflow: hidden;
 }
 
 .user-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
   margin-bottom: 1.5rem;
+  background-color: #111827;
+  padding: 1rem;
+  border-radius: 0.5rem;
 }
 
+.filter-input-group {
+  display: flex;
+  align-items: center;
+  margin: 15px 0;
+  gap: 0.5rem;
+}
+
+.filter-input-group label {
+  font-weight: 500;
+  color: #d1d5db;
+  width: 80px;
+}
+
+.filter-input-group input,
+.filter-input-group select {
+  padding: 0.5rem;
+  background-color: #374151;
+  border: 1px solid #4b5563;
+  border-radius: 0.25rem;
+  color: #f9fafb;
+  outline: none;
+  min-width: 180px;
+}
+
+.filter-input-group input:focus,
+.filter-input-group select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 1px #3b82f6;
+}
+
+/* Tableau des utilisateurs */
 .users-table-container {
+  overflow-x: auto;
+  background-color: #111827;
   border-radius: 0.5rem;
-  overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .users-table-container table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 .users-table-container th {
-  padding: 0.75rem 1rem;
+  background-color: #111827;
+  padding: 1rem;
   text-align: left;
   font-weight: 600;
-  font-size: 0.875rem;
-}
-
-.users-table-container td {
-  padding: 0.75rem 1rem;
-}
-
-.users-table-container tr {
+  color: #d1d5db;
+  border-bottom: 1px solid #374151;
   cursor: pointer;
+  transition: background-color 0.2s;
 }
 
-/* Theme compatibility */
-:root {
-  --table-header-bg: rgb(243, 244, 246);
-  --table-border-color: rgb(229, 231, 235);
-  --table-hover-color: rgb(249, 250, 251);
-  --modal-overlay-color: rgba(0, 0, 0, 0.5);
-  --modal-bg-color: white;
-  --blocked-bg-color: rgba(254, 202, 202, 0.5);
-  --input-bg-color: white;
-  --input-text-color: black;
-  --input-border-color: rgb(209, 213, 219);
-  --label-text-color: rgb(55, 65, 81);
-}
-
-.dark-theme {
-  --table-header-bg: rgb(31, 41, 55);
-  --table-border-color: rgb(55, 65, 81);
-  --table-hover-color: rgb(55, 65, 81);
-  --modal-overlay-color: rgba(0, 0, 0, 0.7);
-  --modal-bg-color: rgb(31, 41, 55);
-  --blocked-bg-color: rgba(220, 38, 38, 0.2);
-  --input-bg-color: rgb(17, 24, 39);
-  --input-text-color: white;
-  --input-border-color: rgb(75, 85, 99);
-  --label-text-color: rgb(209, 213, 219);
-}
-
-.users-table-container th {
-  background-color: var(--table-header-bg);
+.users-table-container th:hover {
+  background-color: #1f2937;
 }
 
 .users-table-container td {
-  border-top: 1px solid var(--table-border-color);
+  padding: 1rem;
+  border-bottom: 1px solid #1f2937;
 }
 
 .users-table-container tr:hover {
-  background-color: var(--table-hover-color);
+  background-color: #1f2937;
 }
 
-.users-table-container tr.blocked-user {
-  background-color: var(--blocked-bg-color);
+/* Badges de statut et rôle */
+.role-badge, .status-badge {
+  display: inline-flex;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
-/* User Detail Modal */
+.role-admin {
+  background-color: #4f46e5;
+  color: white;
+}
+
+.role-premium {
+  background-color: #059669;
+  color: white;
+}
+
+.role-user {
+  background-color: #2563eb;
+  color: white;
+}
+
+.role-guest {
+  background-color: #6b7280;
+  color: white;
+}
+
+.status-active {
+  background-color: #10b981;
+  color: white;
+}
+
+.status-blocked {
+  background-color: #ef4444;
+  color: white;
+}
+
+/* Boutons d'action */
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.action-select {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  background-color: #374151;
+  border: 1px solid #4b5563;
+  color: #f9fafb;
+  cursor: pointer;
+}
+
+.block-button, .unblock-button {
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.block-button {
+  background-color: #b91c1c;
+  color: white;
+  border: none;
+}
+
+.unblock-button {
+  background-color: #047857;
+  color: white;
+  border: none;
+}
+
+.block-button:hover {
+  background-color: #991b1b;
+}
+
+.unblock-button:hover {
+  background-color: #065f46;
+}
+
+/* Styles pour la pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+  gap: 0.5rem;
+}
+
+.pagination button {
+  padding: 0.5rem 1rem;
+  background-color: #374151;
+  border: none;
+  border-radius: 0.25rem;
+  color: #f9fafb;
+  cursor: pointer;
+}
+
+.pagination button.active {
+  background-color: #3b82f6;
+}
+
+.pagination button:hover:not(.active) {
+  background-color: #4b5563;
+}
+
+/* Message vide */
+.empty-message {
+  padding: 2rem;
+  text-align: center;
+  color: #9ca3af;
+  background-color: #111827;
+  border-radius: 0.5rem;
+}
+
+/* Correctif pour l'alignement des actions */
+td.actions-cell {
+  width: 200px;
+}
+
+/* Style pour les lignes d'utilisateurs bloqués */
+.blocked-user {
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+/* Style pour l'utilisateur sélectionné */
+.selected-user {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+/* Styles pour le détail utilisateur */
 .user-detail-modal {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: var(--modal-overlay-color);
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: center;
   justify-content: center;
-  z-index: 50;
+  align-items: center;
+  z-index: 1000;
 }
 
 .user-detail-modal > div {
-  background-color: var(--modal-bg-color);
+  background-color: #1f2937;
   border-radius: 0.5rem;
-  padding: 1.5rem;
-  max-width: 42rem;
-  width: 90%;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.user-info .grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1rem;
-}
-
-@media (min-width: 768px) {
-  .user-info .grid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-/* Form elements */
-.user-filters input[type="text"],
-.user-filters select,
-.users-table-container select {
-  background-color: var(--input-bg-color);
-  color: var(--input-text-color);
-  border-color: var(--input-border-color);
-}
-
-.user-filters input[type="text"]:focus,
-.user-filters select:focus,
-.users-table-container select:focus {
-  border-color: #4f46e5;
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.25);
-}
-
-/* Labels */
-.user-filters label {
-  color: var(--label-text-color);
-}
-
-/* Sort Indicators */
-.users-table-container th {
-  position: relative;
-}
-
-.users-table-container th span {
-  font-size: 10px;
-  vertical-align: middle;
-  display: inline-block;
-  margin-left: 5px;
-}
-
-.users-table-container th:hover {
-  background-color: var(--table-hover-color);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }

@@ -1,0 +1,159 @@
+/* styles/PixelBoardForm.css */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  /* Style principal du modal adapté aux thèmes */
+  .modal-container {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    width: 100%;
+    max-width: 500px;
+    padding: 24px;
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modal-header {
+    margin-bottom: 20px;
+  }
+
+  .modal-header h2 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 0;
+    color: var(--text-primary);
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+
+  .form-group input[type="text"],
+  .form-group input[type="number"],
+  .form-group input[type="date"] {
+    width: 90%;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 1rem;
+  }
+
+  .form-group input[type="text"]:focus,
+  .form-group input[type="number"]:focus,
+  .form-group input[type="date"]:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  }
+
+  .checkbox-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .checkbox-group input[type="checkbox"] {
+    margin-right: 8px;
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .cancel-button {
+    padding: 8px 16px;
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+
+  .cancel-button:hover {
+    background-color: var(--border-color-hover);
+  }
+
+  .submit-button {
+    padding: 8px 16px;
+    background-color: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+
+  .submit-button:hover {
+    background-color: var(--color-primary-hover, #2563eb); /* Bleu plus foncé au survol */
+  }
+
+  /* Animation d'entrée du modal */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .modal-container {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  /* Styles spécifiques pour le thème clair */
+  .light-theme .modal-container {
+    border: 1px solid #e5e7eb;
+  }
+
+  /* Styles spécifiques pour le thème sombre */
+  .dark-theme .modal-container {
+    border: 1px solid #374151;
+  }
+
+  /* Adaptation mobile */
+  @media (max-width: 640px) {
+    .modal-container {
+      width: 90%;
+      padding: 16px;
+    }
+
+    .grid-2 {
+      grid-template-columns: 1fr;
+    }
+
+    .form-actions {
+      flex-direction: column-reverse;
+    }
+
+    .form-actions button {
+      width: 100%;
+    }
+  }

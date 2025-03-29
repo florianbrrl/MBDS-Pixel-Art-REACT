@@ -1,4 +1,3 @@
-// src/services/websocket.service.ts
 import { PixelUpdateData } from '@/types';
 
 /**

@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import adminRoutes from './admin.routes';
 import authRoutes from './auth.routes';
 import userRoutes from './user.routes';
 import pixelBoardRoutes from './pixelboard.routes';
