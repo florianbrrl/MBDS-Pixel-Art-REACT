@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ErrorMessage from '@/components/common/ErrorMessage';
 import PixelBoardDisplay from '@/components/pixel-board/PixelBoardDisplay';
+import ExportModal from '@/components/export/ExportModal';
 import BoardConnectionCounter from '@/components/common/BoardConnectionCounter';
 import '@/styles/connection-counter.css';
 import '@/styles/websocket-status.css';
@@ -30,6 +31,9 @@ const PixelBoardDetail: React.FC = () => {
   const [placementError, setPlacementError] = useState<string | null>(null);
   const [placingPixel, setPlacingPixel] = useState<boolean>(false);
   const [selectedColor, setSelectedColor] = useState<string>('#000000');
+
+  // État pour l'exportation
+  const [showExportModal, setShowExportModal] = useState(false);
 
   // Utiliser notre hook de cooldown
   const {
@@ -283,6 +287,24 @@ const PixelBoardDetail: React.FC = () => {
           canEdit={board.is_active && isAuthenticated}
           onColorSelect={handleColorSelect}
         />
+      </div>
+
+      {/* Modal d'exportation */}
+      {showExportModal && board && (
+        <ExportModal
+          board={board}
+          onClose={() => setShowExportModal(false)}
+        />
+      )}
+
+      {/* Bouton flottant d'exportation */}
+      <div className="floating-export-button" onClick={() => setShowExportModal(true)}>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        <span>Exporter</span>
       </div>
     </div>
   );
