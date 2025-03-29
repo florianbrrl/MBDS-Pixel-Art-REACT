@@ -5,6 +5,7 @@ import { PixelBoard } from '@/types';
 import PixelBoardPreview from '@/components/pixel-board/PixelBoardPreview';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ErrorMessage from '@/components/common/ErrorMessage';
+import { useAuth } from '@/contexts/AuthContext';
 import '../../styles/home.css';
 
 const Home: React.FC = () => {
@@ -14,21 +15,28 @@ const Home: React.FC = () => {
   const [completedBoards, setCompletedBoards] = useState<PixelBoard[]>([]);
 
   // États pour le chargement
-  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(false);
   const [boardsLoading, setBoardsLoading] = useState(true);
 
   // États pour les erreurs
   const [statsError, setStatsError] = useState<string | null>(null);
   const [boardsError, setBoardsError] = useState<string | null>(null);
 
+  // Récupérer le statut d'authentification
+  const { isAuthenticated } = useAuth();
+
   // Charger les données au montage du composant
   useEffect(() => {
-    loadStats();
+    if (isAuthenticated) {
+      loadStats();
+    }
     loadBoards();
-  }, []);
+  }, [isAuthenticated]);
 
   // Fonction pour charger les statistiques
   const loadStats = async () => {
+    if (!isAuthenticated) return;
+
     setStatsLoading(true);
     setStatsError(null);
 
@@ -53,28 +61,39 @@ const Home: React.FC = () => {
     setBoardsError(null);
 
     try {
-      // Charger les PixelBoards actifs
-      const activeResponse = await ApiService.getActivePixelBoards();
+      let activeResponse, completedResponse;
 
-      if (activeResponse.error) {
-        setBoardsError(activeResponse.error);
+      if (isAuthenticated) {
+        // Utiliser les routes authentifiées pour les utilisateurs connectés
+        activeResponse = await ApiService.getActivePixelBoards();
+        completedResponse = await ApiService.getCompletedPixelBoards();
       } else {
+        // Utiliser les routes publiques pour les utilisateurs non connectés
+        activeResponse = await ApiService.getPublicActivePixelBoards();
+        completedResponse = await ApiService.getPublicCompletedPixelBoards();
+      }
+
+      if (!activeResponse.error) {
         setActiveBoards(activeResponse.data || []);
       }
 
-      // Charger les PixelBoards terminés
-      const completedResponse = await ApiService.getCompletedPixelBoards();
-
-      if (!activeResponse.error && completedResponse.error) {
-        setBoardsError(completedResponse.error);
-      } else if (!completedResponse.error) {
+      if (!completedResponse.error) {
         setCompletedBoards(completedResponse.data || []);
+      }
+
+      // Si les deux tableaux sont vides après les tentatives, afficher une erreur
+      if (
+        (activeBoards.length === 0 && completedBoards.length === 0) &&
+        ((activeResponse.error || activeResponse.data?.length === 0) &&
+        (completedResponse.error || completedResponse.data?.length === 0))
+      ) {
+        setBoardsError('Impossible de charger les PixelBoards');
       }
     } catch (error: any) {
       setBoardsError('Impossible de charger les PixelBoards');
+    } finally {
+      setBoardsLoading(false);
     }
-
-    setBoardsLoading(false);
   };
 
   // Rendu des cartes de prévisualisation
@@ -122,29 +141,32 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      <section className="stats-section">
-        <h2 className="section-title">Statistiques</h2>
+      {/* Afficher les statistiques uniquement si l'utilisateur est connecté */}
+      {isAuthenticated && (
+        <section className="stats-section">
+          <h2 className="section-title">Statistiques</h2>
 
-        {statsLoading ? (
-          <div className="loading-container">
-            <LoadingSpinner message="Chargement des statistiques..." />
-          </div>
-        ) : statsError ? (
-          <ErrorMessage message={statsError} onRetry={loadStats} />
-        ) : (
-          <div className="stats-container">
-            <div className="stat-card">
-              <h3 className="stat-title">Utilisateurs</h3>
-              <p className="stat-value">{stats?.totalUsers || 0}</p>
+          {statsLoading ? (
+            <div className="loading-container">
+              <LoadingSpinner message="Chargement des statistiques..." />
             </div>
-            <div className="stat-card">
-              <h3 className="stat-title">PixelBoards</h3>
-              <p className="stat-value">{stats?.totalBoards || 0}</p>
-              <p className="stat-caption">dont {stats?.activeBoards || 0} actifs</p>
+          ) : statsError ? (
+            <ErrorMessage message={statsError} onRetry={loadStats} />
+          ) : (
+            <div className="stats-container">
+              <div className="stat-card">
+                <h3 className="stat-title">Utilisateurs</h3>
+                <p className="stat-value">{stats?.totalUsers || 0}</p>
+              </div>
+              <div className="stat-card">
+                <h3 className="stat-title">PixelBoards</h3>
+                <p className="stat-value">{stats?.totalBoards || 0}</p>
+                <p className="stat-caption">dont {stats?.activeBoards || 0} actifs</p>
+              </div>
             </div>
-          </div>
-        )}
-      </section>
+          )}
+        </section>
+      )}
 
       <section className="active-boards-section">
         <h2 className="section-title">PixelBoards en cours</h2>
@@ -184,6 +206,20 @@ const Home: React.FC = () => {
             <Link to="/pixel-boards" className="view-all-link">
               Voir tous les PixelBoards
             </Link>
+          </div>
+        </section>
+      )}
+
+      {/* Section alternative pour les utilisateurs non connectés */}
+      {!isAuthenticated && (
+        <section className="login-prompt-section">
+          <div className="login-prompt-card">
+            <h2>Connectez-vous pour plus de fonctionnalités</h2>
+            <p>Connectez-vous pour voir les statistiques, contribuer aux tableaux et créer vos propres pixel arts.</p>
+            <div className="login-prompt-actions">
+              <Link to="/login" className="login-button">Se connecter</Link>
+              <Link to="/register" className="register-button">S'inscrire</Link>
+            </div>
           </div>
         </section>
       )}

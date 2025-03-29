@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ApiService from '@/services/api.service';
 import { PixelBoard } from '@/types';
 import PixelBoardList from '@/components/pixel-board/PixelBoardList';
-// Auth context would be needed if we used authentication checks
-// import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import '../../styles/pixelboard.css';
 
 const PixelBoards: React.FC = () => {
@@ -12,10 +11,8 @@ const PixelBoards: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Authentication state might be needed later
-  // const { isAuthenticated } = useAuth();
-  // Verify admin status if needed later
-  // const isAdmin = isAuthenticated && hasRole(['admin']);
+  // État d'authentification
+  const { isAuthenticated } = useAuth();
 
   // Charger les PixelBoards
   useEffect(() => {
@@ -28,8 +25,10 @@ const PixelBoards: React.FC = () => {
     setError(null);
 
     try {
-      // Charger tous les PixelBoards
-      const response = await ApiService.getAllPixelBoards();
+      // Utiliser les fonctions publiques ou authentifiées selon le statut de l'utilisateur
+      const response = isAuthenticated
+        ? await ApiService.getAllPixelBoards()
+        : await ApiService.getPublic('/pixelboards');
 
       if (response.error) {
         setError(response.error);

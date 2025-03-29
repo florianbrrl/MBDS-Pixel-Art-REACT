@@ -49,7 +49,10 @@ const PixelBoardDetail: React.FC = () => {
       setError(null);
 
       try {
-        const response = await ApiService.getPixelBoardById(id);
+        // Utiliser la fonction publique ou authentifiée selon le statut de l'utilisateur
+        const response = isAuthenticated
+          ? await ApiService.getPixelBoardById(id)
+          : await ApiService.getPublicPixelBoardById(id);
 
         if (response.error) {
           setError(response.error);
@@ -65,7 +68,7 @@ const PixelBoardDetail: React.FC = () => {
     };
 
     loadBoard();
-  }, [id]);
+  }, [id, isAuthenticated]);
 
   // Gestionnaire de mise à jour de pixel via WebSocket
   const handlePixelUpdate = useCallback(
