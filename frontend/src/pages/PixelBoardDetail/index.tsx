@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
 import { useCooldown } from '@/hooks/useCooldown';
 import CooldownIndicator from '@/components/pixel-board/CooldownIndicator';
 import ApiService from '@/services/api.service';
@@ -26,7 +24,9 @@ const PixelBoardDetail: React.FC = () => {
   const [board, setBoard] = useState<PixelBoard | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [wsStatus, setWsStatus] = useState<'connected' | 'connecting' | 'disconnected'>('disconnected');
+  const [wsStatus, setWsStatus] = useState<'connected' | 'connecting' | 'disconnected'>(
+    'disconnected',
+  );
 
   // État pour le succès du placement de pixel
   const [placementSuccess, setPlacementSuccess] = useState<string | null>(null);
@@ -38,10 +38,7 @@ const PixelBoardDetail: React.FC = () => {
   const [showExportModal, setShowExportModal] = useState(false);
 
   // Utiliser notre hook de cooldown
-  const {
-    status: cooldownStatus,
-    refresh: refreshCooldown
-  } = useCooldown(id);
+  const { status: cooldownStatus, refresh: refreshCooldown } = useCooldown(id);
 
   // Charger les détails du PixelBoard
   useEffect(() => {
@@ -60,8 +57,8 @@ const PixelBoardDetail: React.FC = () => {
           setBoard(response.data || null);
         }
       } catch (err) {
-        console.error("Erreur lors du chargement du board:", err);
-        setError("Une erreur est survenue lors du chargement du tableau");
+        console.error('Erreur lors du chargement du board:', err);
+        setError('Une erreur est survenue lors du chargement du tableau');
       } finally {
         setLoading(false);
       }
@@ -71,23 +68,26 @@ const PixelBoardDetail: React.FC = () => {
   }, [id]);
 
   // Gestionnaire de mise à jour de pixel via WebSocket
-  const handlePixelUpdate = useCallback((data: PixelUpdateData) => {
-    // Vérifier que les données concernent bien ce tableau
-    if (data.pixelboard_id === id) {
-      console.log('Processing pixel update:', data);
+  const handlePixelUpdate = useCallback(
+    (data: PixelUpdateData) => {
+      // Vérifier que les données concernent bien ce tableau
+      if (data.pixelboard_id === id) {
+        console.log('Processing pixel update:', data);
 
-      // Mettre à jour l'état du board avec le nouveau pixel
-      setBoard(prevBoard => {
-        if (!prevBoard) return prevBoard;
+        // Mettre à jour l'état du board avec le nouveau pixel
+        setBoard((prevBoard) => {
+          if (!prevBoard) return prevBoard;
 
-        const newGrid = { ...prevBoard.grid };
-        const pixelKey = `${data.x},${data.y}`;
-        newGrid[pixelKey] = data.color;
+          const newGrid = { ...prevBoard.grid };
+          const pixelKey = `${data.x},${data.y}`;
+          newGrid[pixelKey] = data.color;
 
-        return { ...prevBoard, grid: newGrid };
-      });
-    }
-  }, [id]);
+          return { ...prevBoard, grid: newGrid };
+        });
+      }
+    },
+    [id],
+  );
 
   // useEffect pour la connexion WebSocket
   useEffect(() => {
@@ -107,15 +107,23 @@ const PixelBoardDetail: React.FC = () => {
     const unsubscribe = WebSocketService.onPixelUpdate(handlePixelUpdate);
 
     // Mettre à jour le statut initial
-    setWsStatus(WebSocketService.getConnectionStatus ?
-      WebSocketService.getConnectionStatus() === 'connected' ? 'connected' : 'connecting' :
-      WebSocketService.isConnected() ? 'connected' : 'connecting');
+    setWsStatus(
+      WebSocketService.getConnectionStatus
+        ? WebSocketService.getConnectionStatus() === 'connected'
+          ? 'connected'
+          : 'connecting'
+        : WebSocketService.isConnected()
+          ? 'connected'
+          : 'connecting',
+    );
 
     // Timer pour vérifier périodiquement l'état de la connexion
     const wsCheckInterval = setInterval(() => {
-      const status = WebSocketService.getConnectionStatus ?
-        WebSocketService.getConnectionStatus() :
-        WebSocketService.isConnected() ? 'connected' : 'disconnected';
+      const status = WebSocketService.getConnectionStatus
+        ? WebSocketService.getConnectionStatus()
+        : WebSocketService.isConnected()
+          ? 'connected'
+          : 'disconnected';
 
       if (status === 'connected') {
         setWsStatus('connected');
@@ -253,7 +261,9 @@ const PixelBoardDetail: React.FC = () => {
       {/* Indicateur WebSocket */}
       {wsStatus !== 'connected' && (
         <div className={`websocket-status ${wsStatus}`}>
-          {wsStatus === 'connecting' ? 'Connexion en cours...' : 'Déconnecté. Les mises à jour en temps réel sont indisponibles.'}
+          {wsStatus === 'connecting'
+            ? 'Connexion en cours...'
+            : 'Déconnecté. Les mises à jour en temps réel sont indisponibles.'}
         </div>
       )}
 
@@ -261,7 +271,11 @@ const PixelBoardDetail: React.FC = () => {
       <div className="notifications-container">
         {placementSuccess && <div className="notification success-message">{placementSuccess}</div>}
         {placementError && <div className="notification error-message">{placementError}</div>}
-        {placingPixel && <div className="notification info-message">{placingPixel ? 'Placement du pixel en cours...' : ''}</div>}
+        {placingPixel && (
+          <div className="notification info-message">
+            {placingPixel ? 'Placement du pixel en cours...' : ''}
+          </div>
+        )}
       </div>
 
       {!isAuthenticated && board.is_active && (
@@ -282,10 +296,7 @@ const PixelBoardDetail: React.FC = () => {
 
       {board && (
         <div className="board-actions">
-          <Link
-            to={`/pixel-boards/${board.id}/heatmap`}
-            className="heatmap-button"
-          >
+          <Link to={`/pixel-boards/${board.id}/heatmap`} className="heatmap-button">
             Voir la Heatmap d'activité
           </Link>
         </div>
@@ -304,15 +315,20 @@ const PixelBoardDetail: React.FC = () => {
 
       {/* Modal d'exportation */}
       {showExportModal && board && (
-        <ExportModal
-          board={board}
-          onClose={() => setShowExportModal(false)}
-        />
+        <ExportModal board={board} onClose={() => setShowExportModal(false)} />
       )}
 
       {/* Bouton flottant d'exportation */}
       <div className="floating-export-button" onClick={() => setShowExportModal(true)}>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
           <polyline points="7 10 12 15 17 10"></polyline>
           <line x1="12" y1="15" x2="12" y2="3"></line>
