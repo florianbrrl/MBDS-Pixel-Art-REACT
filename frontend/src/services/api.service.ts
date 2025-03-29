@@ -124,8 +124,8 @@ async function getPublic<T>(url: string): Promise<ApiResponse<T>> {
     const response = await publicAxiosInstance.get<T>(url);
     return {
       data: response.data && typeof response.data === 'object' && 'data' in response.data
-        ? response.data.data
-        : response.data
+        ? (response.data.data as T)
+        : (response.data as T)
     };
   } catch (error) {
     console.warn(`Erreur lors de l'appel public à ${url}:`, error);

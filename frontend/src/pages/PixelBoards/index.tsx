@@ -33,7 +33,7 @@ const PixelBoards: React.FC = () => {
       if (response.error) {
         setError(response.error);
       } else {
-        setBoards(response.data || []);
+        setBoards(Array.isArray(response.data) ? response.data : []);
       }
     } catch (error: any) {
       setError(error.message || 'Une erreur est survenue lors du chargement des PixelBoards');

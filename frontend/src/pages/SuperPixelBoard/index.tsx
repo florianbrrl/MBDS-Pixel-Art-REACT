@@ -29,16 +29,16 @@ const SuperPixelBoardPage: React.FC = () => {
       setError(null);
 
       try {
-        const response = await PixelBoardService.getSuperPixelBoardData();
+        const response = await PixelBoardService.getAllBoards();
 
         if (response.error) {
           setError(response.error);
         } else if (response.data) {
-          setBoardsData(response.data.boards);
-          setDimensions(response.data.dimensions);
+          setBoardsData(response.data);
+          setDimensions({ width: 100, height: 100 }); // Adjust dimensions as needed
 
           // Si nous avons des données, la fonctionnalité d'historique est disponible
-          setHistoryAvailable(response.data.boards.length > 0);
+          setHistoryAvailable(response.data.length > 0);
         }
       } catch (err: any) {
         setError(err.message || 'Une erreur est survenue lors du chargement des données');
