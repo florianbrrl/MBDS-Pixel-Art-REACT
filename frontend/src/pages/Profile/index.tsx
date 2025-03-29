@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import ThemeSelector from '@/components/common/ThemeSelector';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ErrorMessage from '@/components/common/ErrorMessage';
-import { ThemePreference, UserContributions } from '@/types/auth.types';
+import { UserRole, ThemePreference, UserContributions } from '@/types/auth.types';
 import { PixelBoard } from '@/types';
 import { Link } from 'react-router-dom';
 import ApiService from '@/services/api.service';
@@ -47,8 +47,12 @@ const Profile: React.FC = () => {
   useEffect(() => {
     if (currentUser) {
       setEmail(currentUser.email);
-      // Set default theme preference
-      setThemePreference('system');
+      // 'sys' est le format stocké dans la BD, 'system' est le format utilisé côté client
+      const themeValue =
+          currentUser.theme_preference === 'sys'
+          ? 'system'
+          : (currentUser.theme_preference as ThemePreference) || 'system';
+      setThemePreference(themeValue);
     }
   }, [currentUser]);
 
@@ -88,7 +92,7 @@ const Profile: React.FC = () => {
       try {
         const response = await ApiService.getPixelBoardById(boardId);
         if (response.data) {
-          setBoardDetails((prev) => ({ ...prev, [boardId]: response.data as PixelBoard }));
+          setBoardDetails((prev) => ({ ...prev, [boardId]: response.data || null }));
         }
       } catch (error) {
         console.error(`Erreur lors du chargement du PixelBoard ${boardId}:`, error);
@@ -108,9 +112,24 @@ const Profile: React.FC = () => {
     }
   }, [contributions, loadBoardDetails]);
 
-  // Role formatting is handled directly in the UI
+  // Formater le rôle utilisateur pour l'affichage
+  const formatRole = (role?: UserRole): string => {
+    if (!role) return 'Utilisateur';
 
-  // Gérer la soumission du formulaire de modification du profil
+    switch (role) {
+      case 'admin':
+        return 'Administrateur';
+      case 'premium':
+        return 'Utilisateur premium';
+      case 'user':
+        return 'Utilisateur';
+      case 'guest':
+        return 'Invité';
+      default:
+        return role;
+    }
+  };
+
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setProfileError(null);
@@ -119,9 +138,11 @@ const Profile: React.FC = () => {
     if (!currentUser) return;
 
     try {
-      // Convertir 'system' en 'sys' pour le backend
-      const theme_preference = 'system';
+      // Utiliser la valeur réelle sélectionnée par l'utilisateur
+      // Convertir 'system' en 'sys' pour le backend si nécessaire
+      const theme_preference = themePreference === 'system' ? 'sys' : themePreference;
 
+      // Envoyer les données mises à jour au backend
       await updateProfile({ email, theme_preference });
       setProfileSuccess('Profil mis à jour avec succès');
       setIsEditingProfile(false);
@@ -246,8 +267,11 @@ const Profile: React.FC = () => {
                   onClick={() => {
                     setIsEditingProfile(false);
                     setEmail(currentUser.email);
-                    // Convert user theme preference to component state
-                    const themeValue = 'system';
+                    // 'sys' est le format stocké dans la BD, 'system' est le format utilisé côté client
+                    const themeValue =
+                      currentUser.theme_preference === 'sys'
+                        ? 'system'
+                        : (currentUser.theme_preference as ThemePreference) || 'system';
                     setThemePreference(themeValue);
                     setProfileError(null);
                   }}
@@ -264,7 +288,7 @@ const Profile: React.FC = () => {
                 <strong>Email:</strong> {currentUser.email}
               </p>
               <p>
-                <strong>Rôle:</strong> Utilisateur
+                <strong>Rôle:</strong> {formatRole(currentUser.role as UserRole)}
               </p>
               <p>
                 <strong>Compte créé le:</strong>{' '}
@@ -440,8 +464,8 @@ const Profile: React.FC = () => {
                         <span className="board-title">
                           {loadingBoards[board.boardId] ? (
                             <span className="loading-title">Chargement...</span>
-                          ) : boardDetails[board.boardId] && boardDetails[board.boardId] !== null ? (
-                            boardDetails[board.boardId]!.title
+                          ) : boardDetails[board.boardId] ? (
+                            boardDetails[board.boardId]?.title || `Tableau #${board.boardId.substring(0, 4)}`
                           ) : (
                             `Tableau #${board.boardId.substring(0, 4)}`
                           )}

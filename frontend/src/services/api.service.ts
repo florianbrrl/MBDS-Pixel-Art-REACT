@@ -32,10 +32,8 @@ axiosInstance.interceptors.request.use(
 // Add response interceptor
 axiosInstance.interceptors.response.use(
   (response) => {
-    if (response.data && typeof response.data === 'object') {
-      if ('data' in response.data) {
-        response.data = response.data.data;
-      }
+    if (response.data && typeof response.data === 'object' && 'data' in response.data) {
+      response.data = response.data.data;
     }
     return response;
   },
@@ -227,6 +225,27 @@ const getSuperPixelBoardData = async (): Promise<ApiResponse<any>> => {
   }
 };
 
+const getUserContributionTimeline = async (timeRange: 'day' | 'week' | 'month' | 'all' = 'all'): Promise<ApiResponse<{
+  totalPixels: number;
+  timelineData: Array<{
+    date: string;
+    count: number;
+  }>;
+}>> => {
+  try {
+    const response = await get<{
+      totalPixels: number;
+      timelineData: Array<{
+        date: string;
+        count: number;
+      }>;
+    }>(`/users/me/contributions/timeline?timeRange=${timeRange}`);
+    return response;
+  } catch (error) {
+    return normalizeError(error);
+  }
+};
+
 // Import du service WebSocket séparé
 import WebSocketService from './websocket.service';
 
@@ -324,6 +343,9 @@ const ApiService = {
   updateUserRole,
   toggleUserStatus,
   getGlobalStats,
+
+  // Statistics methods
+  getUserContributionTimeline,
 
   // WebSocket instance - Référence au service externe
   WebSocketService

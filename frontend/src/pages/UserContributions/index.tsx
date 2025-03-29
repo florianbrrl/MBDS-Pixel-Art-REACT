@@ -18,7 +18,7 @@ import { PixelBoard } from '@/types';
 import ApiService from '@/services/api.service';
 import './../../styles/user-contributions.css';
 
-type PeriodType = 'day' | 'week' | 'month' | 'year' | 'all';
+type PeriodType = 'day' | 'week' | 'month' | 'all';
 
 interface ProcessedContributions {
   totalPixels: number;
@@ -34,14 +34,25 @@ interface ProcessedContributions {
   }[];
 }
 
+interface TimelineResponse {
+  totalPixels: number;
+  timelineData: {
+    date: string;
+    count: number;
+  }[];
+}
+
 const UserContributionsPage: React.FC = () => {
   const { currentUser, getUserContributions } = useAuth();
   const [contributions, setContributions] = useState<any | null>(null);
   const [processedData, setProcessedData] = useState<ProcessedContributions | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [timelineLoading, setTimelineLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [timelineError, setTimelineError] = useState<string | null>(null);
   const [boards, setBoards] = useState<{ [key: string]: PixelBoard }>({});
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodType>('month');
+  const [timelineData, setTimelineData] = useState<TimelineResponse | null>(null);
 
   useEffect(() => {
     const fetchContributions = async () => {
@@ -73,6 +84,29 @@ const UserContributionsPage: React.FC = () => {
 
     fetchContributions();
   }, [currentUser, getUserContributions]);
+
+  // Charger les données temporelles en fonction de la période sélectionnée
+  useEffect(() => {
+    const fetchTimelineData = async () => {
+      setTimelineLoading(true);
+      setTimelineError(null);
+
+      try {
+        const response = await ApiService.getUserContributionTimeline(selectedPeriod);
+        if (response.error) {
+          setTimelineError(response.error);
+        } else if (response.data) {
+          setTimelineData(response.data);
+        }
+      } catch (err: any) {
+        setTimelineError(err.message || 'Erreur lors du chargement des données temporelles');
+      } finally {
+        setTimelineLoading(false);
+      }
+    };
+
+    fetchTimelineData();
+  }, [selectedPeriod]);
 
   // Récupérer les informations des PixelBoards pour les noms et détails
   const fetchBoardsInfo = async (contributedBoards: any[]) => {
@@ -109,9 +143,8 @@ const UserContributionsPage: React.FC = () => {
         percentage: (board.pixelCount / contributions.totalPixels) * 100,
       }));
 
-      // Préparer des données temporelles simulées pour l'exemple
-      // Dans une implémentation réelle, cela viendrait de l'API backend
-      const timeSeriesData = generateTimeSeriesData(selectedPeriod);
+      // Utiliser les données de la timeline réelle
+      const timeSeriesData = timelineData?.timelineData || [];
 
       setProcessedData({
         totalPixels: contributions.totalPixels,
@@ -121,78 +154,70 @@ const UserContributionsPage: React.FC = () => {
     } catch (err) {
       console.error('Erreur lors du traitement des données de contributions', err);
     }
-  }, [contributions, boards, selectedPeriod]);
+  }, [contributions, boards, timelineData]);
 
-  // Fonction pour générer des données temporelles simulées
-  const generateTimeSeriesData = (period: PeriodType) => {
-    // Ceci est une simulation. Dans une implémentation réelle, ces données viendraient de l'API.
-    const now = new Date();
-    const data = [];
-    let total = 0;
+  // Process timeline data to ensure current day is included
+  useEffect(() => {
+    if (!timelineData || !timelineData.timelineData) return;
 
-    if (period === 'day') {
-      // Dernières 24 heures
-      for (let i = 0; i < 24; i++) {
-        const count = Math.floor(Math.random() * 10);
-        total += count;
-        const date = new Date(now);
-        date.setHours(now.getHours() - 23 + i);
-        data.push({
-          date: `${date.getHours()}:00`,
-          count,
-        });
+    // Create a copy of the timeline data
+    const processedTimelineData = [...timelineData.timelineData];
+
+    // Make sure the current day is included for day, week, and month views
+    if (selectedPeriod === 'day' || selectedPeriod === 'week' || selectedPeriod === 'month') {
+      const today = new Date();
+
+      // Formatter la date selon le format attendu pour chaque période
+      let todayKey;
+      if (selectedPeriod === 'day') {
+        todayKey = `${today.getHours()}:00`;
+      } else if (selectedPeriod === 'week') {
+        const dayNames = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+        todayKey = dayNames[today.getDay()];
+      } else { // month
+        todayKey = `${today.getDate()}/${today.getMonth() + 1}`;
       }
-    } else if (period === 'week') {
-      // Derniers 7 jours
-      for (let i = 0; i < 7; i++) {
-        const count = Math.floor(Math.random() * 20);
-        total += count;
-        const date = new Date(now);
-        date.setDate(now.getDate() - 6 + i);
-        data.push({
-          date: date.toLocaleDateString(undefined, { weekday: 'short' }),
-          count,
+
+      // Check if today is already in the data
+      const todayExists = processedTimelineData.some(item => item.date === todayKey);
+
+      if (!todayExists) {
+        // Add today with zero count if it doesn't exist
+        processedTimelineData.push({
+          date: todayKey,
+          count: 0
         });
+
+        // Sort the dates properly based on the period type
+        if (selectedPeriod === 'day') {
+          processedTimelineData.sort((a, b) => {
+            return parseInt(a.date.split(':')[0]) - parseInt(b.date.split(':')[0]);
+          });
+        } else if (selectedPeriod === 'month') {
+          processedTimelineData.sort((a, b) => {
+            const [dayA, monthA] = a.date.split('/').map(Number);
+            const [dayB, monthB] = b.date.split('/').map(Number);
+            if (monthA !== monthB) return monthA - monthB;
+            return dayA - dayB;
+          });
+        }
+        // Pour 'week', l'ordre est déjà défini par l'ordre des jours
       }
-    } else if (period === 'month') {
-      // Dernier mois
-      for (let i = 0; i < 30; i++) {
-        const count = Math.floor(Math.random() * 15);
-        total += count;
-        const date = new Date(now);
-        date.setDate(now.getDate() - 29 + i);
-        data.push({
-          date: `${date.getDate()}/${date.getMonth() + 1}`,
-          count,
-        });
-      }
-    } else if (period === 'year') {
-      // Dernière année
-      for (let i = 0; i < 12; i++) {
-        const count = Math.floor(Math.random() * 100);
-        total += count;
-        const date = new Date(now);
-        date.setMonth(now.getMonth() - 11 + i);
-        data.push({
-          date: date.toLocaleDateString(undefined, { month: 'short' }),
-          count,
-        });
-      }
-    } else {
-      // Tous les temps (simulé)
-      for (let i = 0; i < 12; i++) {
-        const count = Math.floor(Math.random() * 200);
-        total += count;
-        const date = new Date(now);
-        date.setMonth(now.getMonth() - 11 + i);
-        data.push({
-          date: date.toLocaleDateString(undefined, { month: 'short', year: 'numeric' }),
-          count,
-        });
-      }
+
+      // Update the processed data with the corrected timeline
+      setProcessedData(prevData => {
+        if (!prevData) return null;
+        return {
+          ...prevData,
+          timeSeriesData: processedTimelineData
+        };
+      });
     }
+  }, [timelineData, selectedPeriod]);
 
-    return data;
+  // Gestionnaire pour changer la plage temporelle
+  const handleTimeRangeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedPeriod(e.target.value as PeriodType);
   };
 
   // Fonction pour exporter les données en CSV
@@ -253,12 +278,11 @@ const UserContributionsPage: React.FC = () => {
             <select
               id="period-select"
               value={selectedPeriod}
-              onChange={(e) => setSelectedPeriod(e.target.value as PeriodType)}
+              onChange={handleTimeRangeChange}
             >
               <option value="day">Dernières 24 heures</option>
               <option value="week">Dernière semaine</option>
               <option value="month">Dernier mois</option>
-              <option value="year">Dernière année</option>
               <option value="all">Tout l'historique</option>
             </select>
           </div>
@@ -279,7 +303,7 @@ const UserContributionsPage: React.FC = () => {
         </div>
         <div className="stat-card">
           <div className="stat-value">
-            {processedData.timeSeriesData.reduce((sum, item) => sum + item.count, 0)}
+            {timelineData?.totalPixels || 0}
           </div>
           <div className="stat-label">Pixels sur cette période</div>
         </div>
@@ -288,25 +312,37 @@ const UserContributionsPage: React.FC = () => {
       <div className="chart-container">
         <h2>Contributions au fil du temps</h2>
         <div className="time-chart">
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart
-              data={processedData.timeSeriesData}
-              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="count"
-                name="Pixels placés"
-                stroke="#8884d8"
-                activeDot={{ r: 8 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          {timelineLoading ? (
+            <div className="chart-loader">
+              <LoadingSpinner size="small" message="Chargement des données..." />
+            </div>
+          ) : timelineError ? (
+            <ErrorMessage message={timelineError} />
+          ) : processedData.timeSeriesData.length === 0 ? (
+            <div className="no-data-message">
+              Aucune donnée disponible pour cette période
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart
+                data={processedData.timeSeriesData}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="count"
+                  name="Pixels placés"
+                  stroke="#8884d8"
+                  activeDot={{ r: 8 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
 
