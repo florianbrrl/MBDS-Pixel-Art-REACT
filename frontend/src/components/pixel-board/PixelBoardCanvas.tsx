@@ -29,7 +29,10 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
   // États pour l'historique des pixels
   const [pixelHistory, setPixelHistory] = useState<any[] | null>(null);
   const [historyLoading, setHistoryLoading] = useState<boolean>(false);
-  const [tooltipPosition, setTooltipPosition] = useState<{left: number, top: number}>({left: 0, top: 0});
+  const [tooltipPosition, setTooltipPosition] = useState<{ left: number; top: number }>({
+    left: 0,
+    top: 0,
+  });
 
   // Fonction pour charger l'historique d'un pixel
   const loadPixelHistory = async (x: number, y: number) => {
@@ -44,7 +47,7 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
         setPixelHistory([]);
       }
     } catch (error) {
-      console.error('Erreur lors du chargement de l\'historique du pixel:', error);
+      console.error("Erreur lors du chargement de l'historique du pixel:", error);
       setPixelHistory([]);
     } finally {
       setHistoryLoading(false);
@@ -284,7 +287,7 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
         // Position pour l'info-bulle (fixée à côté du curseur)
         setTooltipPosition({
           left: e.clientX + 20,
-          top: e.clientY - 20
+          top: e.clientY - 20,
         });
 
         // Annuler le précédent timer de debounce si existe
@@ -340,34 +343,6 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
     }
   };
 
-  // Gérer le zoom avec la molette de la souris
-  const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
-
-    const zoomFactor = 0.1;
-    const delta = e.deltaY < 0 ? zoomFactor : -zoomFactor;
-
-    // Limiter le zoom entre 0.1 et 10
-    const newZoom = Math.max(0.1, Math.min(10, zoom + delta));
-
-    // Calculer le point de référence pour le zoom (position de la souris)
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-
-    // Ajuster l'offset pour zoomer vers/depuis le point de la souris
-    const scaleChange = newZoom / zoom;
-
-    setZoom(newZoom);
-    setOffset({
-      x: mouseX - (mouseX - offset.x) * scaleChange,
-      y: mouseY - (mouseY - offset.y) * scaleChange,
-    });
-  };
-
   // Gérer les boutons de zoom
   const handleZoomIn = () => {
     const newZoom = Math.min(10, zoom + 0.1);
@@ -384,6 +359,30 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
     setOffset({ x: 0, y: 0 });
   };
 
+  useEffect(() => {
+    const centerBoard = () => {
+      if (!canvasRef.current) return;
+
+      const canvas = canvasRef.current;
+      const container = canvas.parentElement;
+
+      if (container) {
+        const containerWidth = container.clientWidth;
+        const containerHeight = container.clientHeight;
+
+        const pixelSize = calculatePixelSize();
+
+        // Calculer le décalage pour centrer le tableau
+        const offsetX = (containerWidth - board.width * pixelSize) / 2;
+        const offsetY = (containerHeight - board.height * pixelSize) / 2;
+
+        setOffset({ x: offsetX, y: offsetY });
+      }
+    };
+
+    centerBoard();
+  }, [board.width, board.height, calculatePixelSize]);
+
   return (
     <div className="pixel-board-canvas-container">
       <div className="canvas-wrapper">
@@ -395,7 +394,6 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
           onMouseDown={handleMouseDown}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseLeave}
-          onWheel={handleWheel}
         />
 
         {/* Affichage de l'historique du pixel au survol */}
@@ -408,7 +406,7 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
               position: 'fixed',
               left: Math.min(tooltipPosition.left, window.innerWidth - 200),
               top: Math.min(tooltipPosition.top - 40, window.innerHeight - 100),
-              zIndex: 9999
+              zIndex: 9999,
             }}
           />
         )}
@@ -428,16 +426,14 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
           </button>
         </div>
 
-        {hoveredPixel && (
-          <div className="position-info">
-            Position: ({hoveredPixel.x}, {hoveredPixel.y})
-            {!historyLoading && pixelHistory && pixelHistory.length > 0 && (
-              <span style={{ marginLeft: '8px' }}>
-                • Placé par {pixelHistory[0].user_email || 'Anonyme'}
-              </span>
-            )}
-          </div>
-        )}
+        <div className="position-info">
+          Position: ({hoveredPixel?.x ?? 0}, {hoveredPixel?.y ?? 0})
+          {!historyLoading && pixelHistory && pixelHistory.length > 0 && (
+            <span style={{ marginLeft: '8px' }}>
+              • Placé par {pixelHistory[0].user_email || 'Anonyme'}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
