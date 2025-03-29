@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useCooldown } from '@/hooks/useCooldown';
 import CooldownIndicator from '@/components/pixel-board/CooldownIndicator';

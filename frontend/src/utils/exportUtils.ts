@@ -15,10 +15,6 @@ export const generateSVG = (board: {
     const svgWidth = options?.customWidth || (width * pixelSize);
     const svgHeight = options?.customHeight || (height * pixelSize);
 
-    // Calculer le facteur d'échelle si des dimensions personnalisées sont utilisées
-    const scaleX = options?.customWidth ? options.customWidth / (width * pixelSize) : 1;
-    const scaleY = options?.customHeight ? options.customHeight / (height * pixelSize) : 1;
-
     let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width * pixelSize} ${height * pixelSize}" width="${svgWidth}" height="${svgHeight}">`;
 
     // Ajouter un titre si fourni
