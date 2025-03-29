@@ -32,8 +32,8 @@
 
 .canvas-controls {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  justify-content: space-between; /* Aligne les éléments sur les côtés */
+  align-items: center; /* Centre verticalement */
   padding: 8px 0;
   margin-top: 8px;
   font-size: 0.9em;
@@ -41,7 +41,19 @@
 
 .zoom-controls {
   display: flex;
-  gap: 8px;
+  gap: 8px; /* Espacement entre les boutons */
+  justify-content: center; /* Centre les boutons horizontalement */
+  flex: 1; /* Permet de prendre tout l'espace disponible */
+}
+
+.zoom-info {
+  flex: 1; /* Garde l'info de zoom alignée à gauche */
+  text-align: left;
+}
+
+.position-info {
+  flex: 1; /* Garde la position alignée à droite */
+  text-align: right;
 }
 
 .zoom-controls button {
