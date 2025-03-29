@@ -85,7 +85,7 @@
   .stat-caption {
     font-size: 0.9rem;
     color: var(--text-tertiary, #9ca3af);
-    margin-top: 6px;
+    margin-left: 6px;
   }
 
   /* PixelBoards Sections */

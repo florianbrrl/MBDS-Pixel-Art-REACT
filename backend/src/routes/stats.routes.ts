@@ -50,7 +50,8 @@ const router = Router();
  *       403:
  *         description: Accès non autorisé
  */
-router.get('/global', authenticateToken, restrictTo('admin'), StatsController.getGlobalStats);
+// Modification: permettre à tous les utilisateurs authentifiés d'accéder aux statistiques globales
+router.get('/global', authenticateToken, StatsController.getGlobalStats);
 
 /**
  * @swagger
@@ -85,7 +86,8 @@ router.get('/global', authenticateToken, restrictTo('admin'), StatsController.ge
  *       403:
  *         description: Accès non autorisé
  */
-router.get('/users/activity', authenticateToken, restrictTo('admin'), StatsController.getUserActivityStats);
+// Modification: permettre à tous les utilisateurs authentifiés d'accéder aux statistiques d'activité
+router.get('/users/activity', authenticateToken, StatsController.getUserActivityStats);
 
 /**
  * @swagger
@@ -168,7 +170,8 @@ router.get('/pixelboards/:id', authenticateToken, StatsController.getBoardStats)
  *       403:
  *         description: Accès non autorisé
  */
-router.get('/engagement', authenticateToken, restrictTo('admin'), StatsController.getEngagementMetrics);
+// Modification: permettre à tous les utilisateurs authentifiés d'accéder aux métriques d'engagement
+router.get('/engagement', authenticateToken, StatsController.getEngagementMetrics);
 
 /**
  * @swagger
@@ -196,7 +199,8 @@ router.get('/engagement', authenticateToken, restrictTo('admin'), StatsControlle
  *       403:
  *         description: Accès non autorisé
  */
-router.get('/activity/recent', authenticateToken, restrictTo('admin'), StatsController.getRecentActivity);
+// Modification: permettre à tous les utilisateurs authentifiés d'accéder à l'activité récente
+router.get('/activity/recent', authenticateToken, StatsController.getRecentActivity);
 
 /**
  * @swagger
@@ -268,7 +272,8 @@ router.get('/super-board', authenticateToken, StatsController.getSuperBoardStats
  *       403:
  *         description: Accès non autorisé
  */
-router.get('/pixelboard/placement', authenticateToken, restrictTo('admin'), StatsController.getPixelPlacementStats);
+// Modification: permettre à tous les utilisateurs authentifiés d'accéder aux statistiques de placement
+router.get('/pixelboard/placement', authenticateToken, StatsController.getPixelPlacementStats);
 
 /**
  * @swagger
