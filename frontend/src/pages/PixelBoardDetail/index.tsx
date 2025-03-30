@@ -11,6 +11,7 @@ import ErrorMessage from '@/components/common/ErrorMessage';
 import PixelBoardDisplay from '@/components/pixel-board/PixelBoardDisplay';
 import ExportModal from '@/components/export/ExportModal';
 import BoardConnectionCounter from '@/components/common/BoardConnectionCounter';
+import PixelBoardTimelapse from '@/components/pixel-board/PixelBoardTimelapse';
 import '@/styles/connection-counter.css';
 import '@/styles/websocket-status.css';
 import '../../styles/PixelBoardDetail.css';
@@ -24,6 +25,7 @@ const PixelBoardDetail: React.FC = () => {
   const [board, setBoard] = useState<PixelBoard | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showTimelapse, setShowTimelapse] = useState(false);
   const [wsStatus, setWsStatus] = useState<'connected' | 'connecting' | 'disconnected'>(
     'disconnected',
   );
@@ -302,6 +304,9 @@ const PixelBoardDetail: React.FC = () => {
           <Link to={`/pixel-boards/${board.id}/heatmap`} className="heatmap-button">
             Voir la Heatmap d'activité
           </Link>
+          <button onClick={() => setShowTimelapse(true)} className="timelapse-button">
+            Voir le Timelapse
+          </button>
         </div>
       )}
 
@@ -338,6 +343,15 @@ const PixelBoardDetail: React.FC = () => {
         </svg>
         <span>Exporter</span>
       </div>
+      {/* Modal Timelapse */}
+      {showTimelapse && board && (
+        <PixelBoardTimelapse
+          boardId={board.id}
+          width={board.width}
+          height={board.height}
+          onClose={() => setShowTimelapse(false)}
+        />
+      )}
     </div>
   );
 };

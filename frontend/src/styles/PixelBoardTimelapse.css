@@ -1,0 +1,244 @@
+.timelapse-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.timelapse-content {
+  background-color: var(--bg-primary, #ffffff);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.timelapse-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+  background-color: var(--bg-secondary, #f9fafb);
+}
+
+.timelapse-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--text-primary, #111827);
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-secondary, #4b5563);
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  padding: 0;
+  z-index: 99999;
+}
+
+.close-button:hover {
+  background-color: var(--bg-tertiary, #e5e7eb);
+  color: var(--text-primary, #111827);
+}
+
+.timelapse-canvas-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  overflow: hidden;
+  background-color: var(--bg-secondary, #f9fafb);
+  min-height: 300px;
+}
+
+.timelapse-canvas {
+  display: block;
+  max-width: 100%;
+  max-height: 60vh;
+  object-fit: contain;
+  border: 1px solid var(--border-color, #e5e7eb);
+  background-color: #fff;
+}
+
+.timelapse-info {
+  position: relative;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-color, #e5e7eb);
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+  background-color: var(--bg-primary, #ffffff);
+}
+
+.pixel-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  color: var(--text-secondary, #4b5563);
+}
+
+.timestamp {
+  margin-left: 8px;
+  font-size: 0.8rem;
+  color: var(--text-secondary, #4b5563);
+  opacity: 0.8;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background-color: var(--bg-tertiary, #e5e7eb);
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 8px 0;
+}
+
+.progress {
+  height: 100%;
+  background-color: var(--color-primary, #3b82f6);
+  transition: width 0.2s ease;
+}
+
+.progress-text {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  color: var(--text-primary, #111827);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.timelapse-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background-color: var(--bg-primary, #ffffff);
+}
+
+.controls-left, .controls-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 99999;
+}
+
+.timelapse-controls button {
+  background-color: var(--bg-tertiary, #e5e7eb);
+  border: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary, #111827);
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+}
+
+.timelapse-controls button:hover {
+  background-color: var(--border-color-hover, #d1d5db);
+}
+
+.control-button {
+  margin: 0 4px !important;
+}
+
+.play-button {
+  width: 56px !important;
+  height: 56px !important;
+  background-color: var(--color-primary, #3b82f6) !important;
+  color: white !important;
+}
+
+.play-button:hover {
+  background-color: var(--color-primary-hover, #2563eb) !important;
+}
+
+.controls-right label {
+  margin-right: 8px;
+  color: var(--text-secondary, #4b5563);
+}
+
+.speed-select {
+  background-color: var(--bg-tertiary, #e5e7eb);
+  color: var(--text-primary, #111827);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='16' height='16' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  padding-right: 28px;
+}
+
+.speed-select:hover {
+  background-color: var(--border-color-hover, #d1d5db);
+}
+
+.empty-message {
+  padding: 32px;
+  text-align: center;
+  color: var(--text-secondary, #4b5563);
+}
+
+/* Making sure buttons are large enough for touch targets on mobile */
+@media (max-width: 768px) {
+  .timelapse-content {
+    width: 95%;
+    max-height: 95vh;
+  }
+
+  .timelapse-controls {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .controls-left, .controls-right {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .timelapse-controls button {
+    width: 50px;
+    height: 50px;
+  }
+
+  .play-button {
+    width: 60px !important;
+    height: 60px !important;
+  }
+
+  .speed-select {
+    padding: 10px 30px 10px 12px;
+    font-size: 1rem;
+  }
+}
+

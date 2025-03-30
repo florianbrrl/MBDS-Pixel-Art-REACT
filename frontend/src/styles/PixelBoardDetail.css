@@ -190,6 +190,7 @@
     .board-interaction {
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
     }
+  }
 
 .notifications-container {
     position: relative;
@@ -234,4 +235,54 @@
   @keyframes fadeIn {
     from { opacity: 0; transform: translate(-50%, -10px); }
     to { opacity: 1; transform: translate(-50%, 0); }
+  }
+
+  .timelapse-button {
+    display: inline-flex;
+    align-items: center;
+    background-color: var(--color-secondary, #4f46e5);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    margin-left: 0.5rem;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+
+  .timelapse-button::before {
+    content: "";
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-right: 0.5rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='16' height='16' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'%3E%3C/circle%3E%3Cpolyline points='12 6 12 12 16 14'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+
+  .timelapse-button:hover {
+    background-color: var(--color-secondary-hover, #4338ca);
+  }
+
+  /* Style pour les boutons d'action en général */
+  .board-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  @media (max-width: 640px) {
+    .board-actions {
+      flex-direction: column;
+    }
+
+    .timelapse-button,
+    .heatmap-button {
+      width: 100%;
+      margin-left: 0;
+      justify-content: center;
+    }
   }
