@@ -176,50 +176,83 @@ export class UserController {
 			const timelineData: { date: string; count: number }[] = [];
 
 			if (timeRange === 'day') {
-			// Grouper par heure
-			const hourlyData: Record<number, number> = {};
+			 	// Grouper par heure
+				const hourlyData: Record<string, number> = {};
 
-			// Initialiser toutes les heures à 0
-			for (let i = 0; i < 24; i++) {
-				hourlyData[i] = 0;
-			}
+				// Obtenir l'heure actuelle
+				const currentDate = new Date();
+				const currentHour = currentDate.getHours();
 
-			// Compter les pixels par heure
-			filteredPixels.forEach(pixel => {
-				const hour = new Date(pixel.timestamp).getHours();
-				hourlyData[hour]++;
-			});
+				// Initialiser les 24 dernières heures (en partant de l'heure actuelle)
+				for (let i = 0; i < 24; i++) {
+					// Calculer l'heure en remontant de i heures en arrière
+					const hourOffset = (currentHour - i + 24) % 24;
+					const hourKey = `${hourOffset}:00`;
+					hourlyData[hourKey] = 0;
+				}
 
-			// Convertir en format de timeline
-			for (let i = 0; i < 24; i++) {
-				timelineData.push({
-				date: `${i}:00`,
-				count: hourlyData[i]
+				// Compter les pixels par heure
+				filteredPixels.forEach(pixel => {
+					const pixelDate = new Date(pixel.timestamp);
+					const hour = pixelDate.getHours();
+					const hourKey = `${hour}:00`;
+
+					if (hourlyData[hourKey] !== undefined) {
+					hourlyData[hourKey]++;
+					}
 				});
-			}
+
+				// Convertir en format de timeline en ordre chronologique (des dernières 24h)
+				// Les heures seront affichées de la plus ancienne à la plus récente
+				const timelineEntries = [];
+				for (let i = 23; i >= 0; i--) {
+					const hourOffset = (currentHour - i + 24) % 24;
+					const hourKey = `${hourOffset}:00`;
+					timelineEntries.push({
+					date: hourKey,
+					count: hourlyData[hourKey]
+					});
+				}
+
+				timelineData.push(...timelineEntries);
 			} else if (timeRange === 'week') {
-			// Grouper par jour de la semaine
-			const dailyData: Record<string, number> = {};
-			const dayNames = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+				const dailyData: Record<string, number> = {};
 
-			// Initialiser tous les jours à 0
-			for (let i = 0; i < 7; i++) {
-				dailyData[dayNames[i]] = 0;
-			}
+				// Créer des entrées pour chacun des 7 derniers jours
+				for (let i = 0; i < 7; i++) {
+				  const date = new Date(now);
+				  date.setDate(now.getDate() - i); // Remonter de i jours
 
-			// Compter les pixels par jour
-			filteredPixels.forEach(pixel => {
-				const day = new Date(pixel.timestamp).getDay();
-				dailyData[dayNames[day]]++;
-			});
+				  // Format pour le jour: "JJ/MM" (par exemple "30/03")
+				  const dateKey = `${date.getDate()}/${date.getMonth() + 1}`;
+				  dailyData[dateKey] = 0;
+				}
 
-			// Convertir en format de timeline
-			for (const day of dayNames) {
-				timelineData.push({
-				date: day,
-				count: dailyData[day]
+				// Compter les pixels par jour
+				filteredPixels.forEach(pixel => {
+				  const pixelDate = new Date(pixel.timestamp);
+				  const dateKey = `${pixelDate.getDate()}/${pixelDate.getMonth() + 1}`;
+
+				  if (dailyData[dateKey] !== undefined) {
+					dailyData[dateKey]++;
+				  }
 				});
-			}
+
+				// Convertir en format de timeline (en ordre chronologique)
+				// Trier les clés pour avoir les jours dans l'ordre chronologique (du plus ancien au plus récent)
+				Object.keys(dailyData).sort((a, b) => {
+				  const [dayA, monthA] = a.split('/').map(Number);
+				  const [dayB, monthB] = b.split('/').map(Number);
+
+				  // Comparer d'abord par mois, puis par jour
+				  if (monthA !== monthB) return monthA - monthB;
+				  return dayA - dayB;
+				}).forEach(dateKey => {
+				  timelineData.push({
+					date: dateKey,
+					count: dailyData[dateKey]
+				  });
+				});
 			} else if (timeRange === 'month') {
 				const monthlyData: Record<string, number> = {};
 

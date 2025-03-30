@@ -163,53 +163,38 @@ const UserContributionsPage: React.FC = () => {
     // Create a copy of the timeline data
     const processedTimelineData = [...timelineData.timelineData];
 
-    // Make sure the current day is included for day, week, and month views
-    if (selectedPeriod === 'day' || selectedPeriod === 'week' || selectedPeriod === 'month') {
+    // For week view, ensure we have all 7 days
+    if (selectedPeriod === 'week') {
       const today = new Date();
+      const sevenDaysData: { date: string; count: number }[] = [];
 
-      // Formatter la date selon le format attendu pour chaque période
-      let todayKey;
-      if (selectedPeriod === 'day') {
-        todayKey = `${today.getHours()}:00`;
-      } else if (selectedPeriod === 'week') {
-        const dayNames = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
-        todayKey = dayNames[today.getDay()];
-      } else { // month
-        todayKey = `${today.getDate()}/${today.getMonth() + 1}`;
-      }
+      // Generate data for each of the last 7 days
+      for (let i = 6; i >= 0; i--) {  // From 6 days ago to today (7 days total)
+        const date = new Date();
+        date.setDate(today.getDate() - i);
 
-      // Check if today is already in the data
-      const todayExists = processedTimelineData.some(item => item.date === todayKey);
+        const dateKey = `${date.getDate()}/${date.getMonth() + 1}`;
 
-      if (!todayExists) {
-        // Add today with zero count if it doesn't exist
-        processedTimelineData.push({
-          date: todayKey,
-          count: 0
-        });
+        // Check if this date exists in our data
+        const existingDataPoint = processedTimelineData.find(item => item.date === dateKey);
 
-        // Sort the dates properly based on the period type
-        if (selectedPeriod === 'day') {
-          processedTimelineData.sort((a, b) => {
-            return parseInt(a.date.split(':')[0]) - parseInt(b.date.split(':')[0]);
-          });
-        } else if (selectedPeriod === 'month') {
-          processedTimelineData.sort((a, b) => {
-            const [dayA, monthA] = a.date.split('/').map(Number);
-            const [dayB, monthB] = b.date.split('/').map(Number);
-            if (monthA !== monthB) return monthA - monthB;
-            return dayA - dayB;
+        if (existingDataPoint) {
+          sevenDaysData.push(existingDataPoint);
+        } else {
+          // Add the date with zero count if it doesn't exist
+          sevenDaysData.push({
+            date: dateKey,
+            count: 0
           });
         }
-        // Pour 'week', l'ordre est déjà défini par l'ordre des jours
       }
 
-      // Update the processed data with the corrected timeline
+      // Update the processed data with the complete 7-day data
       setProcessedData(prevData => {
         if (!prevData) return null;
         return {
           ...prevData,
-          timeSeriesData: processedTimelineData
+          timeSeriesData: sevenDaysData
         };
       });
     }
