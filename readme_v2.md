@@ -46,10 +46,10 @@ Le projet PixelBoard est une plateforme collaborative d'art pixelisé permettant
    ```bash
    # Exécuter les migrations Prisma
    npm run prisma:migrate
-   
+
    # Générer le client Prisma
    npm run prisma:generate
-   
+
    # Initialiser des données de test (optionnel)
    npx ts-node src/scripts/seed.ts
    ```
@@ -142,3 +142,47 @@ Le système d'authentification JWT est minutieusement implémenté (`auth.middle
 L'utilisation d'outils de linting est confirmée par les commandes disponibles (`npm run lint`, `npm run lint:fix`), assurant ainsi une cohérence stylistique et une qualité de code homogène.
 
 Cette architecture backend témoigne d'une conception soignée, alliant rigueur technique et élégance structurelle, répondant ainsi pleinement aux exigences du projet tout en intégrant les fonctionnalités bonus avec brio.
+
+### Pages de Connexion et d'Inscription
+
+Le système d'authentification frontend propose des interfaces utilisateur intuitives et élégantes pour la connexion et l'inscription. Les formulaires incluent une validation robuste des entrées qui guide l'utilisateur en temps réel, renforçant ainsi la sécurité et améliorant l'expérience utilisateur.
+
+### Gestion du Profil Utilisateur
+
+Les utilisateurs authentifiés bénéficient d'une interface de gestion de profil complète, leur permettant de modifier leurs informations personnelles, changer leur mot de passe et consulter leurs statistiques de contribution. Cette centralisation des paramètres utilisateur facilite la personnalisation de l'expérience.
+
+### Système de Thème (Light/Dark)
+
+Le projet implémente un système de thème flexible offrant aux utilisateurs le choix entre un affichage clair, sombre ou automatique suivant les préférences système. Cette personnalisation visuelle améliore le confort d'utilisation et l'accessibilité dans différentes conditions d'éclairage.
+
+### Composant de Canevas PixelBoard Interactif
+
+L'interface de dessin constitue le cœur de l'application avec un canevas interactif permettant la manipulation pixel par pixel. Les fonctionnalités avancées incluent le zoom, la navigation fluide et la prévisualisation des modifications, offrant ainsi une expérience créative optimale.
+
+### Système de Cooldown et Indicateurs
+
+Un mécanisme sophistiqué de cooldown est implémenté, affichant un minuteur visuel indiquant le temps d'attente entre chaque placement de pixel. Les utilisateurs premium bénéficient d'un statut privilégié clairement signalé, renforçant ainsi l'aspect stratégique de la contribution.
+
+### Historique et Statistiques des Contributions
+
+L'application offre une visualisation détaillée de l'historique des contributions par utilisateur et par tableau, avec des graphiques temporels et des indicateurs de performance. Ces données permettent aux utilisateurs de suivre leur impact sur l'œuvre collective.
+
+### Export de PixelBoard en Image
+
+Une fonctionnalité d'exportation permet aux utilisateurs de télécharger les tableaux aux formats SVG (vectoriel) ou PNG (raster), facilitant ainsi le partage et l'utilisation externe des créations collaboratives.
+
+### Notifications en Temps Réel
+
+Un système d'alertes contextuel informe les utilisateurs des événements importants, du résultat de leurs actions et des interactions d'autres utilisateurs, créant ainsi une expérience interactive et réactive.
+
+### Optimisation des Performances
+
+Des techniques avancées d'optimisation ont été mises en œuvre pour garantir une expérience fluide même avec de nombreux utilisateurs simultanés. Le rendu conditionnel, la mise en cache et le chargement différé contribuent à maintenir des performances élevées.
+
+### Replay/Timelapse des PixelBoard
+
+La fonctionnalité de timelapse offre une dimension temporelle fascinante au projet, permettant de visualiser l'évolution chronologique complète d'un PixelBoard depuis sa création. Les utilisateurs peuvent naviguer dans l'historique des modifications, régler la vitesse de lecture et observer la construction collaborative des œuvres pixel par pixel, transformant ainsi l'art statique en une narration visuelle dynamique.
+
+### Responsive Design
+
+L'interface adaptative assure une expérience utilisateur optimale sur tous types d'appareils, des grands écrans de bureau aux smartphones. Les composants se réorganisent intelligemment selon l'espace disponible, préservant ainsi l'accès à toutes les fonctionnalités.
