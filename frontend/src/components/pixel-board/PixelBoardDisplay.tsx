@@ -11,7 +11,7 @@ interface PixelBoardDisplayProps {
   onPixelPlaced?: (x: number, y: number, color: string) => void;
   selectedColor?: string;
   canEdit?: boolean;
-  onColorSelect?: (color: string) => void; // Add this line
+  onColorSelect?: (color: string) => void;
 }
 
 const PixelBoardDisplay: React.FC<PixelBoardDisplayProps> = ({
@@ -23,6 +23,7 @@ const PixelBoardDisplay: React.FC<PixelBoardDisplayProps> = ({
 }) => {
   const [currentColor, setCurrentColor] = useState(selectedColor);
   const [notification, setNotification] = useState<string | null>(null);
+  const [showGrid, setShowGrid] = useState<boolean>(false);
 
   const handleColorChange = (color: string) => {
     setCurrentColor(color);
@@ -44,13 +45,16 @@ const PixelBoardDisplay: React.FC<PixelBoardDisplayProps> = ({
     onPixelPlaced(x, y, currentColor);
   };
 
+  const toggleGrid = () => {
+    setShowGrid(!showGrid);
+  };
+
   return (
     <div className="pixel-board-display">
-
       {notification && <div className="pixel-notification">{notification}</div>}
 
-      <div className="display-container with-info">
-        <div className="info-panel">
+      <div className="display-container lateral-layout">
+        <div className="sidebar-panel">
           <PixelBoardInfo board={board} />
 
           {canEdit && !readOnly && (
@@ -63,6 +67,8 @@ const PixelBoardDisplay: React.FC<PixelBoardDisplayProps> = ({
             readOnly={readOnly}
             onPixelClick={handlePixelClick}
             selectedColor={currentColor}
+            showGrid={showGrid}
+            onToggleGrid={toggleGrid}
           />
         </div>
       </div>
