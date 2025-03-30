@@ -68,7 +68,7 @@
 }
 
 .zoom-controls button:hover:not(:disabled) {
-  background-color: var(--bg-tertiary, #e5e5e5);
+  background-color: var(--bg-tertiary, #e5e5f5);
 }
 
 .zoom-controls button:disabled {
@@ -82,7 +82,38 @@
   font-size: 0.85em;
 }
 
-/* Styles pour le mode sombre */
+/* Ajouter après les styles des boutons de zoom */
+
+/* Bouton de contrôle de grille */
+.grid-toggle-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background-color: var(--bg-secondary, #f5f5f5);
+  border: 1px solid var(--border-color, #ccc);
+  border-radius: var(--border-radius, 4px);
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+  font-size: 0.9em;
+}
+
+.grid-toggle-button svg {
+  width: 14px;
+  height: 14px;
+}
+
+.grid-toggle-button:hover {
+  background-color: var(--bg-tertiary, #e5e5f5);
+}
+
+.grid-toggle-button.active-button {
+  background-color: var(--color-primary, #3498db);
+  color: white;
+}
+
+/* Mode sombre pour le bouton de grille */
 @media (prefers-color-scheme: dark) {
   .canvas-wrapper {
     background-color: #1a1a1a;
@@ -97,5 +128,59 @@
 
   .zoom-controls button:hover:not(:disabled) {
     background-color: #3a3a3a;
+  }
+
+  .grid-toggle-button {
+    background-color: #2a2a2a;
+    border-color: #444;
+    color: #e0e0e0;
+  }
+
+  .grid-toggle-button:hover:not(.active-button) {
+    background-color: #3a3a3a;
+  }
+
+  .grid-toggle-button.active-button {
+    background-color: #4580be;
+  }
+}
+
+/* Ajouter ces media queries à la fin du fichier */
+
+@media (max-width: 768px) {
+  .canvas-controls {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .zoom-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .grid-toggle-button {
+    width: 100%;
+    margin-top: 8px;
+  }
+
+  .zoom-info, .position-info {
+    width: 100%;
+    text-align: center;
+    margin: 0;
+  }
+
+  .position-info {
+    order: -1; /* Place les infos de position en haut */
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .pixel-board-canvas-container {
+    min-height: 300px;
+  }
+
+  .canvas-controls {
+    padding: 4px 0;
+    margin-top: 4px;
   }
 }

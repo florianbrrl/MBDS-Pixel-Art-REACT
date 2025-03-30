@@ -25,6 +25,7 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
   const [hoveredPixel, setHoveredPixel] = useState<{ x: number; y: number } | null>(null);
   const [lastPlacedPixel, setLastPlacedPixel] = useState<{ x: number; y: number } | null>(null);
   const [showPlacementAnimation, setShowPlacementAnimation] = useState<boolean>(false);
+  const [showGrid, setShowGrid] = useState<boolean>(false);
 
   // États pour l'historique des pixels
   const [pixelHistory, setPixelHistory] = useState<any[] | null>(null);
@@ -131,32 +132,51 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
       ) {
         ctx.fillStyle = color;
         ctx.fillRect(canvasX, canvasY, pixelSize, pixelSize);
+
+        // Ajouter une légère bordure aux pixels si la grille est désactivée
+        if (!showGrid && pixelSize > 2) {
+          ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+          ctx.lineWidth = 0.5;
+          ctx.strokeRect(canvasX, canvasY, pixelSize, pixelSize);
+        }
       }
     });
 
-    // Dessiner les lignes de la grille
-    ctx.strokeStyle = '#cccccc';
-    ctx.lineWidth = 0.5;
+    // Dessiner une bordure autour du tableau de pixels
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(
+      offset.x,
+      offset.y,
+      board.width * pixelSize,
+      board.height * pixelSize
+    );
 
-    // Lignes horizontales
-    for (let y = 0; y <= board.height; y++) {
-      const canvasY = y * pixelSize + offset.y;
-      if (canvasY >= 0 && canvasY <= canvas.height) {
-        ctx.beginPath();
-        ctx.moveTo(offset.x, canvasY);
-        ctx.lineTo(board.width * pixelSize + offset.x, canvasY);
-        ctx.stroke();
+    // Dessiner les lignes de la grille seulement si showGrid est true
+    if (showGrid) {
+      ctx.strokeStyle = '#cccccc';
+      ctx.lineWidth = 0.5;
+
+      // Lignes horizontales
+      for (let y = 0; y <= board.height; y++) {
+        const canvasY = y * pixelSize + offset.y;
+        if (canvasY >= 0 && canvasY <= canvas.height) {
+          ctx.beginPath();
+          ctx.moveTo(offset.x, canvasY);
+          ctx.lineTo(board.width * pixelSize + offset.x, canvasY);
+          ctx.stroke();
+        }
       }
-    }
 
-    // Lignes verticales
-    for (let x = 0; x <= board.width; x++) {
-      const canvasX = x * pixelSize + offset.x;
-      if (canvasX >= 0 && canvasX <= canvas.width) {
-        ctx.beginPath();
-        ctx.moveTo(canvasX, offset.y);
-        ctx.lineTo(canvasX, board.height * pixelSize + offset.y);
-        ctx.stroke();
+      // Lignes verticales
+      for (let x = 0; x <= board.width; x++) {
+        const canvasX = x * pixelSize + offset.x;
+        if (canvasX >= 0 && canvasX <= canvas.width) {
+          ctx.beginPath();
+          ctx.moveTo(canvasX, offset.y);
+          ctx.lineTo(canvasX, board.height * pixelSize + offset.y);
+          ctx.stroke();
+        }
       }
     }
 
@@ -197,6 +217,7 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
     readOnly,
     selectedColor,
     showPlacementAnimation,
+    showGrid,
   ]);
 
   // Gérer le redimensionnement du canvas
@@ -359,6 +380,39 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
     setOffset({ x: 0, y: 0 });
   };
 
+  // Gestionnaire pour zoomer avec la molette de souris
+  const handleWheel = useCallback((e: React.WheelEvent<HTMLCanvasElement>) => {
+    // Empêcher le comportement par défaut (le scroll de la page)
+    e.preventDefault();
+
+    // Déterminer la direction du zoom (positif = zoom in, négatif = zoom out)
+    const delta = -Math.sign(e.deltaY);
+    const factor = 0.1; // Facteur de zoom par incrément
+
+    // Calculer le nouveau zoom
+    const newZoom = Math.max(0.1, Math.min(10, zoom + delta * factor));
+
+    // Position du curseur par rapport au canvas
+    const rect = canvasRef.current!.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    // Position du point sous le curseur avant le zoom
+    const beforeZoomX = (mouseX - offset.x) / zoom;
+    const beforeZoomY = (mouseY - offset.y) / zoom;
+
+    // Position du point après le zoom
+    const afterZoomX = (mouseX - offset.x) / newZoom;
+    const afterZoomY = (mouseY - offset.y) / newZoom;
+
+    // Ajuster l'offset pour maintenir le point sous le curseur
+    const newOffsetX = offset.x + (beforeZoomX - afterZoomX) * newZoom;
+    const newOffsetY = offset.y + (beforeZoomY - afterZoomY) * newZoom;
+
+    setZoom(newZoom);
+    setOffset({ x: newOffsetX, y: newOffsetY });
+  }, [zoom, offset]);
+
   useEffect(() => {
     const centerBoard = () => {
       if (!canvasRef.current) return;
@@ -383,6 +437,27 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
     centerBoard();
   }, [board.width, board.height, calculatePixelSize]);
 
+  // Ajouter ce useEffect après vos autres useEffects
+
+  // Empêcher le scroll de la page quand on utilise la molette sur le canvas
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const preventDefaultScroll = (e: WheelEvent) => {
+      e.preventDefault();
+      return false;
+    };
+
+    // Ajouter l'écouteur d'événement avec passive: false pour autoriser preventDefault()
+    canvas.addEventListener('wheel', preventDefaultScroll, { passive: false });
+
+    // Nettoyage lors du démontage du composant
+    return () => {
+      canvas.removeEventListener('wheel', preventDefaultScroll);
+    };
+  }, []);
+
   return (
     <div className="pixel-board-canvas-container">
       <div className="canvas-wrapper">
@@ -394,6 +469,7 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
           onMouseDown={handleMouseDown}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseLeave}
+          onWheel={handleWheel}
         />
 
         {/* Affichage de l'historique du pixel au survol */}
@@ -425,6 +501,22 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
             +
           </button>
         </div>
+
+        {/* Bouton pour activer/désactiver la grille */}
+        <button
+          className={`grid-toggle-button ${showGrid ? 'active-button' : ''}`}
+          onClick={() => setShowGrid(!showGrid)}
+          title={showGrid ? "Désactiver la grille" : "Activer la grille"}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 3h18v18H3z"></path>
+            <path d="M3 9h18"></path>
+            <path d="M3 15h18"></path>
+            <path d="M9 3v18"></path>
+            <path d="M15 3v18"></path>
+          </svg>
+          {showGrid ? "Grille On" : "Grille Off"}
+        </button>
 
         <div className="position-info">
           Position: ({hoveredPixel?.x ?? 0}, {hoveredPixel?.y ?? 0})

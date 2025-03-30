@@ -348,13 +348,13 @@ const PixelBoardTimelapse: React.FC<PixelBoardTimelapseProps> = ({
               </p>
             </div>
           )}
-          <div className="progress-bar">
+          <div className="progress-timelapse-bar">
             <div
               className="progress"
               style={{ width: `${(currentStep / Math.max(1, history.length - 1)) * 100}%` }}
             ></div>
           </div>
-          <div className="progress-text">
+          <div className="progress-timelapse-text">
             {currentStep + 1} / {history.length}
           </div>
         </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PixelBoard } from '@/types';
 import PixelBoardCanvas from './PixelBoardCanvas';
 import PixelBoardInfo from './PixelBoardInfo';
@@ -11,7 +11,7 @@ interface PixelBoardDisplayProps {
   onPixelPlaced?: (x: number, y: number, color: string) => void;
   selectedColor?: string;
   canEdit?: boolean;
-  onColorSelect?: (color: string) => void; // Add this line
+  onColorSelect?: (color: string) => void;
 }
 
 const PixelBoardDisplay: React.FC<PixelBoardDisplayProps> = ({
@@ -23,6 +23,25 @@ const PixelBoardDisplay: React.FC<PixelBoardDisplayProps> = ({
 }) => {
   const [currentColor, setCurrentColor] = useState(selectedColor);
   const [notification, setNotification] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+
+  // Détecter si l'appareil est mobile ou desktop
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    // Vérification initiale
+    checkMobile();
+
+    // Ajouter un écouteur pour le redimensionnement
+    window.addEventListener('resize', checkMobile);
+
+    // Nettoyer l'écouteur lorsque le composant est démonté
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
 
   const handleColorChange = (color: string) => {
     setCurrentColor(color);
@@ -40,30 +59,47 @@ const PixelBoardDisplay: React.FC<PixelBoardDisplayProps> = ({
     }
 
     // Appeler la fonction parente sans afficher directement une notification
-    // La notification de succès sera conditionnelle au niveau parent
     onPixelPlaced(x, y, currentColor);
   };
 
   return (
     <div className="pixel-board-display">
-
       {notification && <div className="pixel-notification">{notification}</div>}
 
-      <div className="display-container with-info">
-        <div className="info-panel">
-          <PixelBoardInfo board={board} />
-
-          {canEdit && !readOnly && (
-            <ColorPicker selectedColor={currentColor} onColorSelect={handleColorChange} />
-          )}
-        </div>
-        <div className="canvas-panel">
+      <div className="display-container with-compact-layout">
+        <div className="canvas-panel expanded">
           <PixelBoardCanvas
             board={board}
             readOnly={readOnly}
             onPixelClick={handlePixelClick}
             selectedColor={currentColor}
           />
+        </div>
+
+        <div className="side-panel">
+          <div className="pixel-board-info">
+            <PixelBoardInfo board={board} />
+          </div>
+
+          {canEdit && !readOnly && (
+            <div className="compact-color-picker">
+              <ColorPicker
+                selectedColor={currentColor}
+                onColorSelect={handleColorChange}
+                isCompact={true}
+                availableColors={isMobile ? [
+                  '#000000', // Noir
+                  '#FFFFFF', // Blanc
+                  '#FF0000', // Rouge
+                  '#00FF00', // Vert
+                  '#0000FF', // Bleu
+                  '#FFFF00', // Jaune
+                  '#FF00FF', // Magenta
+                  '#00FFFF', // Cyan
+                ] : undefined}
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>
