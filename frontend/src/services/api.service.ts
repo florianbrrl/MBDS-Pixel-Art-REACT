@@ -14,6 +14,15 @@ const axiosInstance = axios.create({
   },
 });
 
+// Créer une instance Axios sans intercepteurs pour les appels publics
+const publicAxiosInstance = axios.create({
+  baseURL: API_URL,
+  timeout: API_TIMEOUT,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
 // Add request interceptor
 axiosInstance.interceptors.request.use(
   (config) => {
@@ -109,6 +118,21 @@ async function del<T>(url: string, config?: any): Promise<ApiResponse<T>> {
   }
 }
 
+// Fonctions spéciales pour les appels publics (sans authentification)
+async function getPublic<T>(url: string): Promise<ApiResponse<T>> {
+  try {
+    const response = await publicAxiosInstance.get<T>(url);
+    return {
+      data: response.data && typeof response.data === 'object' && 'data' in response.data
+        ? (response.data.data as T)
+        : (response.data as T)
+    };
+  } catch (error) {
+    console.warn(`Erreur lors de l'appel public à ${url}:`, error);
+    return { data: [] as unknown as T }; // Retourner une liste vide au lieu d'une erreur
+  }
+}
+
 // Auth Service Functions
 const login = async (email: string, password: string): Promise<ApiResponse<{ token: string }>> => {
   return post<{ token: string }>('/auth/login', { email, password });
@@ -187,44 +211,25 @@ const getPixelHistory = async (boardId: string, x: number, y: number): Promise<A
   return get(`/pixelboards/${boardId}/position-history?x=${x}&y=${y}`);
 };
 
-const getSuperPixelBoardData = async (): Promise<ApiResponse<any>> => {
-  try {
-    const [activeResponse, completedResponse] = await Promise.all([
-      get<PixelBoard[]>('/pixelboards/active'),
-      get<PixelBoard[]>('/pixelboards/completed')
-    ]);
+// Fonctions publiques pour les PixelBoards (sans authentification nécessaire)
+const getPublicActivePixelBoards = async (): Promise<ApiResponse<PixelBoard[]>> => {
+  return getPublic<PixelBoard[]>('/pixelboards/active');
+};
 
-    if (activeResponse.error && completedResponse.error) {
-      return { error: activeResponse.error || completedResponse.error };
-    }
+const getPublicCompletedPixelBoards = async (): Promise<ApiResponse<PixelBoard[]>> => {
+  return getPublic<PixelBoard[]>('/pixelboards/completed');
+};
 
-    // Combine active and completed boards
-    const allBoards = [
-      ...(activeResponse.data || []),
-      ...(completedResponse.data || [])
-    ];
+const getPublicPixelBoardById = async (id: string): Promise<ApiResponse<PixelBoard>> => {
+  return getPublic<PixelBoard>(`/pixelboards/${id}`);
+};
 
-    // If no data returned
-    if (allBoards.length === 0) {
-      return { data: { boards: [], dimensions: { width: 100, height: 100 } } };
-    }
+const getActivePixelBoards = async (): Promise<ApiResponse<PixelBoard[]>> => {
+  return get<PixelBoard[]>('/pixelboards/active');
+};
 
-    // Calculate maximum dimensions
-    const maxWidth = Math.max(...allBoards.map(board => board.width), 100);
-    const maxHeight = Math.max(...allBoards.map(board => board.height), 100);
-
-    return {
-      data: {
-        boards: allBoards,
-        dimensions: {
-          width: maxWidth,
-          height: maxHeight
-        }
-      }
-    };
-  } catch (error: any) {
-    return { error: error.message || 'Error retrieving data' };
-  }
+const getCompletedPixelBoards = async (): Promise<ApiResponse<PixelBoard[]>> => {
+  return get<PixelBoard[]>('/pixelboards/completed');
 };
 
 // Import du service WebSocket séparé
@@ -255,7 +260,11 @@ export const PixelBoardService = {
   placePixel,
   checkCooldown,
   getPixelHistory,
-  getSuperPixelBoardData
+  getActivePixelBoards,
+  getCompletedPixelBoards,
+  getPublicActivePixelBoards,
+  getPublicCompletedPixelBoards,
+  getPublicPixelBoardById
 };
 
 // Exporter le service WebSocket importé
@@ -278,14 +287,6 @@ const getGlobalStats = async (): Promise<ApiResponse<any>> => {
   return get('/stats/global');
 };
 
-const getActivePixelBoards = async (): Promise<ApiResponse<PixelBoard[]>> => {
-  return get<PixelBoard[]>('/pixelboards/active');
-};
-
-const getCompletedPixelBoards = async (): Promise<ApiResponse<PixelBoard[]>> => {
-  return get<PixelBoard[]>('/pixelboards/completed');
-};
-
 // Export as single API service
 const ApiService = {
   // API client methods
@@ -293,6 +294,7 @@ const ApiService = {
   post,
   put,
   delete: del,
+  getPublic,
 
   // Auth methods
   login,
@@ -315,9 +317,11 @@ const ApiService = {
   placePixel,
   checkCooldown,
   getPixelHistory,
-  getSuperPixelBoardData,
   getActivePixelBoards,
   getCompletedPixelBoards,
+  getPublicActivePixelBoards,
+  getPublicCompletedPixelBoards,
+  getPublicPixelBoardById,
 
   // Admin methods
   getAllUsers,
