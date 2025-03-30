@@ -9,8 +9,6 @@ interface PixelBoardCanvasProps {
   readOnly?: boolean;
   onPixelClick?: (x: number, y: number) => void;
   selectedColor?: string;
-  showGrid?: boolean;
-  onToggleGrid?: () => void;
 }
 
 const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
@@ -18,8 +16,6 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
   readOnly = false,
   onPixelClick,
   selectedColor = '#000000',
-  showGrid = false,
-  onToggleGrid
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [zoom, setZoom] = useState<number>(1);
@@ -138,43 +134,31 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
       }
     });
 
-    // Dessiner les lignes de la grille uniquement si showGrid est activé
-    if (showGrid && pixelSize > 1) {
-      ctx.strokeStyle = '#cccccc';
-      ctx.lineWidth = 0.5;
+    // Dessiner les lignes de la grille
+    ctx.strokeStyle = '#cccccc';
+    ctx.lineWidth = 0.5;
 
-      // Lignes horizontales
-      for (let y = 0; y <= board.height; y++) {
-        const canvasY = y * pixelSize + offset.y;
-        if (canvasY >= 0 && canvasY <= canvas.height) {
-          ctx.beginPath();
-          ctx.moveTo(offset.x, canvasY);
-          ctx.lineTo(board.width * pixelSize + offset.x, canvasY);
-          ctx.stroke();
-        }
-      }
-
-      // Lignes verticales
-      for (let x = 0; x <= board.width; x++) {
-        const canvasX = x * pixelSize + offset.x;
-        if (canvasX >= 0 && canvasX <= canvas.width) {
-          ctx.beginPath();
-          ctx.moveTo(canvasX, offset.y);
-          ctx.lineTo(canvasX, board.height * pixelSize + offset.y);
-          ctx.stroke();
-        }
+    // Lignes horizontales
+    for (let y = 0; y <= board.height; y++) {
+      const canvasY = y * pixelSize + offset.y;
+      if (canvasY >= 0 && canvasY <= canvas.height) {
+        ctx.beginPath();
+        ctx.moveTo(offset.x, canvasY);
+        ctx.lineTo(board.width * pixelSize + offset.x, canvasY);
+        ctx.stroke();
       }
     }
 
-    // Toujours dessiner une bordure autour du PixelBoard
-    ctx.strokeStyle = '#999999';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(
-      offset.x,
-      offset.y,
-      board.width * pixelSize,
-      board.height * pixelSize
-    );
+    // Lignes verticales
+    for (let x = 0; x <= board.width; x++) {
+      const canvasX = x * pixelSize + offset.x;
+      if (canvasX >= 0 && canvasX <= canvas.width) {
+        ctx.beginPath();
+        ctx.moveTo(canvasX, offset.y);
+        ctx.lineTo(canvasX, board.height * pixelSize + offset.y);
+        ctx.stroke();
+      }
+    }
 
     // Dessiner un aperçu du pixel survolé
     if (hoveredPixel && !readOnly) {
@@ -213,7 +197,6 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
     readOnly,
     selectedColor,
     showPlacementAnimation,
-    showGrid
   ]);
 
   // Gérer le redimensionnement du canvas
@@ -246,7 +229,7 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
   // Re-dessiner le board lorsqu'il change
   useEffect(() => {
     drawBoard();
-  }, [board, zoom, offset, hoveredPixel, drawBoard, showGrid]);
+  }, [board, zoom, offset, hoveredPixel, drawBoard]);
 
   // Effet pour l'animation de placement de pixel
   useEffect(() => {
@@ -376,35 +359,6 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
     setOffset({ x: 0, y: 0 });
   };
 
-  // Empêcher le défilement de la page lors de l'utilisation de la molette sur le canvas
-  const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
-    // Toujours empêcher le scroll par défaut
-    e.preventDefault();
-    e.stopPropagation();
-
-    // Facteur de zoom à ajuster selon vos préférences
-    const zoomFactor = 0.1;
-    const delta = e.deltaY < 0 ? zoomFactor : -zoomFactor;
-
-    // Limiter le zoom entre 0.1 et 10
-    const newZoom = Math.max(0.1, Math.min(10, zoom + delta));
-
-    // Pointeur sous le curseur lors du zoom
-    const rect = canvasRef.current?.getBoundingClientRect();
-    if (rect) {
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-
-      // Ajustement du décalage pour maintenir le point sous le curseur
-      const newOffsetX = mouseX - (mouseX - offset.x) * (newZoom / zoom);
-      const newOffsetY = mouseY - (mouseY - offset.y) * (newZoom / zoom);
-
-      setOffset({ x: newOffsetX, y: newOffsetY });
-    }
-
-    setZoom(newZoom);
-  };
-
   useEffect(() => {
     const centerBoard = () => {
       if (!canvasRef.current) return;
@@ -429,25 +383,6 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
     centerBoard();
   }, [board.width, board.height, calculatePixelSize]);
 
-  // Ajoutez cet useEffect après vos autres useEffect
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    // Cette fonction sera appelée avec l'option passive: false
-    const preventDefaultWheel = (e: WheelEvent) => {
-      e.preventDefault();
-    };
-
-    // Ajouter l'écouteur d'événement avec passive: false (crucial!)
-    canvas.addEventListener('wheel', preventDefaultWheel, { passive: false });
-
-    // Nettoyage lors du démontage
-    return () => {
-      canvas.removeEventListener('wheel', preventDefaultWheel);
-    };
-  }, []);
-
   return (
     <div className="pixel-board-canvas-container">
       <div className="canvas-wrapper">
@@ -459,7 +394,6 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
           onMouseDown={handleMouseDown}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseLeave}
-          onWheel={handleWheel}
         />
 
         {/* Affichage de l'historique du pixel au survol */}
@@ -489,9 +423,6 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
           </button>
           <button onClick={handleZoomIn} disabled={zoom >= 10} title="Agrandir">
             +
-          </button>
-          <button onClick={onToggleGrid} title={showGrid ? "Masquer la grille" : "Afficher la grille"}>
-            {showGrid ? "Masquer grille" : "Afficher grille"}
           </button>
         </div>
 

@@ -1,67 +1,74 @@
 .pixel-board-canvas-container {
   display: flex;
   flex-direction: column;
-  height: 100%;
   width: 100%;
-  overflow: hidden;
-  position: relative;
+  height: 100%;
+  min-height: 400px;
 }
 
 .canvas-wrapper {
   flex: 1;
-  overflow: hidden;
   position: relative;
+  overflow: hidden;
   background-color: #f0f0f0;
-  touch-action: none; /* Importante pour empêcher les comportements tactiles par défaut */
+  border: 1px solid var(--border-color, #ccc);
+  border-radius: var(--border-radius, 4px);
 }
 
 .pixel-board-canvas {
   display: block;
-  touch-action: none; /* Double protection pour la compatibilité */
-  background-color: #f0f0f0;
-  cursor: default;
   width: 100%;
   height: 100%;
-}
-
-.pixel-board-canvas:not(.read-only) {
-  cursor: pointer;
+  cursor: crosshair;
 }
 
 .pixel-board-canvas.dragging {
   cursor: grabbing;
 }
 
+.pixel-board-canvas.read-only {
+  cursor: default;
+}
+
 .canvas-controls {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem;
-  background-color: var(--bg-secondary);
-  border-top: 1px solid var(--border-color);
-  font-size: 0.875rem;
+  justify-content: space-between; /* Aligne les éléments sur les côtés */
+  align-items: center; /* Centre verticalement */
+  padding: 8px 0;
+  margin-top: 8px;
+  font-size: 0.9em;
 }
 
 .zoom-controls {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  gap: 8px; /* Espacement entre les boutons */
+  justify-content: center; /* Centre les boutons horizontalement */
+  flex: 1; /* Permet de prendre tout l'espace disponible */
+}
+
+.zoom-info {
+  flex: 1; /* Garde l'info de zoom alignée à gauche */
+  text-align: left;
+  margin-left: 10px;
+}
+
+.position-info {
+  flex: 1; /* Garde la position alignée à droite */
+  text-align: right;
+  margin-right: 10px;
 }
 
 .zoom-controls button {
-  height: 50px !important;
-  width: 62px !important;
-  padding: 0.25rem 0.5rem;
-  background-color: var(--bg-tertiary);
-  border: 1px solid var(--border-color);
-  border-radius: 0.25rem;
+  background-color: var(--bg-secondary, #f5f5f5);
+  border: 1px solid var(--border-color, #ccc);
+  border-radius: var(--border-radius, 4px);
+  padding: 4px 8px;
   cursor: pointer;
-  font-size: 0.875rem;
   transition: background-color 0.2s;
 }
 
 .zoom-controls button:hover:not(:disabled) {
-  background-color: var(--bg-accent);
+  background-color: var(--bg-tertiary, #e5e5e5);
 }
 
 .zoom-controls button:disabled {
@@ -69,51 +76,26 @@
   cursor: not-allowed;
 }
 
-.position-info {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-}
-
+.position-info,
 .zoom-info {
-  font-weight: 500;
-  color: var(--text-secondary);
+  color: var(--text-secondary, #666);
+  font-size: 0.85em;
 }
 
-/* Optimizations for touch devices */
-@media (pointer: coarse) {
+/* Styles pour le mode sombre */
+@media (prefers-color-scheme: dark) {
+  .canvas-wrapper {
+    background-color: #1a1a1a;
+    border-color: #333;
+  }
+
   .zoom-controls button {
-    padding: 0.5rem 0.75rem;
-    font-size: 1rem;
+    background-color: #2a2a2a;
+    border-color: #444;
+    color: #e0e0e0;
   }
-}
 
-/* Cursors for different interactions */
-.pixel-board-canvas:not(.read-only):hover {
-  cursor: crosshair;
-}
-
-.pixel-board-canvas.read-only {
-  cursor: grab;
-}
-
-/* Ajout de styles pour les animations de placement */
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-    opacity: 1;
+  .zoom-controls button:hover:not(:disabled) {
+    background-color: #3a3a3a;
   }
-  50% {
-    transform: scale(1.2);
-    opacity: 0.7;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.pixel-animation {
-  position: absolute;
-  pointer-events: none;
-  animation: pulse 0.5s ease-in-out;
 }
