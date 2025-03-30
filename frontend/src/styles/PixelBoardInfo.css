@@ -83,7 +83,7 @@
   justify-content: center;
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--text-inverted, white);
+  color: var(--text-primary, #111827);
   text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
 }
 

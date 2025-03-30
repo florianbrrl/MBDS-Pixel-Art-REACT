@@ -128,7 +128,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ board, onClose }) => {
 
           <div className="preview-info">
             <p>Le fichier sera téléchargé automatiquement après l'export.</p>
-            <p>Taille de l'image: {exportSize === 'original' ? board.width * 10 : customWidth}×{exportSize === 'original' ? board.height * 10 : customHeight} pixels</p>
+            <p>Taille de l'image: {exportSize === 'original' ? board.width : customWidth}×{exportSize === 'original' ? board.height : customHeight} pixels</p>
           </div>
         </div>
 

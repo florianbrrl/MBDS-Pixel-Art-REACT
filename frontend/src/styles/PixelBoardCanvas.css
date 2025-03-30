@@ -49,11 +49,13 @@
 .zoom-info {
   flex: 1; /* Garde l'info de zoom alignée à gauche */
   text-align: left;
+  margin-left: 10px;
 }
 
 .position-info {
   flex: 1; /* Garde la position alignée à droite */
   text-align: right;
+  margin-right: 10px;
 }
 
 .zoom-controls button {

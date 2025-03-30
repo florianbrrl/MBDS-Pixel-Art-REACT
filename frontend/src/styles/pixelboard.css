@@ -1,5 +1,3 @@
-/* Fichier: src/styles/PixelBoard.css */
-
 /* Styles généraux pour la gestion des PixelBoards */
 .pixel-board-management {
     width: 100%;
@@ -29,6 +27,11 @@
 
   .pixel-board-management .mb-4 button:hover {
     background-color: #2563eb;
+  }
+
+  .pixel-board-management .boards-list {
+    display: block;
+    margin: 0;
   }
 
   /* Tableau des PixelBoards */

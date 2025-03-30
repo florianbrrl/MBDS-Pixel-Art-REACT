@@ -196,7 +196,8 @@
     }
 
     .search-container {
-      width: 100%;
+      width: 90%;
+      flex: none;
     }
 
     .board-stats {
@@ -205,6 +206,6 @@
     }
 
     .super-board-container {
-      height: 400px;
+      height: fit-content;
     }
   }

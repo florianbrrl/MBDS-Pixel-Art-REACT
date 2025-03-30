@@ -63,6 +63,14 @@ body {
 }
 
 /* Ajustements responsive */
+@media (max-width: 1200px) {
+
+  .app-main {
+    width: -webkit-fill-available;
+  }
+}
+
+/* Ajustements responsive */
 @media (max-width: 768px) {
   .app-header {
     padding: 1rem;

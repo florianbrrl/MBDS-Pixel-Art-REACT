@@ -47,6 +47,57 @@
     margin-bottom: 16px;
   }
 
+  /* Styles pour le bouton heatmap */
+  .heatmap-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #ff7e5f, #feb47b);
+    color: white;
+    font-weight: 600;
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: none;
+    box-shadow: 0 2px 4px rgba(255, 126, 95, 0.3);
+    transition: all 0.3s ease;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .heatmap-button:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .heatmap-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(255, 126, 95, 0.4);
+  }
+
+  .heatmap-button:hover:before {
+    opacity: 1;
+  }
+
+  .heatmap-button:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(255, 126, 95, 0.5);
+  }
+
+  /* Ajouter une icône (optionnel) */
+  .heatmap-button::before {
+    content: "🔥";
+    font-size: 1.2em;
+    margin-right: 8px;
+  }
+
   /* Styles pour la zone d'interaction avec la board */
   .board-interaction {
     margin-top: 16px;

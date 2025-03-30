@@ -120,6 +120,8 @@
       margin-right: 0;
       margin-bottom: 15px;
       max-width: none;
+      flex: none;
+      width: 90%;
     }
 
     .filter-sort-container {

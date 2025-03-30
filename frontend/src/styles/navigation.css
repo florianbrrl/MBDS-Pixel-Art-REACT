@@ -249,51 +249,49 @@
 }
 
 /* Thème sombre */
-@media (prefers-color-scheme: dark) {
-  .app-header {
-    background-color: #111827;
-    color: #f9fafb;
-  }
+.dark-theme .app-header {
+  background-color: #111827;
+  color: #f9fafb;
+}
 
-  .header-link {
-    color: #f9fafb;
-  }
+.dark-theme .header-link {
+  color: #f9fafb;
+}
 
-  .nav-link,
-  .nav-button {
-    color: #f9fafb;
-  }
+.dark-theme .nav-link,
+.dark-theme .nav-button {
+  color: #f9fafb;
+}
 
-  .hamburger-line {
-    background-color: #f9fafb;
-  }
+.dark-theme .hamburger-line {
+  background-color: #f9fafb;
+}
 
-  .mobile-nav {
-    background-color: #1f2937;
-  }
+.dark-theme .mobile-nav {
+  background-color: #1f2937;
+}
 
-  .mobile-nav-link,
-  .mobile-nav-button {
-    color: #f9fafb;
-  }
+.dark-theme .mobile-nav-link,
+.dark-theme .mobile-nav-button {
+  color: #f9fafb;
+}
 
-  .mobile-nav-link:hover,
-  .mobile-nav-button:hover {
-    background-color: #374151;
-  }
+.dark-theme .mobile-nav-link:hover,
+.dark-theme .mobile-nav-button:hover {
+  background-color: #374151;
+}
 
-  .app-footer {
-    background-color: #111827;
-    color: #9ca3af;
-  }
+.dark-theme .app-footer {
+  background-color: #111827;
+  color: #9ca3af;
+}
 
-  .footer-link {
-    color: #9ca3af;
-  }
+.dark-theme .footer-link {
+  color: #9ca3af;
 }
 
 /* Media queries pour la responsivité */
-@media (max-width: 768px) {
+@media (max-width: 1100px) {
   .app-header {
     padding: 1rem;
   }
