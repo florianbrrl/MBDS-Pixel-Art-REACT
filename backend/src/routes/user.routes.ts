@@ -109,7 +109,7 @@ router.get('/me', restrictTo('user', 'premium', 'admin'), UserController.getProf
  *       403:
  *         description: Insufficient permissions
  */
-// Restrict these endpoints to non-guest users 
+// Restrict these endpoints to non-guest users
 router.put('/profile', restrictTo('user', 'premium', 'admin'), UserController.updateProfile);
 router.put('/me', restrictTo('user', 'premium', 'admin'), UserController.updateProfile); // Add /me endpoint as alias for updating profile
 router.patch('/me', restrictTo('user', 'premium', 'admin'), UserController.updateProfile); // Add PATCH method for updating profile
@@ -370,5 +370,50 @@ router.get('/me/statistics', restrictTo('user', 'premium', 'admin'), StatsContro
  *         description: PixelBoard non trouvé
  */
 router.get('/me/pixelboards/:id/contributions', restrictTo('user', 'premium', 'admin'), StatsController.getUserBoardContributionStats);
+
+/**
+ * @swagger
+ * /users/me/contributions/timeline:
+ *   get:
+ *     summary: Récupérer les contributions temporelles de l'utilisateur connecté
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: timeRange
+ *         schema:
+ *           type: string
+ *           enum: [day, week, month, all]
+ *         description: Plage de temps pour les données
+ *     responses:
+ *       200:
+ *         description: Contributions temporelles
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     totalPixels:
+ *                       type: number
+ *                     timelineData:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           date:
+ *                             type: string
+ *                           count:
+ *                             type: number
+ *       401:
+ *         description: Non authentifié
+ */
+router.get('/me/contributions/timeline', restrictTo('user', 'premium', 'admin'), UserController.getUserContributionTimeline);
 
 export default router;
