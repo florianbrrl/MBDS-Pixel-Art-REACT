@@ -128,7 +128,7 @@ const PixelBoardManagement: React.FC = () => {
           {boards.length === 0 ? (
             <p>Aucun PixelBoard trouvé.</p>
           ) : (
-            <table className="min-w-full bg-white border border-gray-200">
+            <table className="min-w-full bg-primary border border-gray-200">
               <thead>
                 <tr>
                   <th className="px-4 py-2 border-b">Titre</th>

@@ -1,5 +1,6 @@
 // src/pages/Admin/index.tsx (mise à jour)
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PixelBoardManagement from './PixelBoardManagement';
 import UserManagement from './components/UserManagement';
 import ApiService from '@/services/api.service';
@@ -10,6 +11,7 @@ const Admin: React.FC = () => {
   const [stats, setStats] = useState<any | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [statsError, setStatsError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   // Charger les statistiques au montage du composant
   useEffect(() => {
@@ -55,12 +57,6 @@ const Admin: React.FC = () => {
           >
             PixelBoards
           </button>
-          <button
-            className={`py-2 px-4 ${activeTab === 'users' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-gray-600'}`}
-            onClick={() => setActiveTab('users')}
-          >
-            Utilisateurs
-          </button>
         </nav>
       </div>
 
@@ -82,65 +78,21 @@ const Admin: React.FC = () => {
               <div className="stats-widget stats-widget-blue">
                 <h3>Utilisateurs</h3>
                 <p className="value">{stats?.totalUsers || 0}</p>
-                <p className="trend">
-                  <span className="trend-up">+12%</span> depuis le mois dernier
-                </p>
               </div>
 
               <div className="stats-widget stats-widget-green">
                 <h3>Tableaux Actifs</h3>
                 <p className="value">{stats?.activeBoards || 0}</p>
-                <p className="trend">
-                  Sur {stats?.totalBoards || 0} tableaux au total
-                </p>
               </div>
 
               <div className="stats-widget stats-widget-purple">
                 <h3>Pixels Placés</h3>
                 <p className="value">{stats?.totalPixelsPlaced?.toLocaleString() || 0}</p>
-                <p className="trend">
-                  <span className="trend-up">+8.5K</span> nouvelles contributions
-                </p>
-              </div>
-
-              <div className="stats-widget stats-widget-yellow">
-                <h3>Taux d'Engagement</h3>
-                <p className="value">78%</p>
-                <p className="trend">
-                  <span className="trend-down">-3%</span> depuis la dernière semaine
-                </p>
               </div>
             </div>
           )}
 
           <div className="dashboard-sections">
-            <div className="dashboard-section">
-              <h3>Activité Récente</h3>
-              <div className="activity-list">
-                <div className="activity-item">
-                  <div className="activity-icon"></div>
-                  <div className="activity-details">
-                    <p>Nouveau tableau "Art Rétro" créé</p>
-                    <p className="activity-time">Il y a 2 heures</p>
-                  </div>
-                </div>
-                <div className="activity-item">
-                  <div className="activity-icon"></div>
-                  <div className="activity-details">
-                    <p>5 nouveaux utilisateurs inscrits</p>
-                    <p className="activity-time">Il y a 1 jour</p>
-                  </div>
-                </div>
-                <div className="activity-item">
-                  <div className="activity-icon"></div>
-                  <div className="activity-details">
-                    <p>Tableau "Paysage de Montagne" complété</p>
-                    <p className="activity-time">Il y a 3 jours</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             <div className="dashboard-section">
               <h3>Actions Rapides</h3>
               <div className="quick-actions">
@@ -148,13 +100,23 @@ const Admin: React.FC = () => {
                   className="quick-action-button"
                   onClick={() => setActiveTab('pixelboards')}
                 >
-                  Créer un PixelBoard
+                  <svg xmlns="http://www.w3.org/2000/svg" className="quick-action-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="12" y1="8" x2="12" y2="16"></line>
+                    <line x1="8" y1="12" x2="16" y2="12"></line>
+                  </svg>
+                  <span>Créer un PixelBoard</span>
                 </button>
-                <button className="quick-action-button">
-                  Voir les Statistiques
-                </button>
-                <button className="quick-action-button">
-                  Gérer les Utilisateurs
+                <button
+                  className="quick-action-button"
+                  onClick={() => navigate('/contributions')}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="quick-action-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                  </svg>
+                  <span>Voir les Statistiques</span>
                 </button>
               </div>
             </div>

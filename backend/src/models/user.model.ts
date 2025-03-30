@@ -50,6 +50,7 @@ export class UserModel {
 		});
 	}
 
+
 	/**
 	 * Mettre à jour un utilisateur existant
 	 * @param id - L'UUID de l'utilisateur

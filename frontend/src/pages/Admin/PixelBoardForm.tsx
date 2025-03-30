@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PixelBoard } from '@/types';
-import '@/styles/pixelboard.css';
+import '@/styles/PixelBoardForm.css';
 
 interface PixelBoardFormProps {
   board: PixelBoard | null;
@@ -90,116 +90,114 @@ const PixelBoardForm: React.FC<PixelBoardFormProps> = ({ board, onSubmit, onCanc
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-        <h2 className="text-xl font-bold mb-4">
-          {board ? 'Modifier le PixelBoard' : 'Créer un nouveau PixelBoard'}
-        </h2>
+    <div className="modal-overlay">
+      <div className="modal-container">
+        <div className="modal-header">
+          <h2>{board ? 'Modifier le PixelBoard' : 'Créer un nouveau PixelBoard'}</h2>
+        </div>
 
         <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block mb-1">Titre</label>
+          <div className="form-group">
+            <label htmlFor="title">Titre</label>
             <input
               type="text"
+              id="title"
               name="title"
               value={formData.title}
               onChange={handleChange}
-              className="w-full px-3 py-2 border rounded"
               required
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="block mb-1">Largeur</label>
+          <div className="grid-2">
+            <div className="form-group">
+              <label htmlFor="width">Largeur</label>
               <input
                 type="number"
+                id="width"
                 name="width"
                 value={formData.width}
                 onChange={handleChange}
                 min="10"
                 max="1000"
-                className="w-full px-3 py-2 border rounded"
                 required
               />
             </div>
-            <div>
-              <label className="block mb-1">Hauteur</label>
+            <div className="form-group">
+              <label htmlFor="height">Hauteur</label>
               <input
                 type="number"
+                id="height"
                 name="height"
                 value={formData.height}
                 onChange={handleChange}
                 min="10"
                 max="1000"
-                className="w-full px-3 py-2 border rounded"
                 required
               />
             </div>
           </div>
 
-          <div className="mb-4">
-            <label className="block mb-1">Délai entre placements (secondes)</label>
+          <div className="form-group">
+            <label htmlFor="cooldown">Délai entre placements (secondes)</label>
             <input
               type="number"
+              id="cooldown"
               name="cooldown"
               value={formData.cooldown}
               onChange={handleChange}
               min="0"
-              className="w-full px-3 py-2 border rounded"
               required
             />
           </div>
 
-          <div className="mb-4">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                name="allow_overwrite"
-                checked={formData.allow_overwrite}
-                onChange={handleChange}
-                className="mr-2"
-              />
-              Autoriser l'écrasement des pixels
-            </label>
+          <div className="checkbox-group">
+            <input
+              type="checkbox"
+              id="allow_overwrite"
+              name="allow_overwrite"
+              checked={formData.allow_overwrite}
+              onChange={handleChange}
+            />
+            <label htmlFor="allow_overwrite">Autoriser l'écrasement des pixels</label>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="block mb-1">Date de début</label>
+          <div className="grid-2">
+            <div className="form-group">
+              <label htmlFor="start_time">Date de début</label>
               <input
                 type="date"
+                id="start_time"
                 name="start_time"
                 value={formData.start_time}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border rounded"
                 required
               />
             </div>
-            <div>
-              <label className="block mb-1">Date de fin</label>
+            <div className="form-group">
+              <label htmlFor="end_time">Date de fin</label>
               <input
                 type="date"
+                id="end_time"
                 name="end_time"
                 value={formData.end_time}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border rounded"
                 required
               />
             </div>
           </div>
 
-          <div className="flex justify-end gap-2">
+          <div className="form-actions">
             <button
               type="button"
               onClick={onCancel}
-              className="px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded"
+              className="cancel-button"
             >
               Annuler
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded"
+              className="submit-button"
             >
               {board ? 'Mettre à jour' : 'Créer'}
             </button>

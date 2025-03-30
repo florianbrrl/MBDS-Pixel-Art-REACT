@@ -3,6 +3,7 @@ import { UserProfile, UserRole } from '@/types/auth.types';
 import ApiService from '@/services/api.service';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ErrorMessage from '@/components/common/ErrorMessage';
+import { useAuth } from '@/contexts/AuthContext';
 
 type SortField = 'email' | 'role' | 'created_at' | 'status';
 type SortDirection = 'asc' | 'desc';
@@ -22,6 +23,9 @@ const UserList: React.FC<UserListProps> = ({ onSelectUser }) => {
   const [sortField, setSortField] = useState<SortField>('email');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
+  // Obtenir l'utilisateur actuel
+  const { currentUser } = useAuth();
+
   const fetchUsers = async () => {
     setLoading(true);
     setError(null);
@@ -31,8 +35,10 @@ const UserList: React.FC<UserListProps> = ({ onSelectUser }) => {
       if (response.error) {
         setError(response.error);
       } else if (response.data) {
-        setUsers(response.data);
-        setFilteredUsers(response.data);
+        // Filtrer l'utilisateur actuel de la liste
+        const filteredUsers = response.data.filter(user => user.email !== currentUser?.email);
+        setUsers(filteredUsers);
+        setFilteredUsers(filteredUsers);
       }
     } catch (err: any) {
       setError(err.message || 'Erreur lors du chargement des utilisateurs');
@@ -43,7 +49,7 @@ const UserList: React.FC<UserListProps> = ({ onSelectUser }) => {
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [currentUser?.email]);
 
   useEffect(() => {
     // Appliquer les filtres
@@ -51,7 +57,7 @@ const UserList: React.FC<UserListProps> = ({ onSelectUser }) => {
 
     // Filtre de recherche par email
     if (searchTerm) {
-      result = result.filter(user => 
+      result = result.filter(user =>
         user.email.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
@@ -106,7 +112,7 @@ const UserList: React.FC<UserListProps> = ({ onSelectUser }) => {
         setError(response.error);
       } else if (response.data) {
         // Mettre à jour l'utilisateur dans la liste
-        setUsers(prevUsers => 
+        setUsers(prevUsers =>
           prevUsers.map(u => u.id === user.id ? { ...u, role: newRole } : u)
         );
       }
@@ -126,7 +132,7 @@ const UserList: React.FC<UserListProps> = ({ onSelectUser }) => {
         setError(response.error);
       } else if (response.data) {
         // Mettre à jour l'utilisateur dans la liste
-        setUsers(prevUsers => 
+        setUsers(prevUsers =>
           prevUsers.map(u => u.id === user.id ? { ...u, is_blocked: newStatus } : u)
         );
       }
@@ -155,10 +161,10 @@ const UserList: React.FC<UserListProps> = ({ onSelectUser }) => {
   return (
     <div className="user-list-container">
       {error && <ErrorMessage message={error} onRetry={() => fetchUsers()} />}
-      
+
       <div className="user-filters mb-6">
         <div className="flex flex-col md:flex-row md:items-center gap-4">
-          <div className="flex items-center min-w-[250px]">
+          <div className="filter-input-group">
             <label htmlFor="search" className="flex-shrink-0 w-24 text-sm font-medium">
               Rechercher:
             </label>
@@ -171,8 +177,8 @@ const UserList: React.FC<UserListProps> = ({ onSelectUser }) => {
               className="flex-grow p-2 border rounded"
             />
           </div>
-          
-          <div className="flex items-center min-w-[200px]">
+
+          <div className="filter-input-group">
             <label htmlFor="role-filter" className="flex-shrink-0 w-16 text-sm font-medium">
               Rôle:
             </label>
@@ -189,8 +195,8 @@ const UserList: React.FC<UserListProps> = ({ onSelectUser }) => {
               <option value="admin">Administrateur</option>
             </select>
           </div>
-          
-          <div className="flex items-center min-w-[200px]">
+
+          <div className="filter-input-group">
             <label htmlFor="status-filter" className="flex-shrink-0 w-16 text-sm font-medium">
               Statut:
             </label>
@@ -201,13 +207,13 @@ const UserList: React.FC<UserListProps> = ({ onSelectUser }) => {
               className="flex-grow p-2 border rounded"
             >
               <option value="all">Tous les statuts</option>
-              <option value="active">Actifs</option>
+              <option value="active">Actif</option>
               <option value="blocked">Bloqués</option>
             </select>
           </div>
         </div>
       </div>
-      
+
       {loading ? (
         <LoadingSpinner />
       ) : (
@@ -215,8 +221,8 @@ const UserList: React.FC<UserListProps> = ({ onSelectUser }) => {
           <table className="w-full min-w-full bg-white rounded-lg overflow-hidden shadow">
             <thead>
               <tr>
-                <th 
-                  className="py-3 px-4 text-left cursor-pointer" 
+                <th
+                  className="py-3 px-4 text-left cursor-pointer"
                   onClick={() => handleSort('email')}
                 >
                   Email
@@ -224,8 +230,8 @@ const UserList: React.FC<UserListProps> = ({ onSelectUser }) => {
                     <span className="ml-1">{sortDirection === 'asc' ? '▲' : '▼'}</span>
                   )}
                 </th>
-                <th 
-                  className="py-3 px-4 text-left cursor-pointer" 
+                <th
+                  className="py-3 px-4 text-left cursor-pointer"
                   onClick={() => handleSort('role')}
                 >
                   Rôle
@@ -233,8 +239,8 @@ const UserList: React.FC<UserListProps> = ({ onSelectUser }) => {
                     <span className="ml-1">{sortDirection === 'asc' ? '▲' : '▼'}</span>
                   )}
                 </th>
-                <th 
-                  className="py-3 px-4 text-left cursor-pointer" 
+                <th
+                  className="py-3 px-4 text-left cursor-pointer"
                   onClick={() => handleSort('created_at')}
                 >
                   Date de création
@@ -242,8 +248,8 @@ const UserList: React.FC<UserListProps> = ({ onSelectUser }) => {
                     <span className="ml-1">{sortDirection === 'asc' ? '▲' : '▼'}</span>
                   )}
                 </th>
-                <th 
-                  className="py-3 px-4 text-left cursor-pointer" 
+                <th
+                  className="py-3 px-4 text-left cursor-pointer"
                   onClick={() => handleSort('status')}
                 >
                   Statut
@@ -263,15 +269,15 @@ const UserList: React.FC<UserListProps> = ({ onSelectUser }) => {
                 </tr>
               ) : (
                 filteredUsers.map((user) => (
-                  <tr 
-                    key={user.id} 
+                  <tr
+                    key={user.id}
                     className={`border-t ${user.is_blocked ? 'blocked-user' : ''}`}
                     onClick={() => handleUserSelect(user)}
                   >
                     <td className="py-3 px-4">{user.email}</td>
                     <td className="py-3 px-4">
                       <span className={`
-                        inline-block px-2 py-1 rounded text-xs 
+                        inline-block px-2 py-1 rounded text-xs
                         ${user.role === 'admin' ? 'bg-purple-100 text-purple-800' : ''}
                         ${user.role === 'premium' ? 'bg-green-100 text-green-800' : ''}
                         ${user.role === 'user' ? 'bg-blue-100 text-blue-800' : ''}
