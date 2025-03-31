@@ -1,11 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { PixelBoard } from '@/types';
+import ImageImporter from '@/components/import/ImageImporter';
 import '@/styles/PixelBoardForm.css';
 
 interface PixelBoardFormProps {
   board: PixelBoard | null;
   onSubmit: (boardData: any) => void;
   onCancel: () => void;
+}
+
+interface PixelBoardFormData {
+  title: string;
+  width: number;
+  height: number;
+  cooldown: number;
+  allow_overwrite: boolean;
+  start_time: string;
+  end_time: string;
+  initialGrid?: Record<string, string>; // Propriété optionnelle pour les données importées
 }
 
 const PixelBoardForm: React.FC<PixelBoardFormProps> = ({ board, onSubmit, onCancel }) => {
@@ -35,7 +47,7 @@ const PixelBoardForm: React.FC<PixelBoardFormProps> = ({ board, onSubmit, onCanc
   };
 
   // État du formulaire
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<PixelBoardFormData>({
     title: '',
     width: 32,
     height: 32,
@@ -44,6 +56,9 @@ const PixelBoardForm: React.FC<PixelBoardFormProps> = ({ board, onSubmit, onCanc
     start_time: getCurrentDate(),
     end_time: getNextWeekDate(),
   });
+
+  // Nouvel état pour stocker les données d'image importée
+  const [importedPixelData, setImportedPixelData] = useState<Record<string, string> | null>(null);
 
   // Initialiser le formulaire avec les données du board si en mode édition
   useEffect(() => {
@@ -68,6 +83,20 @@ const PixelBoardForm: React.FC<PixelBoardFormProps> = ({ board, onSubmit, onCanc
       ...formData,
       [name]: type === 'checkbox' ? checked : type === 'number' ? Number(value) : value,
     });
+
+    // Si on change la largeur ou la hauteur, réinitialiser les données d'image importée
+    if (name === 'width' || name === 'height') {
+      setImportedPixelData(null);
+    }
+  };
+
+  // Fonction pour définir les dimensions à partir de l'image
+  const handleDimensionsDetected = (detectedWidth: number, detectedHeight: number) => {
+    setFormData(prevData => ({
+      ...prevData,
+      width: detectedWidth,
+      height: detectedHeight
+    }));
   };
 
   // Gérer la soumission du formulaire
@@ -86,7 +115,17 @@ const PixelBoardForm: React.FC<PixelBoardFormProps> = ({ board, onSubmit, onCanc
       formattedData.end_time = new Date(`${formattedData.end_time}T23:59:59Z`).toISOString();
     }
 
+    // Ajouter les données de pixels importées si disponibles
+    if (importedPixelData) {
+      formattedData.initialGrid = importedPixelData;
+    }
+
     onSubmit(formattedData);
+  };
+
+  // Gérer l'image traitée
+  const handleImageProcessed = (pixelData: Record<string, string>) => {
+    setImportedPixelData(pixelData);
   };
 
   return (
@@ -119,7 +158,7 @@ const PixelBoardForm: React.FC<PixelBoardFormProps> = ({ board, onSubmit, onCanc
                 value={formData.width}
                 onChange={handleChange}
                 min="10"
-                max="1000"
+                max="300"
                 required
               />
             </div>
@@ -132,7 +171,7 @@ const PixelBoardForm: React.FC<PixelBoardFormProps> = ({ board, onSubmit, onCanc
                 value={formData.height}
                 onChange={handleChange}
                 min="10"
-                max="1000"
+                max="300"
                 required
               />
             </div>
@@ -186,6 +225,20 @@ const PixelBoardForm: React.FC<PixelBoardFormProps> = ({ board, onSubmit, onCanc
               />
             </div>
           </div>
+
+          {/* Ajout du composant d'importation d'image */}
+          <ImageImporter
+            onImageProcessed={handleImageProcessed}
+            onDimensionsDetected={handleDimensionsDetected}
+            width={formData.width}
+            height={formData.height}
+          />
+
+          {importedPixelData && (
+            <div className="import-success">
+              Image traitée avec succès ! {Object.keys(importedPixelData).length} pixels seront ajoutés au tableau.
+            </div>
+          )}
 
           <div className="form-actions">
             <button

@@ -1,0 +1,97 @@
+.image-importer {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--bg-secondary);
+  }
+
+  .image-importer h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+
+  .file-input-container {
+    margin-bottom: 15px;
+  }
+
+  .file-input {
+    display: none;
+  }
+
+  .file-input-label {
+    display: inline-block;
+    padding: 8px 16px;
+    background-color: var(--color-primary);
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .file-input-label:hover {
+    background-color: blue;
+  }
+
+  .preview-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 15px;
+  }
+
+  .image-preview {
+    max-width: 100%;
+    max-height: 200px;
+    margin-bottom: 10px;
+    border: 1px solid var(--border-color);
+  }
+
+  .process-button {
+    padding: 8px 16px;
+    background-color: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .process-button:hover:not(:disabled) {
+    background-color: var(--color-primary-hover);
+  }
+
+  .process-button:disabled {
+    background-color: var(--border-color);
+    cursor: not-allowed;
+  }
+
+  .preview-info {
+    margin-top: 10px;
+    font-size: 0.9em;
+    color: var(--text-secondary);
+  }
+
+  .import-error {
+    color: #e74c3c;
+    margin-bottom: 10px;
+    padding: 8px;
+    background-color: rgba(231, 76, 60, 0.1);
+    border-radius: 4px;
+  }
+
+  .pixelized-preview-container {
+    margin-top: 15px;
+    border: 1px solid var(--border-color);
+    padding: 10px;
+    border-radius: 4px;
+  }
+
+  .pixelized-preview {
+    display: block;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+  }

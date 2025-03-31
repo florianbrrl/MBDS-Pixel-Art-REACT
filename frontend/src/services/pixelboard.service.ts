@@ -94,7 +94,7 @@ const PixelBoardService = {
   },
 
   // Créer un nouveau PixelBoard
-  createBoard: async (boardData: Omit<PixelBoard, 'id' | 'created_at' | 'is_active' | 'grid' | 'admin_id'>) => {
+  createBoard: async (boardData: Omit<PixelBoard, 'id' | 'created_at' | 'is_active' | 'grid' | 'admin_id'> & { initialGrid?: Record<string, string> }) => {
     try {
       const response = await axiosInstance.post<PixelBoard>('/pixelboards', boardData);
       return { data: response.data };

@@ -523,39 +523,39 @@ export class PixelBoardController {
 	 */
 	static createPixelBoard = catchAsync(
 		async (req: Request, res: Response, next: NextFunction) => {
-			const { title, width, height, cooldown, allow_overwrite, start_time, end_time } =
-				req.body;
+		  const { title, width, height, cooldown, allow_overwrite, start_time, end_time, initialGrid } =
+			req.body;
 
-			// Validation de base
-			if (!title || !width || !height || !start_time || !end_time) {
-				return next(new AppErrorClass('Champs obligatoires manquants', 400));
-			}
+		  // Validation de base
+		  if (!title || !width || !height || !start_time || !end_time) {
+			return next(new AppErrorClass('Champs obligatoires manquants', 400));
+		  }
 
-			// Validation approfondie
-			validatePixelBoardData(req.body);
+		  // Validation approfondie
+		  validatePixelBoardData(req.body);
 
-			// Création des données pour le PixelBoard
-			const pixelBoardData: IPixelBoardCreate = {
-				title,
-				width: Number(width),
-				height: Number(height),
-				grid: {}, // Grille vide initialement
-				cooldown: cooldown ? Number(cooldown) : 60, // Valeur par défaut: 60 secondes
-				allow_overwrite: allow_overwrite || false, // Valeur par défaut: false
-				start_time: new Date(start_time),
-				end_time: new Date(end_time),
-				admin_id: req.user?.id, // ID de l'administrateur qui crée le PixelBoard
-			};
+		  // Création des données pour le PixelBoard
+		  const pixelBoardData: IPixelBoardCreate = {
+			title,
+			width: Number(width),
+			height: Number(height),
+			grid: initialGrid || {}, // Utiliser les données de l'image importée si disponibles
+			cooldown: cooldown ? Number(cooldown) : 60, // Valeur par défaut: 60 secondes
+			allow_overwrite: allow_overwrite || false, // Valeur par défaut: false
+			start_time: new Date(start_time),
+			end_time: new Date(end_time),
+			admin_id: req.user?.id, // ID de l'administrateur qui crée le PixelBoard
+		  };
 
-			// Création du PixelBoard
-			const pixelBoard = await PixelBoardModel.create(pixelBoardData);
+		  // Création du PixelBoard
+		  const pixelBoard = await PixelBoardModel.create(pixelBoardData);
 
-			res.status(201).json({
-				status: 'success',
-				data: pixelBoard,
-			});
+		  res.status(201).json({
+			status: 'success',
+			data: pixelBoard,
+		  });
 		}
-	);
+	  );
 
 	/**
 	 * Mettre à jour un PixelBoard
@@ -663,8 +663,8 @@ export class PixelBoardController {
 			}
 
 			const validTimeFrames = ['24h', '7d', '30d', 'all'];
-			const selectedTimeFrame = validTimeFrames.includes(timeFrame as string) 
-				? (timeFrame as string) 
+			const selectedTimeFrame = validTimeFrames.includes(timeFrame as string)
+				? (timeFrame as string)
 				: 'all';
 
 			const heatmap = await StatsService.getBoardHeatmap(id, selectedTimeFrame);

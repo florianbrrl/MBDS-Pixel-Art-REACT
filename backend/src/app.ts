@@ -21,8 +21,8 @@ app.use(
 ); // Autorise les requêtes cross-origin
 app.use(compression()); // Compresse les réponses
 app.use(morgan(config.logging.format)); // Journalisation des requêtes
-app.use(express.json({ limit: '10kb' })); // Parse le corps JSON avec limite
-app.use(express.urlencoded({ extended: true, limit: '10kb' })); // Parse les données URL-encoded
+app.use(express.json({ limit: '5mb' })); // Parse le corps JSON avec limite augmentée à 5mb
+app.use(express.urlencoded({ extended: true, limit: '5mb' })); // Parse les données URL-encoded avec limite augmentée
 
 // Configure Swagger documentation
 setupSwagger(app);

@@ -118,6 +118,16 @@
     background-color: var(--color-primary-hover, #2563eb); /* Bleu plus foncé au survol */
   }
 
+  .import-success {
+    background-color: rgba(46, 204, 113, 0.1);
+    color: #27ae60;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    text-align: center;
+    font-weight: 500;
+  }
+
   /* Animation d'entrée du modal */
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-20px); }
