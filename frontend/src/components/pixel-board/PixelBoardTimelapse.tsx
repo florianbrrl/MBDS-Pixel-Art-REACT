@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { PixelBoard } from '@/types';
 import ApiService from '@/services/api.service';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ErrorMessage from '@/components/common/ErrorMessage';
