@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, memo } from 'react';
 import { PixelBoard } from '@/types';
 import PixelHistoryTooltip from './PixelHistoryTooltip';
 import { PixelBoardService } from '@/services/api.service';
@@ -106,6 +106,10 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // Désactiver l'antialiasing pour éviter les bordures floues
+    // @ts-ignore - Ces propriétés existent mais peuvent ne pas être dans les types TypeScript
+    ctx.imageSmoothingEnabled = false;
+
     // Effacer le canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -120,61 +124,70 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
       const [x, y] = pos.split(',').map(Number);
 
       // Calculer la position sur le canvas avec le zoom et le décalage
-      const canvasX = x * pixelSize + offset.x;
-      const canvasY = y * pixelSize + offset.y;
+      const canvasX = Math.floor(x * pixelSize + offset.x);
+      const canvasY = Math.floor(y * pixelSize + offset.y);
+
+      // IMPORTANT: Utiliser Math.ceil pour la taille du pixel pour éviter les espaces
+      // entre les pixels causés par des arrondis
+      const actualPixelWidth = Math.ceil(pixelSize);
+      const actualPixelHeight = Math.ceil(pixelSize);
 
       // Vérifier si le pixel est visible
       if (
-        canvasX + pixelSize >= 0 &&
-        canvasY + pixelSize >= 0 &&
+        canvasX + actualPixelWidth >= 0 &&
+        canvasY + actualPixelHeight >= 0 &&
         canvasX < canvas.width &&
         canvasY < canvas.height
       ) {
         ctx.fillStyle = color;
-        ctx.fillRect(canvasX, canvasY, pixelSize, pixelSize);
+        ctx.fillRect(canvasX, canvasY, actualPixelWidth, actualPixelHeight);
 
-        // Ajouter une légère bordure aux pixels si la grille est désactivée
+        // Si la grille est désactivée, ne pas dessiner de bordures supplémentaires
         if (!showGrid && pixelSize > 2) {
-          ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
-          ctx.lineWidth = 0.5;
-          ctx.strokeRect(canvasX, canvasY, pixelSize, pixelSize);
+          // N'ajoutez pas de bordure ici, cela crée des espaces
+          // Alternativement, utilisez une bordure interne de la même couleur si nécessaire
+          // ctx.strokeStyle = color; // Même couleur que le remplissage
+          // ctx.lineWidth = 0.5;
+          // ctx.strokeRect(canvasX, canvasY, actualPixelWidth, actualPixelHeight);
         }
       }
     });
 
     // Dessiner une bordure autour du tableau de pixels
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(
-      offset.x,
-      offset.y,
-      board.width * pixelSize,
-      board.height * pixelSize
-    );
+    if (pixelSize >= 1) {
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(
+        Math.floor(offset.x),
+        Math.floor(offset.y),
+        Math.ceil(board.width * pixelSize),
+        Math.ceil(board.height * pixelSize)
+      );
+    }
 
     // Dessiner les lignes de la grille seulement si showGrid est true
-    if (showGrid) {
+    if (showGrid && pixelSize >= 2) {
       ctx.strokeStyle = '#cccccc';
       ctx.lineWidth = 0.5;
 
       // Lignes horizontales
       for (let y = 0; y <= board.height; y++) {
-        const canvasY = y * pixelSize + offset.y;
+        const canvasY = Math.floor(y * pixelSize + offset.y);
         if (canvasY >= 0 && canvasY <= canvas.height) {
           ctx.beginPath();
-          ctx.moveTo(offset.x, canvasY);
-          ctx.lineTo(board.width * pixelSize + offset.x, canvasY);
+          ctx.moveTo(Math.floor(offset.x), canvasY);
+          ctx.lineTo(Math.floor(offset.x) + Math.ceil(board.width * pixelSize), canvasY);
           ctx.stroke();
         }
       }
 
       // Lignes verticales
       for (let x = 0; x <= board.width; x++) {
-        const canvasX = x * pixelSize + offset.x;
+        const canvasX = Math.floor(x * pixelSize + offset.x);
         if (canvasX >= 0 && canvasX <= canvas.width) {
           ctx.beginPath();
-          ctx.moveTo(canvasX, offset.y);
-          ctx.lineTo(canvasX, board.height * pixelSize + offset.y);
+          ctx.moveTo(canvasX, Math.floor(offset.y));
+          ctx.lineTo(canvasX, Math.floor(offset.y) + Math.ceil(board.height * pixelSize));
           ctx.stroke();
         }
       }
@@ -182,28 +195,32 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
 
     // Dessiner un aperçu du pixel survolé
     if (hoveredPixel && !readOnly) {
-      const canvasX = hoveredPixel.x * pixelSize + offset.x;
-      const canvasY = hoveredPixel.y * pixelSize + offset.y;
+      const canvasX = Math.floor(hoveredPixel.x * pixelSize + offset.x);
+      const canvasY = Math.floor(hoveredPixel.y * pixelSize + offset.y);
+      const actualPixelWidth = Math.ceil(pixelSize);
+      const actualPixelHeight = Math.ceil(pixelSize);
 
       // Dessiner une bordure autour du pixel survolé
       ctx.strokeStyle = selectedColor;
       ctx.lineWidth = 2;
-      ctx.strokeRect(canvasX, canvasY, pixelSize, pixelSize);
+      ctx.strokeRect(canvasX, canvasY, actualPixelWidth, actualPixelHeight);
 
       // Dessiner un aperçu semi-transparent
       ctx.fillStyle = `${selectedColor}80`; // 50% de transparence
-      ctx.fillRect(canvasX, canvasY, pixelSize, pixelSize);
+      ctx.fillRect(canvasX, canvasY, actualPixelWidth, actualPixelHeight);
     }
 
     // Dessiner l'animation de placement de pixel
     if (showPlacementAnimation && lastPlacedPixel) {
-      const canvasX = lastPlacedPixel.x * pixelSize + offset.x;
-      const canvasY = lastPlacedPixel.y * pixelSize + offset.y;
+      const canvasX = Math.floor(lastPlacedPixel.x * pixelSize + offset.x);
+      const canvasY = Math.floor(lastPlacedPixel.y * pixelSize + offset.y);
+      const actualPixelWidth = Math.ceil(pixelSize);
+      const actualPixelHeight = Math.ceil(pixelSize);
 
       // Créer un effet de "pulsation"
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 3;
-      ctx.strokeRect(canvasX - 2, canvasY - 2, pixelSize + 4, pixelSize + 4);
+      ctx.strokeRect(canvasX - 2, canvasY - 2, actualPixelWidth + 4, actualPixelHeight + 4);
     }
   }, [
     board.grid,
@@ -413,6 +430,7 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
     setOffset({ x: newOffsetX, y: newOffsetY });
   }, [zoom, offset]);
 
+  // Centrer initialement le tableau sur le canvas
   useEffect(() => {
     const centerBoard = () => {
       if (!canvasRef.current) return;
@@ -436,8 +454,6 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
 
     centerBoard();
   }, [board.width, board.height, calculatePixelSize]);
-
-  // Ajouter ce useEffect après vos autres useEffects
 
   // Empêcher le scroll de la page quand on utilise la molette sur le canvas
   useEffect(() => {
@@ -531,4 +547,4 @@ const PixelBoardCanvas: React.FC<PixelBoardCanvasProps> = ({
   );
 };
 
-export default PixelBoardCanvas;
+export default memo(PixelBoardCanvas);

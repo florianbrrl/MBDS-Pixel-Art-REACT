@@ -1,4 +1,4 @@
-﻿import React from 'react';
+﻿import React, { memo } from 'react';
 import { useTheme } from '@/contexts/ThemeContext';
 import './../../styles/theme-toggle.css';
 
@@ -34,4 +34,5 @@ const ThemeToggle: React.FC = () => {
   );
 };
 
-export default ThemeToggle;
+// Utiliser memo pour éviter les rendus inutiles
+export default memo(ThemeToggle);

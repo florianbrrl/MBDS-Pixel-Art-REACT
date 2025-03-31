@@ -16,6 +16,33 @@ export default defineConfig({
       "@assets": path.resolve(__dirname, "./src/assets")
     },
   },
+  build: {
+    sourcemap: false, // Mettre à true pour debug, false en production
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true, // Supprimer les console.log en production
+      },
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-core': ['react', 'react-dom'],
+          'router': ['react-router-dom'],
+          'charting': ['recharts'],
+          'http': ['axios'],
+          'utils': ['lodash'],
+          'ui-components': [
+            '@/components/common/LoadingSpinner',
+            '@/components/common/ErrorMessage',
+            '@/components/common/ThemeToggle',
+            '@/components/common/ThemeSelector'
+          ]
+        }
+      }
+    },
+    chunkSizeWarningLimit: 800, // Augmenter la limite d'avertissement
+  },
   server: {
     port: 5173,
     proxy: {
