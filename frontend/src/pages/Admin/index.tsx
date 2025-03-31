@@ -67,7 +67,7 @@ const Admin: React.FC = () => {
           <h2>Tableau de bord</h2>
 
           {statsLoading ? (
-            <div className="loading-spinner">Chargement des statistiques...</div>
+            <div>Chargement des statistiques...</div>
           ) : statsError ? (
             <div className="error-message">
               <p>{statsError}</p>
