@@ -1,4 +1,7 @@
 # MBDS-Pixel-Art-REACT
+
+## Pixel Art APP
+
 ## Authors
 - [ROCAMORA Enzo - uncyzer](https://github.com/uncyzer)
 - [LAFAIRE Dylan - dragun06](https://github.com/dragun06)
