@@ -186,3 +186,7 @@ La fonctionnalité de timelapse offre une dimension temporelle fascinante au pro
 ### Responsive Design
 
 L'interface adaptative assure une expérience utilisateur optimale sur tous types d'appareils, des grands écrans de bureau aux smartphones. Les composants se réorganisent intelligemment selon l'espace disponible, préservant ainsi l'accès à toutes les fonctionnalités.
+
+### Création de PixelBoard à partir d'Image
+
+Le système intègre une fonctionnalité innovante permettant aux administrateurs et utilisateurs autorisés de générer automatiquement des PixelBoards à partir d'images existantes. Cette fonctionnalité transforme l'importation d'art pixelisé en un processus fluide et intuitif.
